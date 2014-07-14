@@ -11,7 +11,7 @@ class LedgerRbApp < Sinatra::Base
   helpers Sinatra::Param
 
   get '/' do
-    'OH HAI!'
+    send_file 'public/app/index.html'
   end
 
   get '/api/ledger/accounts/?' do
@@ -42,5 +42,4 @@ class LedgerRbApp < Sinatra::Base
 
     Ledger.version
   end
-
 end
