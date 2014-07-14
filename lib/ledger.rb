@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+# Ruby wrapper module for calling ledger
 module Ledger
   module_function
 
@@ -17,9 +18,11 @@ module Ledger
   def accounts( depth = 9999 )
     run( '', 'accounts' )
       .split( "\n" )
-      .map { |a|
-      a.split( ':' ).each_slice( depth ).to_a.first
-    }.uniq
+      .map do |a|
+      a.split( ':' )
+       .each_slice( depth )
+       .to_a.first
+    end.uniq
   end
 
   def cleared
@@ -29,13 +32,12 @@ module Ledger
   def monthly_register( category )
     run( "--monthly --collapse --amount-data --exchange '€'", 'register', "#{category}" )
       .split( "\n" )
-      .map {
-      |line|
+      .map do |line|
       line_array = line.split
 
-      {   date: line_array[ 0 ],
-          amount: line_array[ 1 ].to_f }
-    }
+      { date: line_array[ 0 ],
+        amount: line_array[ 1 ].to_f }
+      end
   end
 
   def balance( period = nil )
