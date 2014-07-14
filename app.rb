@@ -11,7 +11,7 @@ class LedgerRbApp < Sinatra::Base
   helpers Sinatra::Param
 
   get '/' do
-    send_file 'public/app/index.html'
+    send_file './public/app/index.html'
   end
 
   get '/api/ledger/accounts/?' do
