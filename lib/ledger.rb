@@ -7,7 +7,7 @@ module Ledger
   @file = '~/org/comptes.ledger'
 
   def run( options, command = '', command_parameters = '' )
-    `#{@binary} #{options} #{command} #{command_parameters}`
+    `#{@binary} -f #{@file} #{options} #{command} #{command_parameters}`
   end
 
   def version
@@ -23,11 +23,11 @@ module Ledger
   end
 
   def cleared
-    run "-f #{@file}", 'cleared'
+    run '', 'cleared'
   end
 
   def monthly_register( category )
-    run( "-f #{@file}  --monthly --collapse --amount-data --exchange '€'", 'register', "#{category}" )
+    run( "--monthly --collapse --amount-data --exchange '€'", 'register', "#{category}" )
       .split( "\n" )
       .map {
       |line|
@@ -40,6 +40,6 @@ module Ledger
 
   def balance( period = nil )
     period = period.nil? ? '' : "-p #{period}"
-    output run "-f #{@file} --flat --exchange '€' #{period}", 'balance', "#{category}"
+    output run "--flat --exchange '€' #{period}", 'balance', "#{category}"
   end
 end
