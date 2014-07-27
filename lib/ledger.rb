@@ -25,10 +25,6 @@ module Ledger
     end.uniq
   end
 
-  def cleared
-    run '', 'cleared'
-  end
-
   def register( category, options='' )
     run( "#{options} --collapse --amount-data --exchange '€'", 'register', "#{category}" )
       .split( "\n" )
@@ -48,8 +44,10 @@ module Ledger
     register category, "--yearly"
   end
 
-  def balance( period = nil )
+  def balance( cleared=false, depth=nil, period=nil )
     period = period.nil? ? '' : "-p #{period}"
-    output run "--flat --exchange '€' #{period}", 'balance', "#{category}"
+    depth = depth.nil? ? '' : "--depth #{depth}"
+    operation = cleared ? 'cleared' : 'balance'
+    run "--flat --exchange '€' #{period} #{depth}", operation
   end
 end
