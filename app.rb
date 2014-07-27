@@ -20,7 +20,7 @@ class LedgerRbApp < Sinatra::Base
     Ledger.accounts.to_json
   end
 
-  get '/api/ledger/accounts/depth/:depth' do
+  get '/api/ledger/accounts/depth/:depth/?' do
     content_type :json
     param :depth, Integer, required: true
 
