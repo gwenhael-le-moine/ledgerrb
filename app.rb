@@ -67,8 +67,6 @@ class LedgerRbApp < Sinatra::Base
   end
 
   get '/api/ledger/version/?' do
-    content_type :json
-
     Ledger.version
   end
 end
