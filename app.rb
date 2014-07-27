@@ -22,19 +22,19 @@ class LedgerRbApp < Sinatra::Base
 
   get '/api/ledger/accounts/depth/:depth' do
     content_type :json
-    param :depth, Integer
+    param :depth, Integer, required: true
 
     Ledger.accounts( params[ :depth ] ).to_json
   end
 
   get '/api/ledger/monthly/?' do
     content_type :json
-    param :categories, Array
 
     params[ :categories ].map do |category|
       { category: category,
         data: Ledger.monthly_register( category ).to_json }
     end
+    param :categories, Array, default: Ledger.accounts( 1 )
   end
 
   get '/api/ledger/version/?' do
