@@ -29,15 +29,23 @@ module Ledger
     run '', 'cleared'
   end
 
-  def monthly_register( category )
-    run( "--monthly --collapse --amount-data --exchange '€'", 'register', "#{category}" )
+  def register( category, options='' )
+    run( "#{options} --collapse --amount-data --exchange '€'", 'register', "#{category}" )
       .split( "\n" )
       .map do |line|
       line_array = line.split
 
       { date: line_array[ 0 ],
         amount: line_array[ 1 ].to_f }
-      end
+    end
+  end
+
+  def monthly_register( category )
+    register category, "--monthly"
+  end
+
+  def yearly_register( category )
+    register category, "--yearly"
   end
 
   def balance( period = nil )
