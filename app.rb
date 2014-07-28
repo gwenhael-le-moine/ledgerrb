@@ -30,7 +30,7 @@ class LedgerRbApp < Sinatra::Base
   end
 
   get '/api/ledger/register/:period/?' do
-    param :period, String, required: true       # TODO: restrict possible values to [ 'yearly', 'monthly' ]
+    param :period, String, required: true, within: [ 'yearly', 'monthly' ]
     param :categories, Array, default: Ledger.accounts( 1 )
 
     params[ :categories ].map do
