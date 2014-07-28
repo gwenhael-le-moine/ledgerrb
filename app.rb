@@ -42,24 +42,24 @@ class LedgerRbApp < Sinatra::Base
   end
 
   get '/api/ledger/balance/?' do
-    Ledger.balance # .to_json
+    Ledger.balance.to_json
   end
 
   get '/api/ledger/balance/depth/:depth/?' do
     param :depth, Integer, required: true
 
-    Ledger.balance( false, params[ :depth ] ) # .to_json
+    Ledger.balance( false, params[ :depth ] ).to_json
   end
 
-  get '/api/ledger/cleared/?' do
-    Ledger.balance( true ) # .to_json
-  end
+  # get '/api/ledger/cleared/?' do
+  #   Ledger.balance( true ).to_json
+  # end
 
-  get '/api/ledger/cleared/depth/:depth/?' do
-    param :depth, Integer, required: true
+  # get '/api/ledger/cleared/depth/:depth/?' do
+  #   param :depth, Integer, required: true
 
-    Ledger.balance( true, params[ :depth ] ) # .to_json
-  end
+  #   Ledger.balance( true, params[ :depth ] ).to_json
+  # end
 
   get '/api/ledger/version/?' do
     Ledger.version

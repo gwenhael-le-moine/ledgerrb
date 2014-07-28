@@ -26,7 +26,7 @@ module Ledger
   end
 
   def register( category, options='' )
-    run( "#{options} --collapse --amount-data --exchange '€'", 'register', "#{category}" )
+    run( "#{options} --collapse --amount-data --exchange '#{CURRENCY}'", 'register', "#{category}" )
       .split( "\n" )
       .map do |line|
       line_array = line.split
@@ -48,6 +48,13 @@ module Ledger
     period = period.nil? ? '' : "-p #{period}"
     depth = depth.nil? ? '' : "--depth #{depth}"
     operation = cleared ? 'cleared' : 'balance'
-    run "--flat --exchange '€' #{period} #{depth}", operation
+    run( "--flat --no-total --exchange '#{CURRENCY}' #{period} #{depth}", operation )
+      .split( "\n" )
+      .map do |line|
+      line_array = line.split( "#{CURRENCY}" )
+
+      { account: line_array[ 1 ].strip,
+        amount: line_array[ 0 ].tr( SEPARATOR, '.' ).to_f }
+    end
   end
 end
