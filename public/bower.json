@@ -11,6 +11,8 @@
     "angular-mocks": "latest",
     "html5-boilerplate": "latest",
     "angularjs-nvd3-directives": "latest",
-      "angular-bootstrap": "latest"
+    "angular-bootstrap": "latest",
+    "bootstrap": "~3.2.0",
+    "angular-moment": "~0.8.0"
   }
 }

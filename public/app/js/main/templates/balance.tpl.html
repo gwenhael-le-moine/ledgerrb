@@ -1,25 +1,70 @@
-<p>Balance</p>
-<nvd3-pie-chart
-   data="balance.expenses"
-   x="xFunction()"
-   y="yFunction()"
-   id="ExpensesPie"
-   width="550"
-   height="350"
-   showLabels="true"
-   tooltips="true">
-  <svg></svg>
-</nvd3-pie-chart>
+<div class="row-fluid">
 
+  <div class="col-md-12 date">
+    <h2>
+      <button type="button" class="btn btn-primary"
+	      data-ng-click="previous_period()">
+	<span class="glyphicon glyphicon-chevron-left"></span>
+      </button>
+      <span>{{now | amDateFormat:'MMMM YYYY'}}</span>
+      <button type="button" class="btn btn-primary"
+	      data-ng-click="next_period()">
+	<span class="glyphicon glyphicon-chevron-right"></span>
+      </button>
+    </h2>
+    <h2 class="balance" data-ng-class="{'positive': balance.expenses_total + balance.income_total < 0, 'negative': balance.expenses_total + balance.income_total > 0}">
+      Balance: {{( balance.expenses_total - balance.income_total * -1 ) * -1 | number:2}} €
+    </h2>
+  </div>
 
-<nvd3-pie-chart
-   data="balance.income"
-   x="xFunction()"
-   y="yFunction()"
-   id="incomePie"
-   width="550"
-   height="350"
-   showLabels="true"
-   tooltips="true">
-  <svg></svg>
-</nvd3-pie-chart>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+	<h3 class="panel-title">Expenses, total = {{balance.expenses_total | number:2}} €</h3>
+      </div>
+      <div class="panel-body">
+	<nvd3-pie-chart
+	   data="balance.expenses"
+	   x="xFunction()"
+	   y="yFunction()"
+	   id="ExpensesPie"
+	   height="550"
+	   color="colorsExpenses()"
+	   tooltips="true"
+	   tooltipcontent="toolTipContentFunction()"
+	   showLabels="true"
+	   labelType="value">
+	  <svg></svg>
+	</nvd3-pie-chart>
+      </div>
+      <div class="panel-footer" data-ng-bind-html="balance.expenses | formatLedgerEntries">
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+	<h3 class="panel-title">Income, total = {{balance.income_total | number:2}} €</h3>
+      </div>
+      <div class="panel-body">
+	<nvd3-pie-chart
+	   data="balance.income"
+	   x="xFunction()"
+	   y="yFunction()"
+	   id="incomePie"
+	   height="550"
+	   color="colorsIncome()"
+	   tooltips="true"
+	   tooltipcontent="toolTipContentFunction()"
+	   showLabels="true"
+	   labelType="value">
+	  <svg></svg>
+	</nvd3-pie-chart>
+      </div>
+      <div class="panel-footer" data-ng-bind-html="balance.income | formatLedgerEntries">
+      </div>
+    </div>
+  </div>
+
+</div>

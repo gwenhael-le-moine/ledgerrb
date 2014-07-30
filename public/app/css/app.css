@@ -27,3 +27,11 @@ body {
 .nav:after {
   clear:both;
 }
+
+
+.date,
+.panel-heading { text-align: center }
+
+.balance{color:#fff}
+.balance.positive{background-color:#0a0}
+.balance.negative{background-color:#a00}
