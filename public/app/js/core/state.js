@@ -1,7 +1,7 @@
 // Application Level State
 app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
 
-  $urlRouterProvider.when('', '/home');
+    $urlRouterProvider.when('', '/balance');
 
 
   $stateProvider
@@ -9,13 +9,13 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
       url: '',
       controller: 'AppCtrl',
       views: {
-        'navbar': {
-          templateUrl: 'js/core/templates/navbar.tpl.html',
-          controller: 'NavbarCtrl'
-        },
-        'main': {
-          templateUrl: 'js/core/templates/main.tpl.html'
-        }
+	'navbar': {
+	  templateUrl: 'js/core/templates/navbar.tpl.html',
+	  controller: 'NavbarCtrl'
+	},
+	'main': {
+	  templateUrl: 'js/core/templates/main.tpl.html'
+	}
       }
     })
     .state('404', {
