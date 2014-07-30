@@ -6,10 +6,11 @@
   "license": "MIT",
   "dependencies": {
     "angular": "latest",
-      "angular-ui-router": "latest",
-      "angular-loader": "latest",
-      "angular-mocks": "latest",
-      "html5-boilerplate": "latest",
-      "angularjs-nvd3-directives": "latest"
+    "angular-ui-router": "latest",
+    "angular-loader": "latest",
+    "angular-mocks": "latest",
+    "html5-boilerplate": "latest",
+    "angularjs-nvd3-directives": "latest",
+      "angular-bootstrap": "latest"
   }
 }

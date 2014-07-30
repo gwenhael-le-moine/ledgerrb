@@ -31,8 +31,8 @@ module Ledger
       .map do |line|
       line_array = line.split
 
-      { date: line_array[ 0 ],
-        amount: line_array[ 1 ].to_f }
+      [ Time.new( line_array[ 0 ] ).to_i,
+        line_array[ 1 ].to_f ]
     end
   end
 
@@ -44,11 +44,11 @@ module Ledger
     register category, "--yearly"
   end
 
-  def balance( cleared=false, depth=nil, period=nil )
-    period = period.nil? ? '' : "-p #{period}"
+  def balance( cleared=false, depth=nil, period=nil, categories='' )
+    period = period.nil? ? '' : "-p '#{period}'"
     depth = depth.nil? ? '' : "--depth #{depth}"
     operation = cleared ? 'cleared' : 'balance'
-    run( "--flat --no-total --exchange '#{CURRENCY}' #{period} #{depth}", operation )
+    run( "--flat --no-total --exchange '#{CURRENCY}' #{period} #{depth}", operation, categories )
       .split( "\n" )
       .map do |line|
       line_array = line.split( "#{CURRENCY}" )

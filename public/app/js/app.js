@@ -1,2 +1,2 @@
 var app = angular.module( 'app', [ 'ui.router',
-				   'legendDirectives' ] );
+				   'nvd3ChartDirectives' ] );
