@@ -1,0 +1,21 @@
+#!/bin/sh
+
+THIN=thin
+THINYML=$(pwd)/config/thin.yml
+
+case $1 in
+    "start")
+	$THIN -C $THINYML start
+	;;
+
+    "stop")
+	$THIN -C $THINYML stop
+	;;
+
+    "restart")
+	$THIN -C $THINYML restart
+	;;
+    *)
+	echo "Usage; start|stop|restart"
+	;;
+esac
