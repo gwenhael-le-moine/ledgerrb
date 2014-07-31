@@ -1,6 +1,8 @@
 # encoding: utf-8
 
-require_relative 'config/options'
+require 'bundler'
+
+require_relative './config/options'
 require_relative './app'
 
 configure :development do
