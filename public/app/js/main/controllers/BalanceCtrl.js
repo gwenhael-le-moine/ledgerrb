@@ -216,7 +216,9 @@ app.controller( 'BalanceCtrl',
 				     + ( $scope.now.month() + 1 )
 				     + '&categories=Expenses' )
 			      .then( function( response ) {
-				  $scope.balance.expenses = response.data;
+				  $scope.balance.expenses = _(response.data).sortBy( function( account ) {
+				      return account.amount;
+				  } );
 				  $scope.balance.expenses_total = _(response.data).reduce( function( memo, account ){ return memo + account.amount; }, 0 );
 			      } );
 			  $http.get( '/api/ledger/balance?period='
@@ -225,7 +227,9 @@ app.controller( 'BalanceCtrl',
 				     + ( $scope.now.month() + 1 )
 				     + '&categories=Income' )
 			      .then( function( response ) {
-				  $scope.balance.income = response.data;
+				  $scope.balance.income = _(response.data).sortBy( function( account ) {
+				      return account.amount;
+				  } );
 				  $scope.balance.income_total = _(response.data).reduce( function( memo, account ){ return memo + account.amount; }, 0 );
 			      } );
 		      };
