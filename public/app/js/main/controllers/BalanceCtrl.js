@@ -217,7 +217,7 @@ app.controller( 'BalanceCtrl',
 				     + '&categories=Expenses' )
 			      .then( function( response ) {
 				  $scope.balance.expenses = _(response.data).sortBy( function( account ) {
-				      return account.amount;
+				      return 1 / account.amount;
 				  } );
 				  $scope.balance.expenses_total = _(response.data).reduce( function( memo, account ){ return memo + account.amount; }, 0 );
 			      } );
@@ -228,7 +228,7 @@ app.controller( 'BalanceCtrl',
 				     + '&categories=Income' )
 			      .then( function( response ) {
 				  $scope.balance.income = _(response.data).sortBy( function( account ) {
-				      return account.amount;
+				      return 1 / account.amount;
 				  } );
 				  $scope.balance.income_total = _(response.data).reduce( function( memo, account ){ return memo + account.amount; }, 0 );
 			      } );
