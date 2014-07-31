@@ -5,7 +5,7 @@ module Ledger
   module_function
 
   @binary = 'ledger'
-  @file = '~/org/comptes.ledger'
+  @file = ENV[ 'LEDGER_FILE' ]
 
   def run( options, command = '', command_parameters = '' )
     `#{@binary} -f #{@file} #{options} #{command} #{command_parameters}`
