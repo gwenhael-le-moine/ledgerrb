@@ -11,7 +11,7 @@ configure :development do
 end
 
 use Rack::Rewrite do
-  rewrite %r{^/(.*(css|js|ttf|woff|html|png|jpg|jpeg|gif)$)}, '/app/$1'
+  rewrite %r{^/(.*(css|js|ttf|woff|html|png|jpg|jpeg|gif|ico)$)}, '/app/$1'
 end
 
 run LedgerRbApp
