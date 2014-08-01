@@ -23,7 +23,19 @@ app.controller( 'BalanceCtrl',
 		      };
 		      $scope.toolTipContentFunction = function() {
 			  return function( key, x, y, e, graph ) {
-			      return $filter( 'json' )( $scope.balance.details[ key ] );
+			      //return $filter( 'json' )( $scope.balance.details[ key ] );
+			      var details = $scope.balance.details[ key ];
+			      return '<h3>' + details.key + '</h3>'
+				  + '<table><tr><th>Date</th><th>Payee</th><th>Amount</th></tr>'
+				  + _(details.values).map( function( transaction ) {
+				      return '<tr><td>'
+					  + transaction.date + '</td><td>'
+					  + transaction.payee + '</td><td style="text-align: right">'
+					  + transaction.amount + ' '
+					  + transaction.currency + '</td></tr>';
+				  }).join( '' )
+				  + '</table>';
+
 			  };
 		      };
 
