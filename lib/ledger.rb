@@ -37,7 +37,7 @@ module Ledger
         payee: row[ 2 ],
         account: row[ 3 ],
         amount: row[ 5 ],
-        currentcy: row[ 4 ] }
+        currency: row[ 4 ] }
     end
   end
 
