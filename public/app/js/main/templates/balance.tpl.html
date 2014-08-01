@@ -12,8 +12,8 @@
 	<span class="glyphicon glyphicon-chevron-right"></span>
       </button>
     </h2>
-    <h2 class="balance" data-ng-class="{'positive': balance.expenses_total + balance.income_total < 0, 'negative': balance.expenses_total + balance.income_total > 0}">
-      Balance: {{( balance.expenses_total - balance.income_total * -1 ) * -1 | number:2}} €
+    <h2 class="balance" data-ng-class="{'negative': balance.income_total - balance.expenses_total < 0, 'positive': balance.income_total - balance.expenses_total > 0}">
+    Balance: {{( balance.income_total - balance.expenses_total ) | number:2}} €
     </h2>
   </div>
 
