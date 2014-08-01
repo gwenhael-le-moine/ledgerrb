@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+require 'csv'
+
 # Ruby wrapper module for calling ledger
 module Ledger
   module_function
@@ -25,26 +27,21 @@ module Ledger
     end.uniq
   end
 
-  def register( category, options='' )
-    run( "#{options} --collapse --amount-data --exchange '#{CURRENCY}'", 'register', "#{category}" )
-      .split( "\n" )
-      .map do |line|
-      line_array = line.split
+  def register( period = nil, categories = '' )
+    period = period.nil? ? '' : "-p '#{period}'"
 
-      [ Time.new( line_array[ 0 ] ).to_i,
-        line_array[ 1 ].to_f ]
+    CSV.parse( run( "--exchange '#{CURRENCY}' #{period}", 'csv', categories ) )
+       .map do
+      |row|
+      { date: row[ 0 ],
+        payee: row[ 2 ],
+        account: row[ 3 ],
+        amount: row[ 5 ],
+        currentcy: row[ 4 ] }
     end
   end
 
-  def monthly_register( category )
-    register category, "--monthly"
-  end
-
-  def yearly_register( category )
-    register category, "--yearly"
-  end
-
-  def balance( cleared=false, depth=nil, period=nil, categories='' )
+  def balance( cleared = false, depth = nil, period = nil, categories = '' )
     period = period.nil? ? '' : "-p '#{period}'"
     depth = depth.nil? ? '' : "--depth #{depth}"
     operation = cleared ? 'cleared' : 'balance'
