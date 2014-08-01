@@ -1,3 +1,4 @@
 var app = angular.module( 'app', [ 'ui.router',
 				   'nvd3ChartDirectives',
-				   'angularMoment' ] );
+				   'angularMoment',
+				   'chieffancypants.loadingBar' ] );
