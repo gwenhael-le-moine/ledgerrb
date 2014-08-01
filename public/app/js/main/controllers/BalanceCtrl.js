@@ -23,7 +23,6 @@ app.controller( 'BalanceCtrl',
 		      };
 		      $scope.toolTipContentFunction = function() {
 			  return function( key, x, y, e, graph ) {
-			      //return $filter( 'json' )( $scope.balance.details[ key ] );
 			      var details = $scope.balance.details[ key ];
 			      return '<h3>' + details.key + '</h3>'
 				  + '<table><tr><th>Date</th><th>Payee</th><th>Amount</th></tr>'
@@ -35,7 +34,6 @@ app.controller( 'BalanceCtrl',
 					  + transaction.currency + '</td></tr>';
 				  }).join( '' )
 				  + '</table>';
-
 			  };
 		      };
 
