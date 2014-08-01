@@ -25,14 +25,15 @@ app.controller( 'BalanceCtrl',
 			  return function( key, x, y, e, graph ) {
 			      var details = $scope.balance.details[ key ];
 			      return '<h3>' + details.key + '</h3>'
-				  + '<table><tr><th>Date</th><th>Payee</th><th>Amount</th></tr>'
+				  + '<table>'
 				  + _(details.values).map( function( transaction ) {
 				      return '<tr><td>'
 					  + transaction.date + '</td><td>'
 					  + transaction.payee + '</td><td style="text-align: right">'
-					  + transaction.amount + ' '
+					  + $filter( 'number' )( transaction.amount, 2 ) + ' '
 					  + transaction.currency + '</td></tr>';
 				  }).join( '' )
+				  + '<tr><th></th><th>Total :</th><th>' + x + ' €</th></tr>'
 				  + '</table>';
 			  };
 		      };
