@@ -15,6 +15,7 @@
     "bootstrap": "latest",
     "angular-moment": "latest",
     "angular-loading-bar": "latest",
-      "ng-table": "latest"
+    "ng-table": "latest",
+      "angular-i18n": "latest"
   }
 }
