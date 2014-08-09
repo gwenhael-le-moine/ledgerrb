@@ -24,7 +24,6 @@
     "commit": "4cc49a7df36e367457d0fdfbd44148848eeb8466"
   },
   "_source": "git://github.com/chieffancypants/angular-loading-bar.git",
-  "_target": "~0.5.0",
-  "_originalSource": "angular-loading-bar",
-  "_direct": true
+  "_target": "*",
+  "_originalSource": "angular-loading-bar"
 }

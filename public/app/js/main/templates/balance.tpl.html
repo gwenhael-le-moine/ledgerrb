@@ -13,7 +13,7 @@
       </button>
     </h2>
     <h2 class="balance" data-ng-class="{'negative': balance.income_total - balance.expenses_total < 0, 'positive': balance.income_total - balance.expenses_total > 0}">
-    Balance: {{( balance.income_total - balance.expenses_total ) | number:2}} €
+      Balance: {{( balance.income_total - balance.expenses_total ) | number:2}} €
     </h2>
   </div>
 
@@ -38,7 +38,13 @@
 	  <svg></svg>
 	</nvd3-pie-chart>
       </div>
-      <div class="panel-footer" data-ng-bind-html="balance.expenses | formatLedgerEntries">
+      <div class="panel-footer">
+	<table ng-table="tableParams" class="table">
+	  <tr ng-repeat="account in balance.expenses">
+	    <td data-title="'Account'">{{account.account}}</td>
+	    <td data-title="'Amount'">{{account.amount}} €</td>
+	  </tr>
+	</table>
       </div>
     </div>
   </div>
@@ -64,7 +70,13 @@
 	  <svg></svg>
 	</nvd3-pie-chart>
       </div>
-      <div class="panel-footer" data-ng-bind-html="balance.income | formatLedgerEntries">
+      <div class="panel-footer">
+	<table ng-table="tableParams" class="table">
+	  <tr ng-repeat="account in balance.income">
+	    <td data-title="'Account'">{{account.account}}</td>
+	    <td data-title="'Amount'">{{account.amount}} €</td>
+	  </tr>
+	</table>
       </div>
     </div>
   </div>

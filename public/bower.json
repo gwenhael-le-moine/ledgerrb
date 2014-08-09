@@ -12,8 +12,9 @@
     "html5-boilerplate": "latest",
     "angularjs-nvd3-directives": "latest",
     "angular-bootstrap": "latest",
-      "bootstrap": "latest",
-      "angular-moment": "latest",
-      "angular-loading-bar": "latest"
+    "bootstrap": "latest",
+    "angular-moment": "latest",
+    "angular-loading-bar": "latest",
+      "ng-table": "latest"
   }
 }
