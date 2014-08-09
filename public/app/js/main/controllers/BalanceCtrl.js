@@ -1,6 +1,6 @@
 app.controller( 'BalanceCtrl',
-		[ '$scope', '$http', '$filter',
-		  function( $scope, $http, $filter ) {
+		[ '$scope', '$http', '$filter', 'ngTableParams',
+		  function( $scope, $http, $filter, ngTableParams ) {
 		      $scope.now = moment();
 		      $scope.previous_period = function() {
 			  $scope.now.subtract( 'months', 1 );
@@ -61,6 +61,15 @@ app.controller( 'BalanceCtrl',
 			      }
 			  };
 		      };
+
+		      $scope.tableParams = new ngTableParams( { page: 1,   // show first page
+								count: 999  // count per page
+							      },
+							      { counts: [], // hide page counts control
+								total: 1,  // value less than count hide pagination
+								getData: function($defer, params) {
+								    $defer.resolve(data.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+								} } );
 
 		      var retrieve_data = function() {
 			  $scope.balance = { expenses: [],

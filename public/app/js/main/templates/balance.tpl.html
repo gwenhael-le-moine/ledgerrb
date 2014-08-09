@@ -39,10 +39,10 @@
 	</nvd3-pie-chart>
       </div>
       <div class="panel-footer">
-	<table ng-table="tableParams" class="table">
-	  <tr ng-repeat="account in balance.expenses">
+	<table data-ng-table="tableParams" class="table">
+	  <tr data-ng-repeat="account in balance.expenses">
 	    <td data-title="'Account'">{{account.account}}</td>
-	    <td data-title="'Amount'">{{account.amount}} €</td>
+	    <td data-title="'Amount'">{{account.amount | number:2}} €</td>
 	  </tr>
 	</table>
       </div>
@@ -71,10 +71,10 @@
 	</nvd3-pie-chart>
       </div>
       <div class="panel-footer">
-	<table ng-table="tableParams" class="table">
-	  <tr ng-repeat="account in balance.income">
+	<table data-ng-table="tableParams" class="table">
+	  <tr data-ng-repeat="account in balance.income">
 	    <td data-title="'Account'">{{account.account}}</td>
-	    <td data-title="'Amount'">{{account.amount}} €</td>
+	    <td data-title="'Amount'">{{account.amount | number:2}} €</td>
 	  </tr>
 	</table>
       </div>
