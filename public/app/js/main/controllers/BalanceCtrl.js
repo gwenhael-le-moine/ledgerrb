@@ -40,9 +40,9 @@ app.controller( 'BalanceCtrl',
 
 		      // compute an account's score: from 1 (good) to 10 (bad), 0 is neutral/undecided
 		      $scope.score_account = function( account ) {
-			  if ( account.match( /^Income:salaire$/ ) ) {
+			  if ( account.match( /^Income:(salaire|Sécu|Mutuelle)$/ ) ) {
 			      return 1;
-			  } else if ( account.match( /^Income:Gift$/ ) ) {
+			  } else if ( account.match( /^Income:(Gift|Remboursement)$/ ) ) {
 			      return 6;
 			  } else if ( account.match( /^Expenses:(courses|Hang)$/ ) ) {
 			      return 1;
