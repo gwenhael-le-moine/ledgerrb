@@ -38,26 +38,64 @@ app.controller( 'BalanceCtrl',
 			  };
 		      };
 
+		      // compute an account's score: from 0 (good) to 9 (bad)
+		      var score_account = function( account ) {
+			  if ( account.match( /^Income:salaire$/ ) ) {
+			      return 0;
+			  } else if ( account.match( /^Income:Gift$/ ) ) {
+			      return 5;
+			  } else if ( account.match( /^Expenses:(courses|Hang)$/ ) ) {
+			      return 0;
+			  } else if ( account.match( /^Expenses:Home/ ) ) {
+			      return 0;
+			  } else if ( account.match( /^Expenses:Health/ ) ) {
+			      return 0;
+			  } else if ( account.match( /^Expenses:Car/ ) ) {
+			      return 3;
+			  } else if ( account.match( /^Expenses:(Food|Transport)/ ) ) {
+			      return 6;
+			  } else if ( account.match( /^Expenses:(Shopping|Gadgets|Entertainement)/ ) ) {
+			      return 8;
+			  } else {
+			      return 5;
+			  }
+		      };
 		      $scope.color = function() {
 			  return function( d, i ) {
-			      if ( d.data.account.match( /^Income:salaire$/ ) ) {
+			      var score = score_account( d.data.account );
+			      switch( score ) {
+			      case 0:
 				  return '#0f0';
-			      } else if ( d.data.account.match( /^Income:Gift$/ ) ) {
-				  return '#ef0';
-			      } else if ( d.data.account.match( /^Expenses:Home/ ) ) {
-				  return '#00f';
-			      } else if ( d.data.account.match( /^Expenses:Health/ ) ) {
-				  return '#0cf';
-			      } else if ( d.data.account.match( /^Expenses:(courses|Hang)$/ ) ) {
-				  return '#0b6';
-			      } else if ( d.data.account.match( /^Expenses:Car/ ) ) {
-				  return '#111';
-			      } else if ( d.data.account.match( /^Expenses:(Food|Transport)/ ) ) {
-				  return '#b60';
-			      } else if ( d.data.account.match( /^Expenses:(Shopping|Gadgets|Entertainement)/ ) ) {
+				  break;
+			      case 1:
+				  return '#3f0';
+				  break;
+			      case 2:
+				  return '#6f0';
+				  break;
+			      case 3:
+				  return '#9f0';
+				  break;
+			      case 4:
+				  return '#cf0';
+				  break;
+			      case 5:
+				  return '#fc0';
+				  break;
+			      case 6:
+				  return '#f90';
+				  break;
+			      case 7:
+				  return '#f60';
+				  break;
+			      case 8:
+				  return '#f30';
+				  break;
+			      case 9:
 				  return '#f00';
-			      } else {
-				  return '#ddd';
+				  break;
+			      default:
+				  return '#fff';
 			      }
 			  };
 		      };
