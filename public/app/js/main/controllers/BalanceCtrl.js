@@ -39,7 +39,7 @@ app.controller( 'BalanceCtrl',
 		      };
 
 		      // compute an account's score: from 1 (good) to 10 (bad), 0 is neutral/undecided
-		      var score_account = function( account ) {
+		      $scope.score_account = function( account ) {
 			  if ( account.match( /^Income:salaire$/ ) ) {
 			      return 1;
 			  } else if ( account.match( /^Income:Gift$/ ) ) {
@@ -63,7 +63,7 @@ app.controller( 'BalanceCtrl',
 			  }
 		      };
 
-		      var coloring_score = function( score ) {
+		      $scope.coloring_score = function( score ) {
 			  var color_scale = [ '#99f',
 					      '#0f0',
 					      '#3f0',
@@ -80,7 +80,7 @@ app.controller( 'BalanceCtrl',
 
 		      $scope.color = function() {
 			  return function( d, i ) {
-			      return coloring_score( score_account( d.data.account ) );
+			      return $scope.coloring_score( $scope.score_account( d.data.account ) );
 			  };
 		      };
 
