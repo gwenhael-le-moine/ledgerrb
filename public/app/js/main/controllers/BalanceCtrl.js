@@ -38,65 +38,49 @@ app.controller( 'BalanceCtrl',
 			  };
 		      };
 
-		      // compute an account's score: from 0 (good) to 9 (bad)
+		      // compute an account's score: from 1 (good) to 10 (bad), 0 is neutral/undecided
 		      var score_account = function( account ) {
 			  if ( account.match( /^Income:salaire$/ ) ) {
-			      return 0;
+			      return 1;
 			  } else if ( account.match( /^Income:Gift$/ ) ) {
-			      return 5;
+			      return 6;
 			  } else if ( account.match( /^Expenses:(courses|Hang)$/ ) ) {
-			      return 0;
+			      return 1;
 			  } else if ( account.match( /^Expenses:Home/ ) ) {
-			      return 0;
+			      return 1;
 			  } else if ( account.match( /^Expenses:Health/ ) ) {
-			      return 0;
+			      return 1;
 			  } else if ( account.match( /^Expenses:Car/ ) ) {
-			      return 3;
+			      return 4;
 			  } else if ( account.match( /^Expenses:(Food|Transport)/ ) ) {
 			      return 6;
-			  } else if ( account.match( /^Expenses:(Shopping|Gadgets|Entertainement)/ ) ) {
-			      return 8;
+			  } else if ( account.match( /^Expenses:(Shopping|Entertainement)/ ) ) {
+			      return 9;
+			  } else if ( account.match( /^Expenses:Gadgets/ ) ) {
+			      return 10;
 			  } else {
-			      return 5;
+			      return 0;
 			  }
 		      };
+
+		      var coloring_score = function( score ) {
+			  var color_scale = [ '#99f',
+					      '#0f0',
+					      '#3f0',
+					      '#6f0',
+					      '#9f0',
+					      '#cf0',
+					      '#fc0',
+					      '#f90',
+					      '#f60',
+					      '#f30',
+					      '#f00' ];
+			  return color_scale[ score ];
+		      };
+
 		      $scope.color = function() {
 			  return function( d, i ) {
-			      var score = score_account( d.data.account );
-			      switch( score ) {
-			      case 0:
-				  return '#0f0';
-				  break;
-			      case 1:
-				  return '#3f0';
-				  break;
-			      case 2:
-				  return '#6f0';
-				  break;
-			      case 3:
-				  return '#9f0';
-				  break;
-			      case 4:
-				  return '#cf0';
-				  break;
-			      case 5:
-				  return '#fc0';
-				  break;
-			      case 6:
-				  return '#f90';
-				  break;
-			      case 7:
-				  return '#f60';
-				  break;
-			      case 8:
-				  return '#f30';
-				  break;
-			      case 9:
-				  return '#f00';
-				  break;
-			      default:
-				  return '#fff';
-			      }
+			      return coloring_score( score_account( d.data.account ) );
 			  };
 		      };
 
