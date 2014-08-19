@@ -104,10 +104,11 @@ app.controller( 'BalanceCtrl',
 								count: 999  // count per page
 							      },
 							      { counts: [], // hide page counts control
-								total: 1,  // value less than count hide pagination
-								getData: function($defer, params) {
-								    $defer.resolve(data.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-								} } );
+								total: 1//,  // value less than count hide pagination
+								// getData: function($defer, params) {
+								//     $defer.resolve(data.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+								// }
+							      } );
 
 		      var retrieve_data = function() {
 			  $scope.balance = { expenses: [],
