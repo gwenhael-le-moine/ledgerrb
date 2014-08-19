@@ -35,3 +35,6 @@ body {
 .balance{color:#fff}
 .balance.positive{background-color:#0a0}
 .balance.negative{background-color:#a00}
+
+.even{background-color:#ddd}
+.odd{background-color:#eee}

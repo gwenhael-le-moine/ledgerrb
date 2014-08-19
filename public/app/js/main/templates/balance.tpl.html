@@ -41,9 +41,16 @@
       <div class="panel-footer">
 	<table data-ng-table="tableParams" class="table">
 	  <tr data-ng-repeat="account in balance.expenses"
-	      style="border-left:10px solid {{coloring_score( score_account( account.account ) )}}">
-	    <td data-title="'Account'">{{account.account}}</td>
-	    <td data-title="'Amount'">{{account.amount | number:2}} €</td>
+	      data-ng-class="{'even': $even, 'odd': $odd}"
+	      style="border-left:10px solid {{coloring_score( score_account( account.account ) )}};border-right:10px solid {{coloring_score( score_account( account.account ) )}}">
+	    <td data-title="'Account'"
+		style="border-bottom:1px solid {{coloring_score( score_account( account.account ) )}}">
+	      {{account.account}}
+	    </td>
+	    <td data-title="'Amount'"
+		style="text-align:right;border-bottom:1px solid {{coloring_score( score_account( account.account ) )}}">
+	      {{account.amount | number:2}} €
+	    </td>
 	  </tr>
 	</table>
       </div>
@@ -74,9 +81,16 @@
       <div class="panel-footer">
 	<table data-ng-table="tableParams" class="table">
 	  <tr data-ng-repeat="account in balance.income"
-	      style="border-left:10px solid {{coloring_score( score_account( account.account ) )}}">
-	    <td data-title="'Account'">{{account.account}}</td>
-	    <td data-title="'Amount'">{{account.amount | number:2}} €</td>
+	      data-ng-class="{'even': $even, 'odd': $odd}"
+	      style="border-left:10px solid {{coloring_score( score_account( account.account ) )}};border-right:10px solid {{coloring_score( score_account( account.account ) )}}">
+	    <td data-title="'Account'"
+		style="border-bottom:1px solid {{coloring_score( score_account( account.account ) )}}">
+	      {{account.account}}
+	    </td>
+	    <td data-title="'Amount'"
+		style="text-align:right;border-bottom:1px solid {{coloring_score( score_account( account.account ) )}}">
+	      {{account.amount | number:2}} €
+	    </td>
 	  </tr>
 	</table>
       </div>
