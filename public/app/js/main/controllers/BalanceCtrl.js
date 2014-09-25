@@ -54,17 +54,7 @@ app.controller( 'BalanceCtrl',
 		      };
 
 		      $scope.coloring_score = function( score ) {
-			  var color_scale = [ '#99f',
-					      '#0f0',
-					      '#3f0',
-					      '#6f0',
-					      '#9f0',
-					      '#cf0',
-					      '#fc0',
-					      '#f90',
-					      '#f60',
-					      '#f30',
-					      '#f00' ];
+			  var color_scale = [ '#99f', '#0f0', '#3f0', '#6f0', '#9f0', '#cf0', '#fc0', '#f90', '#f60', '#f30', '#f00' ];
 			  return color_scale[ score ];
 		      };
 
