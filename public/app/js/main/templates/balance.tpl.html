@@ -2,15 +2,15 @@
 
   <div class="col-md-12 date">
     <h2>
-      <button type="button" class="btn btn-primary"
-	      data-ng-click="previous_period()">
-	<span class="glyphicon glyphicon-chevron-left"></span>
-      </button>
-      <span>{{now | amDateFormat:'MMMM YYYY'}}</span>
-      <button type="button" class="btn btn-primary"
-	      data-ng-click="next_period()">
-	<span class="glyphicon glyphicon-chevron-right"></span>
-      </button>
+      From {{from_date | date:'longDate'}} to {{to_date | date:'longDate'}}
+
+      <div class="pull-right">
+	<button class="btn btn-default" data-ng-click="reset_offset()">Aujourd'hui</button>
+	<div class="btn-group">
+	  <button class="btn btn-default" data-ng-click="incr_offset()"><span class="glyphicon glyphicon-chevron-left"></span></button>
+	  <button class="btn btn-default" data-ng-click="decr_offset()"><span class="glyphicon glyphicon-chevron-right"></span></button>
+	</div>
+      </div>
     </h2>
     <h2 class="balance" data-ng-class="{'negative': balance.income_total - balance.expenses_total < 0, 'positive': balance.income_total - balance.expenses_total > 0}">
       Balance: {{( balance.income_total - balance.expenses_total ) | number:2}} €

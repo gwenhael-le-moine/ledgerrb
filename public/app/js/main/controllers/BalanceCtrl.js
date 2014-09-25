@@ -1,16 +1,6 @@
 app.controller( 'BalanceCtrl',
 		[ '$scope', '$http', '$filter', 'ngTableParams',
 		  function( $scope, $http, $filter, ngTableParams ) {
-		      $scope.now = moment();
-		      $scope.previous_period = function() {
-			  $scope.now.subtract( 'months', 1 );
-			  retrieve_data();
-		      };
-		      $scope.next_period = function() {
-			  $scope.now.add( 'months', 1 );
-			  retrieve_data();
-		      };
-
 		      $scope.xFunction = function() {
 			  return function( d ) {
 			      return d.account;
@@ -94,39 +84,49 @@ app.controller( 'BalanceCtrl',
 								// }
 							      } );
 
+		      $scope.month_offset = 0;
+
+		      // retrieve_data() when the value of week_offset changes
+		      // n.b.: triggered when week_offset is initialized above
+		      $scope.$watch( 'month_offset', function() { retrieve_data(); } );
+
+		      $scope.incr_offset = function() { $scope.month_offset++; };
+		      $scope.decr_offset = function() { $scope.month_offset--; };
+		      $scope.reset_offset = function() { $scope.month_offset = 0; };
+
 		      var retrieve_data = function() {
+			  $scope.from_date = moment().subtract( $scope.month_offset, 'months' ).startOf( 'month' ).toDate();
+			  $scope.to_date = moment().subtract( $scope.month_offset, 'months' ).endOf( 'month' ).toDate();
+			  var from = moment( $scope.from_date );
+			  var to = moment( $scope.to_date );
+			  var period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date() + ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
+
 			  $scope.balance = { expenses: [],
 					     income: [],
 					     details: {} };
 
-			  $http.get( '/api/ledger/balance?period='
-				     + $scope.now.year()
-				     + '-'
-				     + ( $scope.now.month() + 1 )
-				     + '&categories=Expenses' )
+			  $http.get( '/api/ledger/balance',
+				     { params: { period: period,
+						 categories: 'Expenses' } } )
 			      .then( function( response ) {
 				  $scope.balance.expenses = _(response.data).sortBy( function( account ) {
 				      return 1 / account.amount;
 				  } );
 				  _($scope.balance.expenses).each(
 				      function( account ) {
-					  $http.get( '/api/ledger/register?period='
-						     + $scope.now.year()
-						     + '-'
-						     + ( $scope.now.month() + 1 )
-						     + '&category='
-						     + account.account )
+					  $http.get( '/api/ledger/register',
+						     { params: { period: period,
+								 category: account.account } } )
 					      .then( function( response ) {
 						  $scope.balance.details[ account.account ] = response.data;
 					      } );
 				      } );
 				  $scope.balance.expenses_total = _(response.data).reduce( function( memo, account ){ return memo + account.amount; }, 0 );
 			      } );
-			  $http.get( '/api/ledger/balance?period='
-				     + $scope.now.year()
-				     + '-'
-				     + ( $scope.now.month() + 1 )
-				     + '&categories=Income' )
+			  $http.get( '/api/ledger/balance',
+				     { params: { period: period,
+						 categories: 'Income' } } )
+
 			      .then( function( response ) {
 				  $scope.balance.income = _(response.data)
 				      .map( function( account ) {
@@ -139,12 +139,9 @@ app.controller( 'BalanceCtrl',
 				      } );
 				  _($scope.balance.income)
 				      .each( function( account ) {
-					  $http.get( '/api/ledger/register?period='
-						     + $scope.now.year()
-						     + '-'
-						     + ( $scope.now.month() + 1 )
-						     + '&category='
-						     + account.account )
+					  $http.get( '/api/ledger/register',
+						     { params: { period: period,
+								 category: account.account } } )
 					      .then( function( response ) {
 						  $scope.balance.details[ account.account ] = response.data;
 					      } );
@@ -154,5 +151,5 @@ app.controller( 'BalanceCtrl',
 			      } );
 		      };
 
-		      retrieve_data();
+			  //retrieve_data();
 		  }]);
