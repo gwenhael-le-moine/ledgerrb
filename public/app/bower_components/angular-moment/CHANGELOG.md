@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.2 - 2014-09-07
+- `amMoment.changeLanguage()` was deprecated in favor of `amMoment.changeLocale()` (following [a change](http://momentjs.com/docs/#/i18n/changing-locale/) introduced in moment v2.8.1)
+- Bugfix: changing the locale emitted a deprecation warning (see [#76](https://github.com/urish/angular-moment/issues/76) for details).
+
+## 0.8.1 - 2014-09-01
+- Support moment.js v2.8.0. See [here](https://gist.github.com/ichernev/ac3899324a5fa6c8c9b4) for changelog.
+- Support moment-timezone v0.2.1. See [here](https://github.com/moment/moment-timezone/blob/develop/changelog.md#021-2014-08-02) for changelog.
+- Bugfix: `updateTime()` is called too often for future dates ([#73](https://github.com/urish/angular-moment/issues/73)) 
+
 ## 0.8.0 - 2014-07-26
 - Generate source map for the minified version ([#50](https://github.com/urish/angular-moment/issues/50))
 - Add support HTML `<time>` element - set the `datetime` attribute ([#41](https://github.com/urish/angular-moment/pull/41), contributed by [gsklee](https://github.com/gsklee))

@@ -2,7 +2,7 @@
  * Copyright (C) 2013, 2014, Uri Shaked.
  */
 
-/* global describe, inject, module, beforeEach, afterEach, it, expect, spyOn */
+/* global describe, inject, module, beforeEach, afterEach, it, expect, spyOn, jasmine */
 
 'use strict';
 
@@ -24,8 +24,8 @@ describe('module angularMoment', function () {
 		originalTimeAgoConfig = angular.copy(amTimeAgoConfig);
 		originalAngularMomentConfig = angular.copy(angularMomentConfig);
 
-		// Ensure the language of moment.js is set to english by default
-		moment.lang('en');
+		// Ensure the locale of moment.js is set to en by default
+		(moment.locale || moment.lang)('en');
 		// Add a sample timezone for tests
 		moment.tz.add('Pacific/Tahiti|LMT TAHT|9W.g a0|01|-2joe1.I');
 	}));
@@ -34,6 +34,7 @@ describe('module angularMoment', function () {
 		// Restore original configuration after each test
 		angular.copy(originalTimeAgoConfig, amTimeAgoConfig);
 		angular.copy(originalAngularMomentConfig, angularMomentConfig);
+		jasmine.clock().uninstall();
 	});
 
 
@@ -117,6 +118,16 @@ describe('module angularMoment', function () {
 				expect(element.text()).toBe('a minute ago');
 				done();
 			}, 50);
+		});
+
+		it('should schedule the update timer to one hour ahead for date in the far future (#73)', function () {
+			$rootScope.testDate = new Date(new Date().getTime() + 86400000);
+			jasmine.clock().install();
+			spyOn($window, 'setTimeout');
+			var element = angular.element('<div am-time-ago="testDate"></div>');
+			element = $compile(element)($rootScope);
+			$rootScope.$digest();
+			expect($window.setTimeout).toHaveBeenCalledWith(jasmine.any(Function), 3600000);
 		});
 
 		describe('bindonce', function () {
@@ -223,13 +234,13 @@ describe('module angularMoment', function () {
 			expect(element.text()).toBe('a few seconds');
 		});
 
-		it('should generate update the text following a language change via amMoment.changeLanguage() method', function () {
+		it('should generate update the text following a locale change via amMoment.changeLocale() method', function () {
 			$rootScope.testDate = new Date();
 			var element = angular.element('<span am-time-ago="testDate"></span>');
 			element = $compile(element)($rootScope);
 			$rootScope.$digest();
 			expect(element.text()).toBe('a few seconds ago');
-			amMoment.changeLanguage('fr');
+			amMoment.changeLocale('fr');
 			expect(element.text()).toBe('il y a quelques secondes');
 		});
 
@@ -465,28 +476,36 @@ describe('module angularMoment', function () {
 	});
 
 	describe('amMoment service', function () {
-		describe('#changeLanguage', function () {
-			it('should return the current language', function () {
-				expect(amMoment.changeLanguage()).toBe('en');
+		describe('#changeLocale', function () {
+			it('should return the current locale', function () {
+				expect(amMoment.changeLocale()).toBe('en');
 			});
 
-			it('should broadcast an angularMoment:languageChange event on the root scope if a language is specified', function () {
+			it('should broadcast an angularMoment:localeChanged event on the root scope if a locale is specified', function () {
 				var eventBroadcasted = false;
-				$rootScope.$on('amMoment:languageChange', function () {
+				$rootScope.$on('amMoment:localeChanged', function () {
 					eventBroadcasted = true;
 				});
-				amMoment.changeLanguage('fr');
+				amMoment.changeLocale('fr');
 				expect(eventBroadcasted).toBe(true);
 			});
 
-			it('should not broadcast an angularMoment:languageChange event on the root scope if no language is specified', function () {
+			it('should not broadcast an angularMoment:localeChanged event on the root scope if no locale is specified', function () {
 				var eventBroadcasted = false;
-				$rootScope.$on('amMoment:languageChange', function () {
+				$rootScope.$on('amMoment:localeChanged', function () {
 					eventBroadcasted = true;
 				});
-				amMoment.changeLanguage();
+				amMoment.changeLocale();
 				expect(eventBroadcasted).toBe(false);
 			});
+		});
+
+		describe('#changeLanguage', function () {
+			it('should issue a warning about changeLanguage() deprecation', inject(function ($log) {
+				spyOn($log, 'warn');
+				amMoment.changeLanguage('fr');
+				expect($log.warn).toHaveBeenCalledWith('angular-moment: Usage of amMoment.changeLanguage() is deprecated. Please use changeLocale()');
+			}));
 		});
 
 		describe('#preprocessDate', function () {

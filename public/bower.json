@@ -1,21 +1,27 @@
 {
-  "name": "angular-ui-seed",
-  "description": "A starter project for AngularJS",
-  "version": "0.0.2",
-  "homepage": "https://github.com/dokko1230/angular-ui-seed",
-  "license": "MIT",
-  "dependencies": {
-    "angular": "latest",
-    "angular-ui-router": "latest",
-    "angular-loader": "latest",
-    "angular-mocks": "latest",
-    "html5-boilerplate": "latest",
-    "angularjs-nvd3-directives": "latest",
-    "angular-bootstrap": "latest",
-    "bootstrap": "latest",
-    "angular-moment": "latest",
-    "angular-loading-bar": "latest",
-    "ng-table": "latest",
-      "angular-i18n": "latest"
-  }
+    "name": "ledgerrb",
+    "description": "UI for ledgerrb",
+    "version": "0.0.2",
+    "homepage": "https://github.com/cycojesus/ledgerrb",
+    "license": "MIT",
+    "dependencies": {
+	"angular": "latest",
+	"angular-bootstrap": "latest",
+	"angular-i18n": "latest",
+	"angular-loader": "latest",
+	"angular-loading-bar": "latest",
+	"angular-material": "~0.0.3",
+	"angular-mocks": "latest",
+	"angular-moment": "latest",
+	"angular-ui-router": "latest",
+	"angularjs-nvd3-directives": "latest",
+	"bootstrap": "latest",
+	"html5-boilerplate": "latest",
+	"ng-table": "latest",
+	"underscore": "latest"
+    },
+    "resolutions": {
+	"angular": "^1.3.0-beta.18",
+	"d3": "~3.4.1"
+    }
 }
