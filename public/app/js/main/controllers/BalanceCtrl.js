@@ -74,23 +74,18 @@ app.controller( 'BalanceCtrl',
 								// }
 							      } );
 
-		      $scope.month_offset = 0;
-
-		      // retrieve_data() when the value of week_offset changes
-		      // n.b.: triggered when week_offset is initialized above
-		      $scope.$watch( 'month_offset', function() { retrieve_data(); } );
-
-		      $scope.incr_offset = function() { $scope.month_offset++; };
-		      $scope.decr_offset = function() { $scope.month_offset--; };
-		      $scope.reset_offset = function() { $scope.month_offset = 0; };
-
 		      var retrieve_data = function() {
-			  $scope.from_date = moment().subtract( $scope.month_offset, 'months' ).startOf( 'month' ).toDate();
-			  $scope.to_date = moment().subtract( $scope.month_offset, 'months' ).endOf( 'month' ).toDate();
+			  // $scope.from_date = moment().subtract( $scope.period_offset, 'months' ).startOf( 'month' ).toDate();
+			  // $scope.to_date = moment().subtract( $scope.period_offset, 'months' ).endOf( 'month' ).toDate();
+			  $scope.from_date = new Date( $scope.dates_salaries[ $scope.period_offset ] );
+			  $scope.to_date = ( $scope.period_offset < $scope.dates_salaries.length - 1 ) ? new Date( $scope.dates_salaries[ $scope.period_offset + 1 ] ) : null;
 			  var from = moment( $scope.from_date );
-			  var to = moment( $scope.to_date );
-			  var period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date() + ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
-
+			  var period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date();
+			  if ( !_($scope.to_date).isNull() ) {
+			      var to = moment( $scope.to_date );
+			      period = period + ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
+			  }
+			  console.log(period)
 			  $scope.balance = { expenses: [],
 					     income: [],
 					     details: {} };
@@ -141,5 +136,21 @@ app.controller( 'BalanceCtrl',
 			      } );
 		      };
 
-			  //retrieve_data();
-		  }]);
+		      $scope.dates_salaries = [];
+		      $scope.period_offset = 0;
+		      $scope.after = function() { if ( $scope.period_offset < $scope.dates_salaries.length - 1 ) { $scope.period_offset++; } };
+		      $scope.before = function() { if ( $scope.period_offset > 0 ) { $scope.period_offset--; } };
+		      $scope.reset_offset = function() { $scope.period_offset = $scope.dates_salaries.length - 1; };
+
+		      $http.get( '/api/ledger/dates_salaries' )
+			  .then( function( response ) {
+			      $scope.dates_salaries = response.data;
+
+			      $scope.reset_offset();
+
+			      // retrieve_data() when the value of week_offset changes
+			      // n.b.: triggered when week_offset is initialized above
+			      $scope.$watch( 'period_offset', function() { retrieve_data(); } );
+
+			  } );
+		  } ] );

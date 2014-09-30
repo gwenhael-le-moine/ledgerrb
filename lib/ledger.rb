@@ -27,6 +27,15 @@ module Ledger
     end.uniq
   end
 
+  def dates_salaries( category = 'salaire' )
+    CSV.parse( run( '', 'csv', category ) )
+       .map do
+      |row|
+      Date.parse row[ 0 ]
+    end
+       .uniq
+  end
+
   def register( period = nil, categories = '' )
     period = period.nil? ? '' : "-p '#{period}'"
 

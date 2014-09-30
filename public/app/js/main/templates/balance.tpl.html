@@ -2,13 +2,17 @@
 
   <div class="col-md-12 date">
     <h2>
-      From {{from_date | date:'longDate'}} to {{to_date | date:'longDate'}}
+      From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
 
       <div class="pull-right">
 	<button class="btn btn-default" data-ng-click="reset_offset()">Aujourd'hui</button>
 	<div class="btn-group">
-	  <button class="btn btn-default" data-ng-click="incr_offset()"><span class="glyphicon glyphicon-chevron-left"></span></button>
-	  <button class="btn btn-default" data-ng-click="decr_offset()"><span class="glyphicon glyphicon-chevron-right"></span></button>
+	  <button class="btn btn-default"
+		  data-ng-click="before()"
+		  data-ng-class="{'disabled': period_offset == 0}"><span class="glyphicon glyphicon-chevron-left"></span></button>
+	  <button class="btn btn-default"
+		  data-ng-click="after()"
+		  data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}"><span class="glyphicon glyphicon-chevron-right"></span></button>
 	</div>
       </div>
     </h2>

@@ -29,6 +29,10 @@ class LedgerRbApp < Sinatra::Base
     Ledger.accounts( params[ :depth ] ).to_json
   end
 
+  get '/api/ledger/dates_salaries/?' do
+    Ledger.dates_salaries.to_json
+  end
+
   get '/api/ledger/register/?' do
     param :period, String, default: nil
     param :category, String, required: true
