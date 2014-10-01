@@ -1,5 +1,7 @@
 // Sub-application/main Level State
-app.config(['$stateProvider', function($stateProvider) {
+app.config( [ '$stateProvider', '$urlRouterProvider',
+	      function ( $stateProvider, $urlRouterProvider ) {
+		  $urlRouterProvider.when( '', '/balance' );
 
     $stateProvider
 	.state('app.balance', {
