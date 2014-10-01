@@ -85,7 +85,7 @@ app.controller( 'BalanceCtrl',
 			      var to = moment( $scope.to_date );
 			      period = period + ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
 			  }
-			  console.log(period)
+
 			  $scope.balance = { expenses: [],
 					     income: [],
 					     details: {} };
