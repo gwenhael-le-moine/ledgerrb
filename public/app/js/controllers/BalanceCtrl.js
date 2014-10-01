@@ -75,8 +75,6 @@ app.controller( 'BalanceCtrl',
 							      } );
 
 		      var retrieve_data = function() {
-			  // $scope.from_date = moment().subtract( $scope.period_offset, 'months' ).startOf( 'month' ).toDate();
-			  // $scope.to_date = moment().subtract( $scope.period_offset, 'months' ).endOf( 'month' ).toDate();
 			  $scope.from_date = new Date( $scope.dates_salaries[ $scope.period_offset ] );
 			  $scope.to_date = ( $scope.period_offset < $scope.dates_salaries.length - 1 ) ? new Date( $scope.dates_salaries[ $scope.period_offset + 1 ] ) : null;
 			  var from = moment( $scope.from_date );
