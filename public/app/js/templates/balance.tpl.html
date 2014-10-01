@@ -6,12 +6,15 @@
 	From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
       </h2>
     </material-toolbar>
-    <div layout="horizontal" layout-align="end" layout-padding>
-      <material-button data-ng-click="reset_offset()"
-		       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</material-button>
-      <material-button data-ng-click="before()"
+    <div layout="horizontal" layout-align="center center" layout-padding>
+      <material-button class="material-theme-green"
+		       data-ng-click="before()"
 		       data-ng-class="{'disabled': period_offset == 0}">prev</span></material-button>
-      <material-button data-ng-click="after()"
+      <material-button class="material-theme-light-blue"
+		       data-ng-click="reset_offset()"
+		       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</material-button>
+      <material-button class="material-theme-green"
+		       data-ng-click="after()"
 		       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">next</material-button>
     </div>
     <material-toolbar>
@@ -21,7 +24,7 @@
     </material-toolbar>
   </div>
 
-  <div layout="horizontal" layout-padding>
+  <div layout="vertical" layout-md="horizontal" layout-padding>
     <div flex data-ng-repeat="bucket in balance.buckets">
       <material-toolbar class="material-theme-light">
 	<h3>{{bucket.name}}, total = {{bucket.total | number:2}} €</h3>
