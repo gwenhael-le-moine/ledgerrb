@@ -1,10 +1,11 @@
 <div layout="vertical" layout-padding>
 
   <div class="date">
-    <h2>
-      From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
-    </h2>
-
+    <material-toolbar class="material-theme-light">
+      <h2>
+	From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
+      </h2>
+    </material-toolbar>
     <div layout="horizontal" layout-align="end" layout-padding>
       <material-button data-ng-click="reset_offset()"
 		       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</material-button>
@@ -13,9 +14,11 @@
       <material-button data-ng-click="after()"
 		       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">next</material-button>
     </div>
-    <h2 class="balance" data-ng-class="{'negative': balance.buckets[1].total - balance.buckets[0].total < 0, 'positive': balance.buckets[1].total - balance.buckets[0].total > 0}">
-      Balance: {{( balance.buckets[1].total - balance.buckets[0].total ) | number:2}} €
-    </h2>
+    <material-toolbar>
+      <h2 class="balance" data-ng-class="{'negative': balance.buckets[1].total - balance.buckets[0].total < 0, 'positive': balance.buckets[1].total - balance.buckets[0].total > 0}">
+	Balance: {{( balance.buckets[1].total - balance.buckets[0].total ) | number:2}} €
+      </h2>
+    </material-toolbar>
   </div>
 
   <div layout="horizontal" layout-padding>
