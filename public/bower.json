@@ -1,27 +1,25 @@
 {
-    "name": "ledgerrb",
-    "description": "UI for ledgerrb",
-    "version": "0.0.2",
-    "homepage": "https://github.com/cycojesus/ledgerrb",
-    "license": "MIT",
-    "dependencies": {
-	"angular": "latest",
-	"angular-bootstrap": "latest",
-	"angular-i18n": "latest",
-	"angular-loader": "latest",
-	"angular-loading-bar": "latest",
-	"angular-material": "~0.0.3",
-	"angular-mocks": "latest",
-	"angular-moment": "latest",
-	"angular-ui-router": "latest",
-	"angularjs-nvd3-directives": "latest",
-	"bootstrap": "latest",
-	"html5-boilerplate": "latest",
-	"ng-table": "latest",
-	"underscore": "latest"
-    },
-    "resolutions": {
-	"angular": "^1.3.0-beta.18",
-	"d3": "~3.4.1"
-    }
+  "name": "ledgerrb",
+  "description": "UI for ledgerrb",
+  "version": "0.0.2",
+  "homepage": "https://github.com/cycojesus/ledgerrb",
+  "license": "MIT",
+  "dependencies": {
+    "angular": "latest",
+    "angular-i18n": "latest",
+    "angular-loader": "latest",
+    "angular-loading-bar": "latest",
+    "angular-material": "~0.0.3",
+    "angular-mocks": "latest",
+    "angular-moment": "latest",
+    "angular-ui-router": "latest",
+    "angularjs-nvd3-directives": "latest",
+    "html5-boilerplate": "latest",
+    "ng-table": "latest",
+    "underscore": "latest"
+  },
+  "resolutions": {
+    "angular": "^1.3.0-beta.18",
+    "d3": "~3.4.1"
+  }
 }
