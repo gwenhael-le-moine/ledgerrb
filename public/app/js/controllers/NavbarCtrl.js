@@ -1,4 +1,5 @@
 app.controller( 'NavbarCtrl',
-		function( $scope ) {
-		    $scope.items = [ 'Balance' ];
-		} );
+		[ '$scope',
+		  function( $scope ) {
+		      $scope.items = [ 'Balance' ];
+		  } ] );
