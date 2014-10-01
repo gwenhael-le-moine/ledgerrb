@@ -14,7 +14,7 @@ app.controller( 'BalanceCtrl',
 		      $scope.toolTipContentFunction = function() {
 			  return function( key, x, y, e, graph ) {
 			      var details = $scope.balance.details[ key ];
-			      return '<h3>' + details.key + '</h3>'
+			      return '<material-content><h3>' + details.key + '</h3>'
 				  + '<table>'
 				  + _(details.values).map( function( transaction ) {
 				      return '<tr><td>'
@@ -24,7 +24,7 @@ app.controller( 'BalanceCtrl',
 					  + transaction.currency + '</td></tr>';
 				  }).join( '' )
 				  + '<tr><th></th><th>Total :</th><th>' + x + ' €</th></tr>'
-				  + '</table>';
+				  + '</table></material-content>';
 			  };
 		      };
 
@@ -84,18 +84,22 @@ app.controller( 'BalanceCtrl',
 			      period = period + ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
 			  }
 
-			  $scope.balance = { expenses: [],
-					     income: [],
+			  $scope.balance = { buckets: [ { name: 'Expenses',
+							  data: [],
+							  total: 0 },
+							{ name: 'Income',
+							  data: [],
+							  total: 0 } ],
 					     details: {} };
 
 			  $http.get( '/api/ledger/balance',
 				     { params: { period: period,
 						 categories: 'Expenses' } } )
 			      .then( function( response ) {
-				  $scope.balance.expenses = _(response.data).sortBy( function( account ) {
+				  $scope.balance.buckets[ 0 ].data = _(response.data).sortBy( function( account ) {
 				      return 1 / account.amount;
 				  } );
-				  _($scope.balance.expenses).each(
+				  _($scope.balance.buckets[ 0 ].data).each(
 				      function( account ) {
 					  $http.get( '/api/ledger/register',
 						     { params: { period: period,
@@ -104,23 +108,23 @@ app.controller( 'BalanceCtrl',
 						  $scope.balance.details[ account.account ] = response.data;
 					      } );
 				      } );
-				  $scope.balance.expenses_total = _(response.data).reduce( function( memo, account ){ return memo + account.amount; }, 0 );
+				  $scope.balance.buckets[ 0 ].total = _(response.data).reduce( function( memo, account ){ return memo + account.amount; }, 0 );
 			      } );
 			  $http.get( '/api/ledger/balance',
 				     { params: { period: period,
 						 categories: 'Income' } } )
 
 			      .then( function( response ) {
-				  $scope.balance.income = _(response.data)
+				  $scope.balance.buckets[ 1 ].data = _(response.data)
 				      .map( function( account ) {
 					  account.amount = account.amount * -1;
 					  return account;
 				      } );
-				  $scope.balance.income = _($scope.balance.income)
+				  $scope.balance.buckets[ 1 ].data = _($scope.balance.buckets[ 1 ].data)
 				      .sortBy( function( account ) {
 					  return account.amount;
 				      } );
-				  _($scope.balance.income)
+				  _($scope.balance.buckets[ 1 ].data)
 				      .each( function( account ) {
 					  $http.get( '/api/ledger/register',
 						     { params: { period: period,
@@ -129,7 +133,7 @@ app.controller( 'BalanceCtrl',
 						  $scope.balance.details[ account.account ] = response.data;
 					      } );
 				      } );
-				  $scope.balance.income_total = _(response.data)
+				  $scope.balance.buckets[ 1 ].total = _(response.data)
 				      .reduce( function( memo, account ){ return memo + account.amount; }, 0 );
 			      } );
 		      };

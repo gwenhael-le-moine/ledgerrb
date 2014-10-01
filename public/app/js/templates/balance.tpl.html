@@ -1,50 +1,46 @@
-<div class="row-fluid">
+<div layout="vertical">
 
-  <div class="col-md-12 date">
+  <div class="date">
     <h2>
       From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
-
-      <div class="pull-right">
-	<button class="btn btn-default" data-ng-click="reset_offset()">Aujourd'hui</button>
-	<div class="btn-group">
-	  <button class="btn btn-default"
-		  data-ng-click="before()"
-		  data-ng-class="{'disabled': period_offset == 0}"><span class="glyphicon glyphicon-chevron-left"></span></button>
-	  <button class="btn btn-default"
-		  data-ng-click="after()"
-		  data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}"><span class="glyphicon glyphicon-chevron-right"></span></button>
-	</div>
-      </div>
     </h2>
-    <h2 class="balance" data-ng-class="{'negative': balance.income_total - balance.expenses_total < 0, 'positive': balance.income_total - balance.expenses_total > 0}">
-      Balance: {{( balance.income_total - balance.expenses_total ) | number:2}} €
+
+    <div layout="horizontal" layout-align="end">
+      <material-button class="material-button-raised material-button-colored" data-ng-click="reset_offset()">Now</material-button>
+      <material-button class="material-button-fab"
+		       data-ng-click="before()"
+		       data-ng-class="{'disabled': period_offset == 0}">prev</span></material-button>
+      <material-button class="material-button-fab"
+		       data-ng-click="after()"
+		       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">next</material-button>
+    </div>
+    <h2 class="balance" data-ng-class="{'negative': balance.buckets[1].total - balance.buckets[0].total < 0, 'positive': balance.buckets[1].total - balance.buckets[0].total > 0}">
+      Balance: {{( balance.buckets[1].total - balance.buckets[0].total ) | number:2}} €
     </h2>
   </div>
 
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-	<h3 class="panel-title">Expenses, total = {{balance.expenses_total | number:2}} €</h3>
-      </div>
-      <div class="panel-body">
-	<nvd3-pie-chart
-	   data="balance.expenses"
-	   x="xFunction()"
-	   y="yFunction()"
-	   id="ExpensesPie"
-	   height="300"
-	   margin="{left:0,top:0,bottom:0,right:0}"
-	   color="color()"
-	   tooltips="true"
-	   tooltipcontent="toolTipContentFunction()"
-	   showLabels="true"
-	   labelType="value">
+  <div layout="horizontal" layout-padding>
+    <div flex data-ng-repeat="bucket in balance.buckets">
+      <material-toolbar class="material-theme-light">
+	<h3>{{bucket.name}}, total = {{bucket.total | number:2}} €</h3>
+      </material-toolbar>
+      <material-content>
+	<nvd3-pie-chart data="bucket.data"
+			x="xFunction()"
+			y="yFunction()"
+			height="300"
+			margin="{left:0,top:0,bottom:0,right:0}"
+			color="color()"
+			tooltips="true"
+			tooltipcontent="toolTipContentFunction()"
+			showLabels="true"
+			labelType="value">
 	  <svg></svg>
 	</nvd3-pie-chart>
-      </div>
-      <div class="panel-footer">
+      </material-content>
+      <material-content>
 	<table data-ng-table="tableParams" class="table">
-	  <tr data-ng-repeat="account in balance.expenses"
+	  <tr data-ng-repeat="account in bucket.data"
 	      data-ng-class="{'even': $even, 'odd': $odd}"
 	      style="border-left:10px solid {{coloring_score( score_account( account.account ) )}};border-right:10px solid {{coloring_score( score_account( account.account ) )}}">
 	    <td data-title="'Account'"
@@ -57,48 +53,8 @@
 	    </td>
 	  </tr>
 	</table>
-      </div>
+      </material-content>
     </div>
-  </div>
 
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-	<h3 class="panel-title">Income, total = {{balance.income_total | number:2}} €</h3>
-      </div>
-      <div class="panel-body">
-	<nvd3-pie-chart
-	   data="balance.income"
-	   x="xFunction()"
-	   y="yFunction()"
-	   id="incomePie"
-	   height="300"
-	   margin="{left:0,top:0,bottom:0,right:0}"
-	   color="color()"
-	   tooltips="true"
-	   tooltipcontent="toolTipContentFunction()"
-	   showLabels="true"
-	   labelType="value">
-	  <svg></svg>
-	</nvd3-pie-chart>
-      </div>
-      <div class="panel-footer">
-	<table data-ng-table="tableParams" class="table">
-	  <tr data-ng-repeat="account in balance.income"
-	      data-ng-class="{'even': $even, 'odd': $odd}"
-	      style="border-left:10px solid {{coloring_score( score_account( account.account ) )}};border-right:10px solid {{coloring_score( score_account( account.account ) )}}">
-	    <td data-title="'Account'"
-		style="border-bottom:1px solid {{coloring_score( score_account( account.account ) )}}">
-	      {{account.account}}
-	    </td>
-	    <td data-title="'Amount'"
-		style="text-align:right;border-bottom:1px solid {{coloring_score( score_account( account.account ) )}}">
-	      {{account.amount | number:2}} €
-	    </td>
-	  </tr>
-	</table>
-      </div>
-    </div>
   </div>
-
 </div>
