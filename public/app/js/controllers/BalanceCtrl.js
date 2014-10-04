@@ -69,13 +69,13 @@ app.controller( 'BalanceCtrl',
 
 		      var retrieve_data = function () {
 			  $scope.from_date = new Date( $scope.dates_salaries[ $scope.period_offset ] );
-			  $scope.to_date = ( $scope.period_offset < $scope.dates_salaries.length - 1 ) ? new Date( $scope.dates_salaries[ $scope.period_offset + 1 ] ) : null;
+			  $scope.to_date = ( $scope.period_offset < $scope.dates_salaries.length - 1 ) ? new Date( $scope.dates_salaries[ $scope.period_offset + 1 ] ) : moment( $scope.from_date ).add( 1, 'month' ).toDate();
+
 			  var from = moment( $scope.from_date );
+			  var to = moment( $scope.to_date );
+
 			  var period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date();
-			  if ( !_( $scope.to_date ).isNull() ) {
-			      var to = moment( $scope.to_date );
-			      period = period + ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
-			  }
+			  period += ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
 
 			  $scope.balance = {
 			      buckets: [ {
