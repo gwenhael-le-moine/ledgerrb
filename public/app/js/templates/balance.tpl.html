@@ -15,7 +15,7 @@
 		       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</material-button>
       <material-button class="material-theme-green"
 		       data-ng-click="after()"
-		       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">next</material-button>
+		       data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</material-button>
     </div>
     <material-toolbar>
       <h2 class="balance" data-ng-class="{'negative': balance.buckets[1].total - balance.buckets[0].total < 0, 'positive': balance.buckets[1].total - balance.buckets[0].total > 0}">

@@ -68,14 +68,24 @@ app.controller( 'BalanceCtrl',
 		      } );
 
 		      var retrieve_data = function () {
-			  $scope.from_date = new Date( $scope.dates_salaries[ $scope.period_offset ] );
-			  $scope.to_date = ( $scope.period_offset < $scope.dates_salaries.length - 1 ) ? new Date( $scope.dates_salaries[ $scope.period_offset + 1 ] ) : moment( $scope.from_date ).add( 1, 'month' ).toDate();
+			  var from, to, period;
 
-			  var from = moment( $scope.from_date );
-			  var to = moment( $scope.to_date );
+			  if ( $scope.period_offset === $scope.dates_salaries.length ) {
+			      $scope.from_date = moment( _($scope.dates_salaries).last() ).add( 1, 'month' ).toDate();
 
-			  var period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date();
-			  period += ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
+			      from = moment( $scope.from_date );
+
+			      period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date();
+			  } else {
+			      $scope.from_date = new Date( $scope.dates_salaries[ $scope.period_offset ] );
+			      $scope.to_date = ( $scope.period_offset < $scope.dates_salaries.length - 1 ) ? new Date( $scope.dates_salaries[ $scope.period_offset + 1 ] ) : moment( $scope.from_date ).add( 1, 'month' ).toDate();
+
+			      from = moment( $scope.from_date );
+			      to = moment( $scope.to_date );
+
+			      period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date();
+			      period += ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
+			  }
 
 			  $scope.balance = {
 			      buckets: [ {
