@@ -89,83 +89,57 @@ app.controller( 'BalanceCtrl',
 
 			  $scope.balance = {
 			      buckets: [ {
-				  name: 'Expenses',
+				  categories: 'Expenses',
 				  data: [],
 				  total: 0
 			      }, {
-				  name: 'Income',
+				  categories: 'Income Equity',
 				  data: [],
 				  total: 0
 			      } ],
 			      details: {}
 			  };
 
-			  $http.get( '/api/ledger/balance', {
-			      params: {
-				  period: period,
-				  categories: 'Expenses'
-			      }
-			  } )
-			      .then( function ( response ) {
-				  $scope.balance.buckets[ 0 ].data = _( response.data ).sortBy( function ( account ) {
-				      return 1 / account.amount;
-				  } );
-				  _( $scope.balance.buckets[ 0 ].data ).each(
-				      function ( account ) {
-					  $http.get( '/api/ledger/register', {
-					      params: {
-						  period: period,
-						  category: account.account
-					      }
+			  _($scope.balance.buckets).each( function( bucket ) {
+			      $http.get( '/api/ledger/balance', {
+				  params: {
+				      period: period,
+				      categories: bucket.categories
+				  }
+			      } )
+				  .then( function ( response ) {
+				      bucket.data = _.chain( response.data )
+					  .map( function( account ) {
+					      account.amount = ( account.amount < 0 ) ? account.amount * -1 : account.amount;
+					      return account;
 					  } )
-					      .then( function ( response ) {
-						  $scope.balance.details[ account.account ] = response.data;
-					      } );
-				      } );
-				  $scope.balance.buckets[ 0 ].total = _( response.data ).reduce( function ( memo, account ) {
-				      return memo + account.amount;
-				  }, 0 );
-			      } );
-			  $http.get( '/api/ledger/balance', {
-			      params: {
-				  period: period,
-				  categories: 'Income'
-			      }
-			  } )
-
-			      .then( function ( response ) {
-				  $scope.balance.buckets[ 1 ].data = _( response.data )
-				      .map( function ( account ) {
-					  account.amount = account.amount * -1;
-					  return account;
-				      } );
-				  $scope.balance.buckets[ 1 ].data = _( $scope.balance.buckets[ 1 ].data )
-				      .sortBy( function ( account ) {
-					  return account.amount;
-				      } );
-				  _( $scope.balance.buckets[ 1 ].data )
-				      .each( function ( account ) {
-					  $http.get( '/api/ledger/register', {
-					      params: {
-						  period: period,
-						  category: account.account
-					      }
+					  .sortBy( function ( account ) {
+					      return 1 / account.amount;
 					  } )
-					      .then( function ( response ) {
-						  $scope.balance.details[ account.account ] = response.data;
-					      } );
-				      } );
-				  $scope.balance.buckets[ 1 ].total = _( response.data )
-				      .reduce( function ( memo, account ) {
+					  .value();
+				      _( bucket.data ).each(
+					  function ( account ) {
+					      $http.get( '/api/ledger/register', {
+						  params: {
+						      period: period,
+						      category: account.account
+						  }
+					      } )
+						  .then( function ( response ) {
+						      $scope.balance.details[ account.account ] = response.data;
+						  } );
+					  } );
+				      bucket.total = _( response.data ).reduce( function ( memo, account ) {
 					  return memo + account.amount;
 				      }, 0 );
-			      } );
+				  } );
+			  } );
 		      };
 
 		      $scope.dates_salaries = [];
 		      $scope.period_offset = 0;
 		      $scope.after = function () {
-			  if ( $scope.period_offset < $scope.dates_salaries.length - 1 ) {
+			  if ( $scope.period_offset < $scope.dates_salaries.length ) {
 			      $scope.period_offset++;
 			  }
 		      };
