@@ -14,7 +14,7 @@ app.controller( 'BalanceCtrl',
 		      $scope.toolTipContentFunction = function () {
 			  return function ( key, x, y, e, graph ) {
 			      var details = $scope.balance.details[ key ];
-			      return '<material-content><h3>' + details.key + '</h3>' + '<table>' + _( details ).map( function ( transaction ) {
+			      return '<material-content><h3>' + key + '</h3>' + '<table>' + _( details ).map( function ( transaction ) {
 				  return '<tr><td>' + transaction.date + '</td><td>' + transaction.payee + '</td><td style="text-align: right">' + $filter( 'number' )( transaction.amount, 2 ) + ' ' + transaction.currency + '</td></tr>';
 			      } ).join( '' ) + '<tr><th></th><th>Total :</th><th>' + x + ' €</th></tr>' + '</table></material-content>';
 			  };
@@ -67,6 +67,12 @@ app.controller( 'BalanceCtrl',
 			  // }
 		      } );
 
+		      $scope.update_chart_data = function() {
+			  _($scope.balance.buckets).each( function( bucket ) {
+			      bucket.chart.data = $filter('filter')( bucket.data, bucket.account_selected, true );
+			  } );
+		      };
+
 		      var retrieve_data = function () {
 			  var from, to, period;
 
@@ -91,11 +97,17 @@ app.controller( 'BalanceCtrl',
 			      buckets: [ {
 				  categories: 'Expenses',
 				  data: [],
-				  total: 0
+				  total: 0,
+				  chart: {
+				      data: []
+				  }
 			      }, {
 				  categories: 'Income Equity',
 				  data: [],
-				  total: 0
+				  total: 0,
+				  chart: {
+				      data: []
+				  }
 			      } ],
 			      details: {}
 			  };
@@ -122,6 +134,8 @@ app.controller( 'BalanceCtrl',
 				      bucket.total = _( response.data ).reduce( function ( memo, account ) {
 					  return memo + account.amount;
 				      }, 0 );
+
+				      $scope.update_chart_data();
 				  } );
 			  } );
 		      };
@@ -142,24 +156,24 @@ app.controller( 'BalanceCtrl',
 			  $scope.period_offset = $scope.dates_salaries.length - 1;
 		      };
 
-		      API.dates_salaries()
-			  .then( function ( response ) {
-			      $scope.dates_salaries = response.data;
-
-			      $scope.reset_offset();
-
-			      // retrieve_data() when the value of week_offset changes
-			      // n.b.: triggered when week_offset is initialized above
-			      $scope.$watch( 'period_offset', function () {
-				  retrieve_data();
-			      } );
-
-			  } );
 		      API.accounts()
 			  .then( function ( response ) {
 			      $scope.accounts = response.data.map( function( account_ary ) {
 				  return account_ary.join( ':' );
 			      } );
+			      API.dates_salaries()
+				  .then( function ( response ) {
+				      $scope.dates_salaries = response.data;
+
+				      $scope.reset_offset();
+
+				      // retrieve_data() when the value of week_offset changes
+				      // n.b.: triggered when week_offset is initialized above
+				      $scope.$watch( 'period_offset', function () {
+					  retrieve_data();
+				      } );
+
+				  } );
 			  } );
 		  }
 		] );
