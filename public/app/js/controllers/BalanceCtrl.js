@@ -71,7 +71,7 @@ app.controller( 'BalanceCtrl',
 			  _($scope.balance.buckets).each( function( bucket ) {
 			      bucket.data = [];
 
-			      if ( _(bucket.accounts_selected).isEmpty() ) {
+			      if ( _(bucket.accounts_selected).isEmpty() && bucket.score_threshold === 0 ) {
 				  bucket.data = bucket.raw_data;
 			      } else {
 				  _(bucket.accounts_selected).each( function( account_selected ) {
@@ -84,14 +84,20 @@ app.controller( 'BalanceCtrl',
 			      }, 0 );
 			  } );
 		      };
-		      $scope.select = { all: function( bucket ) {
-			  bucket.accounts_selected = bucket.raw_data;
-		      },
-					score_higher_than: function( bucket, score ) {
-					    bucket.accounts_selected = _(bucket.raw_data).filter( function( account ) {
-						return account.score > score;
-					    } );
-					}};
+
+		      $scope.select = { score_higher_than: function( bucket, score ) {
+			  bucket.accounts_selected = _(bucket.raw_data).filter( function( account ) {
+			      return account.score >= score;
+			  } );
+		      }};
+
+		      $scope.balance = {
+			  buckets: [ { categories: 'Expenses',
+				       score_threshold: 0 },
+				     { categories: 'Income Equity',
+				       score_threshold: 0 } ],
+			  details: {}
+		      };
 
 		      var retrieve_data = function () {
 			  var from, to, period;
@@ -112,19 +118,6 @@ app.controller( 'BalanceCtrl',
 			      period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date();
 			      period += ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
 			  }
-
-			  $scope.balance = {
-			      buckets: [ {
-				  categories: 'Expenses',
-				  data: [],
-				  total: 0
-			      }, {
-				  categories: 'Income Equity',
-				  data: [],
-				  total: 0
-			      } ],
-			      details: {}
-			  };
 
 			  API.register( { period: period,
 					  categories: '' } )
@@ -151,6 +144,7 @@ app.controller( 'BalanceCtrl',
 				      }, 0 );
 				      bucket.accounts_selected = bucket.raw_data;
 
+				      $scope.select.score_higher_than( bucket, bucket.score_threshold );
 				      $scope.filter_data();
 				  } );
 			  } );

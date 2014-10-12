@@ -2,10 +2,41 @@
  * Angular Material Design
  * https://github.com/angular/material
  * @license MIT
- * v0.0.3
+ * v0.4
  */
 (function(){
-angular.module('ngMaterial', [ 'ng', 'ngAnimate', 'material.services.attrBind', 'material.services.compiler', 'material.services.registry', 'material.services.throttle', 'material.decorators', 'material.services.aria', "material.components.button","material.components.card","material.components.checkbox","material.components.content","material.components.dialog","material.components.divider","material.components.icon","material.components.linearProgress","material.components.list","material.components.radioButton","material.components.sidenav","material.components.slider","material.components.switch","material.components.tabs","material.components.textField","material.components.toast","material.components.toolbar","material.components.whiteframe"]);
+angular.module('ngMaterial', [ 'ng', 'ngAnimate', 'ngAria', 'material.core', 'material.services.attrBind', 'material.services.compiler', 'material.services.registry', 'material.decorators', 'material.services.aria', "material.components.bottomSheet","material.components.button","material.components.card","material.components.checkbox","material.components.circularProgress","material.components.content","material.components.dialog","material.components.divider","material.components.icon","material.components.linearProgress","material.components.list","material.components.radioButton","material.components.sidenav","material.components.slider","material.components.subheader","material.components.switch","material.components.tabs","material.components.textField","material.components.toast","material.components.toolbar","material.components.tooltip","material.components.whiteframe"]);
+var Constant = {
+  KEY_CODE: {
+    ENTER: 13,
+    ESCAPE: 27,
+    SPACE: 32,
+    LEFT_ARROW : 37,
+    UP_ARROW : 38,
+    RIGHT_ARROW : 39,
+    DOWN_ARROW : 40
+  }
+};
+
+  /**
+   * Angular Materials initialization function that validates environment
+   * requirements.
+   */
+  angular.module('material.core',['ng'])
+    .run(function validateEnvironment() {
+
+      if (angular.isUndefined( window.Hammer )) {
+        throw new Error(
+          '$materialSwipe requires HammerJS to be preloaded.'
+        );
+      }
+
+    });
+
+
+
+
+
 /*
  * iterator is a list facade to easily support iteration and accessors
  *
@@ -13,253 +44,228 @@ angular.module('ngMaterial', [ 'ng', 'ngAnimate', 'material.services.attrBind', 
  * @param reloop Boolean enables iterator to consider the list as an endless reloop
  */
 function iterator(items, reloop) {
+  var trueFn = function() { return true; };
 
-    reloop = !!reloop;
+  reloop = !!reloop;
+  var _items = items || [ ];
 
-    var _items = items || [ ];
+  // Published API
+  return {
+    items: getItems,
+    count: count,
 
-    // Published API
+    inRange: inRange,
+    contains: contains,
+    indexOf: indexOf,
+    itemAt: itemAt,
 
-    return {
+    findBy: findBy,
 
-      items: getItems,
-      count: count,
+    add: add,
+    remove: remove,
 
-      inRange: inRange,
-      contains: contains,
-      indexOf: indexOf,
-      itemAt: itemAt,
+    first: first,
+    last: last,
+    next: next,
+    previous: previous,
 
-      findBy: findBy,
+    hasPrevious: hasPrevious,
+    hasNext: hasNext
 
-      add: add,
-      remove: remove,
+  };
 
-      first: first,
-      last: last,
-      next: next,
-      previous: previous,
+  /*
+   * Publish copy of the enumerable set
+   * @returns {Array|*}
+   */
+  function getItems() {
+    return [].concat(_items);
+  }
 
-      hasPrevious:hasPrevious,
-      hasNext: hasNext
+  /*
+   * Determine length of the list
+   * @returns {Array.length|*|number}
+   */
+  function count() {
+    return _items.length;
+  }
 
-    };
+  /*
+   * Is the index specified valid
+   * @param index
+   * @returns {Array.length|*|number|boolean}
+   */
+  function inRange(index) {
+    return _items.length && ( index > -1 ) && (index < _items.length );
+  }
 
-    /*
-     * Publish copy of the enumerable set
-     * @returns {Array|*}
-     */
-    function getItems() {
-      return [].concat(_items);
+  /*
+   * Can the iterator proceed to the next item in the list; relative to
+   * the specified item.
+   *
+   * @param item
+   * @returns {Array.length|*|number|boolean}
+   */
+  function hasNext(item) {
+    return item ? inRange(indexOf(item) + 1) : false;
+  }
+
+  /*
+   * Can the iterator proceed to the previous item in the list; relative to
+   * the specified item.
+   *
+   * @param item
+   * @returns {Array.length|*|number|boolean}
+   */
+  function hasPrevious(item) {
+    return item ? inRange(indexOf(item) - 1) : false;
+  }
+
+  /*
+   * Get item at specified index/position
+   * @param index
+   * @returns {*}
+   */
+  function itemAt(index) {
+    return inRange(index) ? _items[index] : null;
+  }
+
+  /*
+   * Find all elements matching the key/value pair
+   * otherwise return null
+   *
+   * @param val
+   * @param key
+   *
+   * @return array
+   */
+  function findBy(key, val) {
+    return _items.filter(function(item) {
+      return item[key] === val;
+    });
+  }
+
+  /*
+   * Add item to list
+   * @param item
+   * @param index
+   * @returns {*}
+   */
+  function add(item, index) {
+    if ( !item ) return -1;
+
+    if (!angular.isNumber(index)) {
+      index = _items.length;
     }
 
-    /*
-     * Determine length of the list
-     * @returns {Array.length|*|number}
-     */
-    function count() {
-      return _items.length;
+    _items.splice(index, 0, item);
+
+    return indexOf(item);
+  }
+
+  /*
+   * Remove item from list...
+   * @param item
+   */
+  function remove(item) {
+    if ( contains(item) ){
+      _items.splice(indexOf(item), 1);
+    }
+  }
+
+  /*
+   * Get the zero-based index of the target item
+   * @param item
+   * @returns {*}
+   */
+  function indexOf(item) {
+    return _items.indexOf(item);
+  }
+
+  /*
+   * Boolean existence check
+   * @param item
+   * @returns {boolean}
+   */
+  function contains(item) {
+    return item && (indexOf(item) > -1);
+  }
+
+  /*
+   * Find the next item. If reloop is true and at the end of the list, it will 
+   * go back to the first item. If given ,the `validate` callback will be used
+   * determine whether the next item is valid. If not valid, it will try to find the
+   * next item again.
+   * @param item
+   * @param {optional} validate
+   * @returns {*}
+   */
+  function next(item, validate) {
+    validate = validate || trueFn;
+
+    if (contains(item)) {
+      var index = indexOf(item) + 1,
+      found = inRange(index) ? _items[ index ] : (reloop ? first() : null);
+
+      return validate(found) ? found : next(found, validate);
     }
 
-    /*
-     * Is the index specified valid
-     * @param index
-     * @returns {Array.length|*|number|boolean}
-     */
-    function inRange(index) {
-      return _items.length && ( index > -1 ) && (index < _items.length );
+    return null;
+  }
+
+  /*
+   * Find the previous item. If reloop is true and at the beginning of the list, it will 
+   * go back to the last item. If given ,the `validate` callback will be used
+   * determine whether the previous item is valid. If not valid, it will try to find the
+   * previous item again.
+   * @param item
+   * @param {optional} validate
+   * @returns {*}
+   */
+  function previous(item, validate) {
+    validate = validate || trueFn;
+
+    if (contains(item)) {
+      var index = indexOf(item) - 1,
+      found = inRange(index) ? _items[ index ] : (reloop ? last() : null);
+
+      return validate(found) ? found : previous(found, validate);
     }
 
-    /*
-     * Can the iterator proceed to the next item in the list; relative to
-     * the specified item.
-     *
-     * @param tab
-     * @returns {Array.length|*|number|boolean}
-     */
-    function hasNext(tab) {
-      return tab ? inRange(indexOf(tab) + 1) : false;
-    }
+    return null;
+  }
 
-    /*
-     * Can the iterator proceed to the previous item in the list; relative to
-     * the specified item.
-     *
-     * @param tab
-     * @returns {Array.length|*|number|boolean}
-     */
-    function hasPrevious(tab) {
-      return tab ? inRange(indexOf(tab) - 1) : false;
-    }
+  /*
+   * Return first item in the list
+   * @returns {*}
+   */
+  function first() {
+    return _items.length ? _items[0] : null;
+  }
 
-    /*
-     * Get item at specified index/position
-     * @param index
-     * @returns {*}
-     */
-    function itemAt(index) {
-      return inRange(index) ? _items[index] : null;
-    }
-
-    /*
-     * Find all elements matching the key/value pair
-     * otherwise return null
-     *
-     * @param val
-     * @param key
-     *
-     * @return array
-     */
-    function findBy(key, val) {
-
-      /*
-       * Implement of e6 Array::find()
-       * @param list
-       * @param callback
-       * @returns {*}
-       */
-      function find(list, callback) {
-        var results = [ ];
-
-        angular.forEach(list, function (it, index) {
-          var val = callback.apply(null, [it, index, list]);
-          if (val) {
-            results.push(val);
-          }
-        });
-
-        return results.length ? results : null;
-      }
-
-      // Use iterator callback to matches element key value
-      // NOTE: searches full prototype chain
-
-      return find(_items, function (el) {
-        return ( el[key] == val ) ? el : null;
-      });
-
-    }
-
-    /*
-     * Add item to list
-     * @param it
-     * @param index
-     * @returns {*}
-     */
-    function add(it, index) {
-      if ( !it ) return -1;
-
-      if (!angular.isDefined(index)) {
-        index = _items.length;
-      }
-
-      _items.splice(index, 0, it);
-
-      return indexOf(it);
-    }
-
-    /*
-     * Remove it from list...
-     * @param it
-     */
-    function remove(it) {
-      if ( contains(it) ){
-        _items.splice(indexOf(it), 1);
-      }
-    }
-
-    /*
-     * Get the zero-based index of the target tab
-     * @param it
-     * @returns {*}
-     */
-    function indexOf(it) {
-      return _items.indexOf(it);
-    }
-
-    /*
-     * Boolean existence check
-     * @param it
-     * @returns {boolean}
-     */
-    function contains(it) {
-      return it && (indexOf(it) > -1);
-    }
-
-    /*
-     * Find the next item
-     * @param tab
-     * @returns {*}
-     */
-    function next(it, validate) {
-
-      if (contains(it)) {
-        var index = indexOf(it) + 1,
-            found = inRange(index) ? _items[ index ] : reloop ? first() : null,
-            skip = found && validate && !validate(found);
-
-        return skip ? next(found, validate) : found;
-      }
-
-      return null;
-    }
-
-    /*
-     * Find the previous item
-     * @param tab
-     * @returns {*}
-     */
-    function previous(it, validate) {
-
-      if (contains(it)) {
-        var index = indexOf(it) - 1,
-            found = inRange(index) ? _items[ index ] : reloop ? last() : null,
-            skip = found && validate && !validate(found);
-
-        return skip ? previous(found, validate) : found;
-      }
-
-      return null;
-    }
-
-    /*
-     * Return first item in the list
-     * @returns {*}
-     */
-    function first() {
-      return _items.length ? _items[0] : null;
-    }
-
-    /*
-     * Return last item in the list...
-     * @returns {*}
-     */
-    function last() {
-      return _items.length ? _items[_items.length - 1] : null;
-    }
+  /*
+   * Return last item in the list...
+   * @returns {*}
+   */
+  function last() {
+    return _items.length ? _items[_items.length - 1] : null;
+  }
 
 }
 
-
-
-
 var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
 
+/* for nextUid() function below */
+var uid = ['0','0','0'];
+
 var Util = {
-  /**
-   * Checks to see if the element or its parents are disabled.
-   * @param element DOM element to start scanning for `disabled` attribute
-   * @param limit Number of parent levels that should be scanned; defaults to 4
-   * @returns {*} Boolean
-   */
-  isDisabled : function isDisabled(element, limit) {
-    return Util.ancestorHasAttribute( element, 'disabled', limit );
-  },
+  now: window.performance ? angular.bind(window.performance, window.performance.now) : Date.now,
+
   /**
    * Checks if the specified element has an ancestor (ancestor being parent, grandparent, etc)
    * with the given attribute defined. 
    *
-   * Also pass in an optional `limit` (levels of ancestry to scan), default 8.
+   * Also pass in an optional `limit` (levels of ancestry to scan), default 4.
    */
   ancestorHasAttribute: function ancestorHasAttribute(element, attrName, limit) {
     limit = limit || 4;
@@ -271,6 +277,16 @@ var Util = {
       current = current.parent();
     }
     return false;
+  },
+
+  /**
+   * Checks to see if the element or its parents are disabled.
+   * @param element DOM element to start scanning for `disabled` attribute
+   * @param limit Number of parent levels that should be scanned; defaults to 4
+   * @returns {*} Boolean
+   */
+  isParentDisabled: function isParentDisabled(element, limit) {
+    return Util.ancestorHasAttribute(element, 'disabled', limit);
   },
 
   /**
@@ -286,11 +302,12 @@ var Util = {
    * @param name Name to normalize
    */
   camelCase: function camelCase(name) {
-    return name.
-      replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
+    return name
+      .replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
         return offset ? letter.toUpperCase() : letter;
       });
   },
+
   /**
    * Selects 'n' words from a string
    * for use in an HTML attribute
@@ -305,60 +322,18 @@ var Util = {
   },
 
   /**
-   * Spread the arguments as individual parameters to the target function.
-   * @param targetFn
-   * @param scope
-   * @returns {Function}
-   */
-  spread : function ( targetFn, scope ) {
-    return function()
-    {
-      var params = Array.prototype.slice.call(arguments, 0);
-      targetFn.apply(scope, params);
-    };
-  },
-
-  /**
    * Publish the iterator facade to easily support iteration and accessors
    * @see iterator.js
    */
-  iterator : iterator,
+  iterator: iterator,
 
-  css : {
-    /**
-     * For any positional fields, ensure that a `px` suffix
-     * is provided.
-     * @param target
-     * @returns {*}
-     */
-    appendSuffix : function (target) {
-      var styles = 'top left right bottom ' +
-        'x y width height ' +
-        'border-width border-radius borderWidth borderRadius' +
-        'margin margin-top margin-bottom margin-left margin-right ' +
-        'padding padding-left padding-right padding-top padding-bottom'.split(' ');
-
-      angular.forEach(target, function(val, key) {
-        var isPositional = styles.indexOf(key) > -1;
-        var hasPx        = String(val).indexOf('px') > -1;
-
-        if (isPositional && !hasPx) {
-          target[key] = val + 'px';
-        }
-      });
-
-      return target;
-    }
-
-  },
-  
   // Returns a function, that, as long as it continues to be invoked, will not
   // be triggered. The function will be called after it stops being called for
   // N milliseconds. If `immediate` is passed, trigger the function on the
   // leading edge, instead of the trailing.
   debounce: function debounce(func, wait, immediate) {
     var timeout;
-    return function() {
+    return function debounced() {
       var context = this, args = arguments;
       clearTimeout(timeout);
       timeout = setTimeout(function() {
@@ -367,8 +342,116 @@ var Util = {
       }, wait);
       if (immediate && !timeout) func.apply(context, args);
     };
+  },
+
+  // Returns a function that can only be triggered every `delay` milliseconds.
+  // In other words, the function will not be called unless it has been more
+  // than `delay` milliseconds since the last call.
+  throttle: function throttle(func, delay) {
+    var recent;
+    return function throttled() {
+      var context = this;
+      var args = arguments;
+      var now = Util.now();
+
+      if (!recent || recent - now > delay) {
+        func.apply(context, args);
+        recent = now;
+      }
+    };
+  },
+
+  /**
+   * Wraps an element with a tag
+   *
+   * @param el element to wrap
+   * @param tag tag to wrap it with
+   * @param [className] optional class to apply to the wrapper
+   * @returns new element
+   *
+   */
+  wrap: function(el, tag, className) {
+    if(el.hasOwnProperty(0)) { el = el[0]; }
+    var wrapper = document.createElement(tag);
+    wrapper.className += className;
+    wrapper.appendChild(el.parentNode.replaceChild(wrapper, el));
+    return angular.element(wrapper);
+  },
+
+  /**
+   * nextUid, from angular.js.
+   * A consistent way of creating unique IDs in angular. The ID is a sequence of alpha numeric
+   * characters such as '012ABC'. The reason why we are not using simply a number counter is that
+   * the number string gets longer over time, and it can also overflow, where as the nextId
+   * will grow much slower, it is a string, and it will never overflow.
+   *
+   * @returns an unique alpha-numeric string
+   */
+  nextUid: function() {
+    var index = uid.length;
+    var digit;
+
+    while(index) {
+      index--;
+      digit = uid[index].charCodeAt(0);
+      if (digit == 57 /*'9'*/) {
+        uid[index] = 'A';
+        return uid.join('');
+      }
+      if (digit == 90  /*'Z'*/) {
+        uid[index] = '0';
+      } else {
+        uid[index] = String.fromCharCode(digit + 1);
+        return uid.join('');
+      }
+    }
+    uid.unshift('0');
+    return uid.join('');
+  },
+
+  // Stop watchers and events from firing on a scope without destroying it,
+  // by disconnecting it from its parent and its siblings' linked lists.
+  disconnectScope: function disconnectScope(scope) {
+    if (!scope) return;
+
+    // we can't destroy the root scope or a scope that has been already destroyed
+    if (scope.$root === scope) return;
+    if (scope.$$destroyed ) return;
+
+    var parent = scope.$parent;
+    scope.$$disconnected = true;
+
+    // See Scope.$destroy
+    if (parent.$$childHead === scope) parent.$$childHead = scope.$$nextSibling;
+    if (parent.$$childTail === scope) parent.$$childTail = scope.$$prevSibling;
+    if (scope.$$prevSibling) scope.$$prevSibling.$$nextSibling = scope.$$nextSibling;
+    if (scope.$$nextSibling) scope.$$nextSibling.$$prevSibling = scope.$$prevSibling;
+
+    scope.$$nextSibling = scope.$$prevSibling = null;
+
+  },
+
+  // Undo the effects of disconnectScope above.
+  reconnectScope: function reconnectScope(scope) {
+    if (!scope) return;
+
+    // we can't disconnect the root node or scope already disconnected
+    if (scope.$root === scope) return;
+    if (!scope.$$disconnected) return;
+
+    var child = scope;
+
+    var parent = child.$parent;
+    child.$$disconnected = false;
+    // See Scope.$new for this logic...
+    child.$$prevSibling = parent.$$childTail;
+    if (parent.$$childHead) {
+      parent.$$childTail.$$nextSibling = child;
+      parent.$$childTail = child;
+    } else {
+      parent.$$childHead = parent.$$childTail = child;
+    }
   }
-    
 
 };
 
@@ -385,54 +468,12 @@ angular.element.prototype.focus = angular.element.prototype.focus || function() 
   }
   return this;
 };
-
-var Constant = {
-  ARIA : {
-    ROLE : {
-      BUTTON : 'button',
-      CHECKBOX : 'checkbox',
-      DIALOG : 'dialog',
-      LIST : 'list',
-      LIST_ITEM : 'listitem',
-      RADIO : 'radio',
-      RADIO_GROUP : 'radiogroup',
-      SLIDER : 'slider',
-      TAB_LIST : 'tablist',
-      TAB : 'tab',
-      TAB_PANEL : 'tabpanel'
-    },
-    PROPERTY : {
-      CHECKED : 'aria-checked',
-      HIDDEN : 'aria-hidden',
-      EXPANDED : 'aria-expanded',
-      LABEL: 'aria-label',
-      SELECTED : 'aria-selected',
-      LABEL_BY : 'aria-labelledby'
-    },
-    STATE: {}
-  },
-  KEY_CODE : {
-    ESCAPE : 27,
-    SPACE : 32,
-    LEFT_ARROW : 37,
-    RIGHT_ARROW : 39,
-    ENTER: 13
-  },
-  EVENTS : {
-    SCOPE_DESTROY : '$destroy',
-    TABS_CHANGED : '$materialTabsChanged',
-    FOCUS_CHANGED : '$materialFocusChanged',
-    WINDOW_RESIZE : 'resize',
-    KEY_DOWN     : 'keydown',
-    CLICK        : 'click'
+angular.element.prototype.blur = angular.element.prototype.blur || function() {
+  if (this.length) {
+    this[0].blur();
   }
+  return this;
 };
-
-/**
- * Alias shortcuts...
- */
-var EVENT = Constant.EVENTS;
-var KEY  = Constant.KEY_CODE;
 
 /**
  * @ngdoc module
@@ -441,9 +482,7 @@ var KEY  = Constant.KEY_CODE;
  *
  * Ink and Popup Effects
  */
-angular.module('material.animations', [
-  'material.services.throttle'
-])
+angular.module('material.animations', [])
   .service('$materialEffects', [ 
     '$rootElement', 
     '$$rAF', 
@@ -665,6 +704,9 @@ function InkRippleService($window, $$rAF, $materialEffects, $timeout) {
   }
 
   function attach(element, options) {
+    // Parent element with noink attr? Abort.
+    if (element.controller('noink')) return angular.noop;
+
     options = angular.extend({
       mousedown: true,
       hover: true,
@@ -680,56 +722,34 @@ function InkRippleService($window, $$rAF, $materialEffects, $timeout) {
     var node = element[0];
 
     if (options.mousedown) {
-      enableMousedown();
+      listenPointerDown(true);
+    }
+
+    // Publish self-detach method if desired...
+    return function detach() {
+      listenPointerDown(false);
+      if (rippleContainer) {
+        rippleContainer.remove();
+      }
+    };
+
+    function listenPointerDown(shouldListen) {
+      element[shouldListen ? 'on' : 'off'](POINTERDOWN_EVENT, onPointerDown);
     }
 
     function rippleIsAllowed() {
-      return !element.controller('noink') && !Util.isDisabled(element);
+      return !Util.isParentDisabled(element);
     }
 
-    function enableMousedown() {
-      element.on(POINTERDOWN_EVENT, onPointerDown);
-
-      function onPointerDown(ev) {
-        if (!rippleIsAllowed()) return;
-
-
-        var rippleEl = createRippleFromEvent(ev);
-        var ripplePauseTimeout = $timeout(pauseRipple, options.mousedownPauseTime, false);
-        rippleEl.on('$destroy', cancelRipplePause);
-
-        // Stop listening to pointer down for now, until the user lifts their finger/mouse
-        element.off(POINTERDOWN_EVENT, onPointerDown);
-        element.on(POINTERUP_EVENT, onPointerUp);
-
-        function onPointerUp() {
-          cancelRipplePause();
-          rippleEl.css($materialEffects.ANIMATION_PLAY_STATE, 'running');
-          element.off(POINTERUP_EVENT, onPointerUp);
-          element.on(POINTERDOWN_EVENT, onPointerDown);
-        }
-        function pauseRipple() {
-          rippleEl.css($materialEffects.ANIMATION_PLAY_STATE, 'paused');
-        }
-        function cancelRipplePause() {
-          $timeout.cancel(ripplePauseTimeout);
-        }
-      }
-    }
-
-    function createRippleFromEvent(ev) {
-      ev = ev.touches ? ev.touches[0] : ev;
-      return createRipple(ev.pageX, ev.pageY, true);
-    }
     function createRipple(left, top, positionsAreAbsolute) {
 
       var rippleEl = angular.element('<div class="material-ripple">')
-        .css($materialEffects.ANIMATION_DURATION, options.animationDuration + 'ms')
-        .css($materialEffects.ANIMATION_NAME, options.animationName)
-        .css($materialEffects.ANIMATION_TIMING, options.animationTimingFunction)
-        .on($materialEffects.ANIMATIONEND_EVENT, function() {
-          rippleEl.remove();
-        });
+            .css($materialEffects.ANIMATION_DURATION, options.animationDuration + 'ms')
+            .css($materialEffects.ANIMATION_NAME, options.animationName)
+            .css($materialEffects.ANIMATION_TIMING, options.animationTimingFunction)
+            .on($materialEffects.ANIMATIONEND_EVENT, function() {
+              rippleEl.remove();
+            });
 
       if (!rippleContainer) {
         rippleContainer = angular.element('<div class="material-ripple-container">');
@@ -764,6 +784,610 @@ function InkRippleService($window, $$rAF, $materialEffects, $timeout) {
 
       return rippleEl;
     }
+
+    function onPointerDown(ev) {
+      if (!rippleIsAllowed()) return;
+
+      var rippleEl = createRippleFromEvent(ev);
+      var ripplePauseTimeout = $timeout(pauseRipple, options.mousedownPauseTime, false);
+      rippleEl.on('$destroy', cancelRipplePause);
+
+      // Stop listening to pointer down for now, until the user lifts their finger/mouse
+      listenPointerDown(false);
+      element.on(POINTERUP_EVENT, onPointerUp);
+
+      function onPointerUp() {
+        cancelRipplePause();
+        rippleEl.css($materialEffects.ANIMATION_PLAY_STATE, 'running');
+        element.off(POINTERUP_EVENT, onPointerUp);
+        listenPointerDown(true);
+      }
+      function pauseRipple() {
+        rippleEl.css($materialEffects.ANIMATION_PLAY_STATE, 'paused');
+      }
+      function cancelRipplePause() {
+        $timeout.cancel(ripplePauseTimeout);
+      }
+
+      function createRippleFromEvent(ev) {
+        ev = ev.touches ? ev.touches[0] : ev;
+        return createRipple(ev.pageX, ev.pageY, true);
+      }
+    }
+  }
+
+}
+
+/**
+ * @ngdoc module
+ * @name material.components.sticky
+ * @description
+ *
+ * Sticky effects for material
+ */
+
+angular.module('material.components.sticky', [
+  'material.components.content',
+  'material.decorators',
+  'material.animations'
+])
+.factory('$materialSticky', [
+  '$document',
+  '$materialEffects',
+  '$compile',
+  '$$rAF',
+  MaterialSticky
+]);
+
+/**
+ * @ngdoc factory
+ * @name $materialSticky
+ * @module material.components.sticky
+ *
+ * @description
+ * The `$materialSticky`service provides a mixin to make elements sticky.
+ *
+ * @returns A `$materialSticky` function that takes three arguments:
+ *   - `scope`
+ *   - `element`: The element that will be 'sticky'
+ *   - `{optional}` `clone`: A clone of the element, that will be shown
+ *     when the user starts scrolling past the original element.
+ *     If not provided, it will use the result of `element.clone()`.
+ */
+
+function MaterialSticky($document, $materialEffects, $compile, $$rAF) {
+
+  var browserStickySupport = checkStickySupport();
+
+  /**
+   * Registers an element as sticky, used internally by directives to register themselves
+   */
+  return function registerStickyElement(scope, element, stickyClone) {
+    var contentCtrl = element.controller('materialContent');
+    if (!contentCtrl) return;
+
+    if (browserStickySupport) {
+      element.css({
+        position: browserStickySupport,
+        top: 0,
+        'z-index': 2
+      });
+    } else {
+      var $$sticky = contentCtrl.$element.data('$$sticky');
+      if (!$$sticky) {
+        $$sticky = setupSticky(contentCtrl);
+        contentCtrl.$element.data('$$sticky', $$sticky);
+      }
+
+      var deregister = $$sticky.add(element, stickyClone || element.clone());
+      scope.$on('$destroy', deregister);
+    }
+  };
+
+  function setupSticky(contentCtrl) {
+    var contentEl = contentCtrl.$element;
+
+    // Refresh elements is very expensive, so we use the debounced
+    // version when possible.
+    var debouncedRefreshElements = $$rAF.debounce(refreshElements);
+
+    // setupAugmentedScrollEvents gives us `$scrollstart` and `$scroll`,
+    // more reliable than `scroll` on android.
+    setupAugmentedScrollEvents(contentEl);
+    contentEl.on('$scrollstart', debouncedRefreshElements);
+    contentEl.on('$scroll', onScroll);
+
+    var self;
+    return self = {
+      prev: null,
+      current: null, //the currently stickied item
+      next: null,
+      items: [],
+      add: add,
+      refreshElements: refreshElements
+    };
+
+    /***************
+     * Public
+     ***************/
+    // Add an element and its sticky clone to this content's sticky collection
+    function add(element, stickyClone) {
+      stickyClone.addClass('material-sticky-clone');
+
+      var item = {
+        element: element,
+        clone: stickyClone
+      };
+      self.items.push(item);
+
+      contentEl.parent().prepend(item.clone);
+
+      debouncedRefreshElements();
+
+      return function remove() {
+        self.items.forEach(function(item, index) {
+          if (item.element[0] === element[0]) {
+            self.items.splice(index, 1);
+            item.clone.remove();
+          }
+        });
+        debouncedRefreshElements();
+      };
+    }
+
+    function refreshElements() {
+      var contentRect = contentEl[0].getBoundingClientRect();
+
+
+      // Sort our collection of elements by their current position in the DOM.
+      // We need to do this because our elements' order of being added may not
+      // be the same as their order of display.
+      self.items.forEach(refreshPosition);
+      self.items = self.items.sort(function(a, b) {
+        return a.top > b.top;
+      });
+
+      // Find which item in the list should be active, 
+      // based upon the content's current scroll position
+      var item;
+      var currentScrollTop = contentEl.prop('scrollTop');
+      for (var i = self.items.length - 1; i >= 0; i--) {
+        if (currentScrollTop > self.items[i].top) {
+          item = self.items[i];
+          break;
+        }
+      }
+      setCurrentItem(item);
+    }
+
+
+    /***************
+     * Private
+     ***************/
+
+    // Find the `top` of an item relative to the content element,
+    // and also the height.
+    function refreshPosition(item) {
+      // Find the top of an item by adding to the offsetHeight until we reach the 
+      // content element.
+      var current = item.element[0];
+      item.top = 0;
+      item.left = 0;
+      while (current && current !== contentEl[0]) {
+        item.top += current.offsetTop;
+        item.left += current.offsetLeft;
+        current = current.offsetParent;
+      }
+      item.height = item.element.prop('offsetHeight');
+
+      item.clone.css('margin-left', item.left + 'px');
+    }
+
+
+    // As we scroll, push in and select the correct sticky element.
+    function onScroll() {
+      var scrollTop = contentEl.prop('scrollTop');
+      var isScrollingDown = scrollTop > (onScroll.prevScrollTop || 0);
+      onScroll.prevScrollTop = scrollTop;
+
+      // At the top?
+      if (scrollTop === 0) {
+        setCurrentItem(null);
+
+      // Going to next item?
+      } else if (isScrollingDown && self.next) {
+        if (self.next.top - scrollTop <= 0) {
+          // Sticky the next item if we've scrolled past its position.
+          setCurrentItem(self.next);
+        } else if (self.current) {
+          // Push the current item up when we're almost at the next item.
+          if (self.next.top - scrollTop <= self.next.height) {
+            translate(self.current, self.next.top - self.next.height - scrollTop);
+          } else {
+            translate(self.current, null);
+          }
+        }
+        
+      // Scrolling up with a current sticky item?
+      } else if (!isScrollingDown && self.current) {
+        if (scrollTop < self.current.top) {
+          // Sticky the previous item if we've scrolled up past
+          // the original position of the currently stickied item.
+          setCurrentItem(self.prev);
+        }
+        // Scrolling up, and just bumping into the item above (just set to current)?
+        // If we have a next item bumping into the current item, translate
+        // the current item up from the top as it scrolls into view.
+        if (self.current && self.next) {
+          if (scrollTop >= self.next.top - self.current.height) {
+            translate(self.current, self.next.top - scrollTop - self.current.height);
+          } else {
+            translate(self.current, null);
+          }
+        }
+      }
+    }
+     
+   function setCurrentItem(item) {
+     if (self.current === item) return;
+     // Deactivate currently active item
+     if (self.current) {
+       translate(self.current, null);
+       setStickyState(self.current, null);
+     }
+
+     // Activate new item if given
+     if (item) {
+       setStickyState(item, 'active');
+     }
+
+     self.current = item;
+     var index = self.items.indexOf(item);
+     // If index === -1, index + 1 = 0. It works out.
+     self.next = self.items[index + 1];
+     self.prev = self.items[index - 1];
+     setStickyState(self.next, 'next');
+     setStickyState(self.prev, 'prev');
+   }
+
+   function setStickyState(item, state) {
+     if (!item || item.state === state) return;
+     if (item.state) {
+       item.clone.attr('sticky-prev-state', item.state);
+       item.element.attr('sticky-prev-state', item.state);
+     }
+     item.clone.attr('sticky-state', state);
+     item.element.attr('sticky-state', state);
+     item.state = state;
+   }
+
+   function translate(item, amount) {
+     if (!item) return;
+     if (amount === null || amount === undefined) {
+       if (item.translateY) {
+         item.translateY = null;
+         item.clone.css($materialEffects.TRANSFORM, '');
+       }
+     } else {
+       item.translateY = amount;
+       item.clone.css(
+         $materialEffects.TRANSFORM, 
+         'translate3d(' + item.left + 'px,' + amount + 'px,0)'
+       );
+     }
+   }
+  }
+
+  // Function to check for browser sticky support
+  function checkStickySupport($el) {
+    var stickyProp;
+    var testEl = angular.element('<div>');
+    $document[0].body.appendChild(testEl[0]);
+
+    var stickyProps = ['sticky', '-webkit-sticky'];
+    for (var i = 0; i < stickyProps.length; ++i) {
+      testEl.css({position: stickyProps[i], top: 0, 'z-index': 2});
+      if (testEl.css('position') == stickyProps[i]) {
+        stickyProp = stickyProps[i];
+        break;
+      }
+    }
+    testEl.remove();
+    return stickyProp;
+  }
+
+  // Android 4.4 don't accurately give scroll events.
+  // To fix this problem, we setup a fake scroll event. We say:
+  // > If a scroll or touchmove event has happened in the last DELAY milliseconds, 
+  //   then send a `$scroll` event every animationFrame.
+  // Additionally, we add $scrollstart and $scrollend events.
+  function setupAugmentedScrollEvents(element) {
+    var SCROLL_END_DELAY = 200;
+    var isScrolling;
+    var lastScrollTime;
+    element.on('scroll touchmove', function() {
+      if (!isScrolling) {
+        isScrolling = true;
+        $$rAF(loopScrollEvent);
+        element.triggerHandler('$scrollstart');
+      }
+      element.triggerHandler('$scroll');
+      lastScrollTime = +Util.now();
+    });
+
+    function loopScrollEvent() {
+      if (+Util.now() - lastScrollTime > SCROLL_END_DELAY) {
+        isScrolling = false;
+        element.triggerHandler('$scrollend');
+      } else {
+        element.triggerHandler('$scroll');
+        $$rAF(loopScrollEvent);
+      }
+    }
+  }
+
+}
+
+/**
+ * @ngdoc module
+ * @name material.components.bottomSheet
+ * @description
+ * BottomSheet
+ */
+angular.module('material.components.bottomSheet', [
+  'material.services.interimElement'
+])
+.directive('materialBottomSheet', [
+  MaterialBottomSheetDirective
+])
+.factory('$materialBottomSheet', [
+  '$$interimElement',
+  '$animate',
+  '$materialEffects',
+  '$timeout',
+  '$$rAF',
+  MaterialBottomSheet
+]);
+
+function MaterialBottomSheetDirective() {
+  return {
+    restrict: 'E'
+  };
+}
+
+/**
+ * @ngdoc service
+ * @name $materialBottomSheet
+ * @module material.components.bottomSheet
+ *
+ * @description
+
+ * Used to open a bottom sheet on the screen, `$materialBottomSheet` is a service
+ * created by `$$interimElement` and provides a simple promise-based, behavior API:
+ *
+ *  - `$materialBottomSheet.show()`
+ *  - `$materialBottomSheet.hide()`
+ *  - `$materialBottomSheet.cancel()`
+ *
+ * #### Notes:
+ *
+ * Only one bottom sheet may ever be active at any time. If a new sheet is
+ * shown while a different one is active, the previous sheet will be automatically
+ * hidden.
+
+ * The bottom sheet's template must have an outer `<material-bottom-sheet>` element.
+ *
+ * @usage
+ * <hljs lang="html">
+ * <div ng-controller="MyController">
+ *   <material-button ng-click="openBottomSheet()">
+ *     Open a Bottom Sheet!
+ *   </material-button>
+ * </div>
+ * </hljs>
+ * <hljs lang="js">
+ * var app = angular.module('app', ['ngMaterial']);
+ * app.controller('MyController', function($scope, $materialBottomSheet) {
+ *   $scope.openBottomSheet = function() {
+ *     $materialBottomSheet.show({
+ *       template: '<material-bottom-sheet>Hello!</material-bottom-sheet>'
+ *     });
+ *   };
+ * });
+ * </hljs>
+ */
+
+ /**
+ * @ngdoc method
+ * @name $materialBottomSheet#show
+ *
+ * @description
+ * Show a bottom sheet with the specified options.
+ *
+ * @paramType Options
+ * @param {string=} templateUrl The url of an html template file that will
+ * be used as the content of the bottom sheet. Restrictions: the template must
+ * have an outer `material-bottom-sheet` element.
+ * @param {string=} template Same as templateUrl, except this is an actual
+ * template string.
+ * @param {string=} controller The controller to associate with this bottom sheet.
+ * @param {string=} locals An object containing key/value pairs. The keys will
+ * be used as names of values to inject into the controller. For example, 
+ * `locals: {three: 3}` would inject `three` into the controller with the value
+ * of 3.
+ * @param {DOMClickEvent=} targetEvent A click's event object. When passed in as an option, 
+ * the location of the click will be used as the starting point for the opening animation
+ * of the the dialog.
+ * @param {object=} resolve Similar to locals, except it takes promises as values
+ * and the bottom sheet will not open until the promises resolve.
+ * @param {string=} controllerAs An alias to assign the controller to on the scope.
+ *
+ * @returns {Promise} Returns a promise that will be resolved or rejected when
+ *  `$materialBottomSheet.hide()` or `$materialBottomSheet.cancel()` is called respectively.
+ */
+
+/**
+ * @ngdoc method
+ * @name $materialBottomSheet#hide
+ *
+ * @description
+ * Hide the existing bottom sheet and `resolve` the promise returned from 
+ * `$materialBottomSheet.show()`.
+ *
+ * @param {*} arg An argument to resolve the promise with.
+ *
+ */
+
+/**
+ * @ngdoc method
+ * @name $materialBottomSheet#cancel
+ *
+ * @description
+ * Hide the existing bottom sheet and `reject` the promise returned from 
+ * `$materialBottomSheet.show()`.
+ *
+ * @param {*} arg An argument to reject the promise with.
+ *
+ */
+
+function MaterialBottomSheet($$interimElement, $animate, $materialEffects, $timeout, $$rAF) {
+  var backdrop;
+
+  var $materialBottomSheet = $$interimElement({
+    targetEvent: null,
+    onShow: onShow,
+    onRemove: onRemove,
+  });
+
+  return $materialBottomSheet;
+
+  function onShow(scope, element, options) {
+    // Add a backdrop that will close on click
+    backdrop = angular.element('<material-backdrop class="opaque ng-enter">');
+    backdrop.on('click touchstart', function() {
+      $timeout($materialBottomSheet.cancel);
+    });
+
+    $animate.enter(backdrop, options.parent, null);
+
+    var bottomSheet = new BottomSheet(element);
+    options.bottomSheet = bottomSheet;
+
+    // Give up focus on calling item
+    options.targetEvent && angular.element(options.targetEvent.target).blur();
+
+    return $animate.enter(bottomSheet.element, options.parent);
+
+  }
+
+  function onRemove(scope, element, options) {
+    var bottomSheet = options.bottomSheet;
+    $animate.leave(backdrop);
+    return $animate.leave(bottomSheet.element).then(function() {
+      bottomSheet.cleanup();
+
+      // Restore focus
+      options.targetEvent && angular.element(options.targetEvent.target).focus();
+    });
+  }
+
+  /**
+   * BottomSheet class to apply bottom-sheet behavior to an element
+   */
+  function BottomSheet(element) {
+    var MAX_OFFSET = 80; // amount past the bottom of the element that we can drag down, this is same as in _bottomSheet.scss
+    var WIGGLE_AMOUNT = 20; // point where it starts to get "harder" to drag
+    var CLOSING_VELOCITY = 10; // how fast we need to flick down to close the sheet
+    var startY, lastY, velocity, transitionDelay, startTarget;
+
+    // coercion incase $materialCompiler returns multiple elements
+    element = element.eq(0);
+
+    element.on('touchstart', onTouchStart);
+    element.on('touchmove', onTouchMove);
+    element.on('touchend', onTouchEnd);
+
+    return {
+      element: element,
+      cleanup: function cleanup() {
+        element.off('touchstart', onTouchStart);
+        element.off('touchmove', onTouchMove);
+        element.off('touchend', onTouchEnd);
+      }
+    };
+
+    function onTouchStart(e) {
+      e.preventDefault();
+      startTarget = e.target;
+      startY = getY(e);
+      
+      // Disable transitions on transform so that it feels fast
+      transitionDelay = element.css($materialEffects.TRANSITION_DURATION);
+      element.css($materialEffects.TRANSITION_DURATION, '0s');
+    }
+
+    function onTouchEnd(e) {
+      // Re-enable the transitions on transforms
+      element.css($materialEffects.TRANSITION_DURATION, transitionDelay);
+
+      var currentY = getY(e);
+      // If we didn't scroll much, and we didn't change targets, assume its a click
+      if ( Math.abs(currentY - startY) < 5  && e.target == startTarget) {
+        angular.element(e.target).triggerHandler('click');
+      } else {
+        // If they went fast enough, trigger a close.
+        if (velocity > CLOSING_VELOCITY) {
+          $timeout($materialBottomSheet.cancel);
+
+        // Otherwise, untransform so that we go back to our normal position
+        } else {
+          setTransformY(undefined);
+        }
+      }
+    }
+
+    function onTouchMove(e) {
+      var currentY = getY(e);
+      var delta = currentY - startY;
+
+      velocity = currentY - lastY;
+      lastY = currentY;
+      
+      // Do some conversion on delta to get a friction-like effect
+      delta = adjustedDelta(delta);
+      setTransformY(delta + MAX_OFFSET);
+    }
+
+    /**
+     * Helper function to find the Y aspect of various touch events.
+     **/
+    function getY(e) {
+      var touch = e.touches && e.touches.length ? e.touches[0] : e.changedTouches[0];
+      return touch.clientY;
+    }
+
+    /**
+     * Transform the element along the y-axis
+     **/
+    function setTransformY(amt) {
+      if (amt === null || amt === undefined) {
+        element.css($materialEffects.TRANSFORM, '');
+      } else {
+        element.css($materialEffects.TRANSFORM, 'translate3d(0, ' + amt + 'px, 0)');
+      }
+    }
+
+    // Returns a new value for delta that will never exceed MAX_OFFSET_AMOUNT
+    // Will get harder to exceed it as you get closer to it
+    function adjustedDelta(delta) {
+      if ( delta < 0  && delta < -MAX_OFFSET + WIGGLE_AMOUNT) {
+        delta = -delta;
+        var base = MAX_OFFSET - WIGGLE_AMOUNT;
+        delta = Math.max(-MAX_OFFSET, -Math.min(MAX_OFFSET - 5, base + ( WIGGLE_AMOUNT * (delta - base)) / MAX_OFFSET) - delta / 50);
+      }
+
+      return delta;
+    }
   }
 
 }
@@ -782,7 +1406,7 @@ angular.module('material.components.button', [
   .directive('materialButton', [
     'ngHrefDirective',
     '$materialInkRipple',
-    '$aria',
+    '$materialAria',
     MaterialButtonDirective
   ]);
 
@@ -796,12 +1420,12 @@ angular.module('material.components.button', [
  * @description
  * `<material-button>` is a button directive with optional ink ripples (default enabled).
  *
- * @param {boolean=} noink Flag indicates use of ripple ink effects
- * @param {boolean=} disabled Flag indicates if the tab is disabled: not selectable with no ink effects
+ * @param {boolean=} noink If present, disable ripple ink effects.
+ * @param {boolean=} disabled If present, disable tab selection.
  * @param {string=} type Optional attribute to specific button types (useful for forms); such as 'submit', etc.
  * @param {string=} ng-href Optional attribute to support both ARIA and link navigation
  * @param {string=} href Optional attribute to support both ARIA and link navigation
- * @param {string=} ariaLabel Publish the button label used by screen-readers for accessibility. Defaults to the radio button's text.
+ * @param {string=} ariaLabel Publish the button label used by screen-readers for accessibility. Defaults to the button's text.
  *
  * @usage
  * <hljs lang="html">
@@ -816,7 +1440,7 @@ angular.module('material.components.button', [
  *  </material-button>
  * </hljs>
  */
-function MaterialButtonDirective(ngHrefDirectives, $materialInkRipple, $aria ) {
+function MaterialButtonDirective(ngHrefDirectives, $materialInkRipple, $materialAria ) {
   var ngHrefDirective = ngHrefDirectives[0];
 
   return {
@@ -865,7 +1489,7 @@ function MaterialButtonDirective(ngHrefDirectives, $materialInkRipple, $aria ) {
         });
 
       return function postLink(scope, element, attr) {
-        $aria.expect(element, 'aria-label', element.text());
+        $materialAria.expect(element, 'aria-label', element.text());
         $materialInkRipple.attachButtonBehavior(element);
       };
     }
@@ -933,7 +1557,7 @@ angular.module('material.components.checkbox', [
   .directive('materialCheckbox', [ 
     'inputDirective',
     '$materialInkRipple',
-    '$aria',
+    '$materialAria',
     MaterialCheckboxDirective
   ]);
 
@@ -972,7 +1596,7 @@ angular.module('material.components.checkbox', [
  * </hljs>
  *
  */
-function MaterialCheckboxDirective(inputDirectives, $materialInkRipple, $aria) {
+function MaterialCheckboxDirective(inputDirectives, $materialInkRipple, $materialAria) {
   var inputDirective = inputDirectives[0];
 
   var CHECKED_CSS = 'material-checked';
@@ -986,72 +1610,72 @@ function MaterialCheckboxDirective(inputDirectives, $materialInkRipple, $aria) {
         '<div class="material-icon"></div>' +
       '</div>' +
       '<div ng-transclude class="material-label"></div>',
-    link: postLink
+    compile: compile
   };
 
   // **********************************************************
   // Private Methods
   // **********************************************************
 
-  function postLink(scope, element, attr, ngModelCtrl) {
-    var checked = false;
+  function compile (tElement, tAttrs) {
 
-    // Create a mock ngModel if the user doesn't provide one
-    ngModelCtrl = ngModelCtrl || {
-      $setViewValue: function(value) {
-        this.$viewValue = value;
-      },
-      $parsers: [],
-      $formatters: []
-    };
+    tAttrs.type = 'checkbox';
+    tAttrs.tabIndex = 0;
+    tElement.attr('role', tAttrs.type);
 
-    // Reuse the original input[type=checkbox] directive from Angular core.
-    // This is a bit hacky as we need our own event listener and own render 
-    // function.
-    attr.type = 'checkbox';
-    attr.tabIndex = 0;
-    inputDirective.link(scope, {
-      on: angular.noop,
-      0: {}
-    }, attr, [ngModelCtrl]);
+    $materialAria.expect(tElement, 'aria-label', tElement.text());
 
-    // We can't chain element.attr here because of a bug with jqLite
-    element.attr(Constant.ARIA.PROPERTY.CHECKED, checked);
-    element.attr('role', attr.type);
-    element.attr('tabIndex', attr.tabIndex);
-    element.on('click', listener);
-    element.on('keypress', keypressHandler);
-    ngModelCtrl.$render = render;
+    return function postLink(scope, element, attr, ngModelCtrl) {
+      var checked = false;
 
-    $aria.expect(element, Constant.ARIA.PROPERTY.LABEL, element.text());
+      // Create a mock ngModel if the user doesn't provide one
+      ngModelCtrl = ngModelCtrl || {
+        $setViewValue: function(value) {
+          this.$viewValue = value;
+        },
+        $parsers: [],
+        $formatters: []
+      };
 
-    function keypressHandler(ev) {
-      if(ev.which === Constant.KEY_CODE.SPACE) {
-        ev.preventDefault();
-        listener(ev);
+      // Reuse the original input[type=checkbox] directive from Angular core.
+      // This is a bit hacky as we need our own event listener and own render
+      // function.
+      inputDirective.link.pre(scope, {
+        on: angular.noop,
+        0: {}
+      }, attr, [ngModelCtrl]);
+
+      element.on('click', listener);
+      element.on('keypress', keypressHandler);
+      ngModelCtrl.$render = render;
+
+      function keypressHandler(ev) {
+        if(ev.which === Constant.KEY_CODE.SPACE) {
+          ev.preventDefault();
+          listener(ev);
+        }
       }
-    }
-    function listener(ev) {
-      if (element[0].hasAttribute('disabled')) return;
+      function listener(ev) {
+        if (element[0].hasAttribute('disabled')) return;
 
-      scope.$apply(function() {
-        checked = !checked;
-        ngModelCtrl.$setViewValue(checked, ev && ev.type);
-        ngModelCtrl.$render();
-      });
-    }
+        scope.$apply(function() {
+          checked = !checked;
+          ngModelCtrl.$setViewValue(checked, ev && ev.type);
+          ngModelCtrl.$render();
+        });
+      }
 
-    function render() {
-      checked = ngModelCtrl.$viewValue;
-      element.attr(Constant.ARIA.PROPERTY.CHECKED, checked);
-      if(checked) {
-        element.addClass(CHECKED_CSS);
-      } else {
-        element.removeClass(CHECKED_CSS);
+      function render() {
+        checked = ngModelCtrl.$viewValue;
+        // element.attr('aria-checked', checked);
+        if(checked) {
+          element.addClass(CHECKED_CSS);
+        } else {
+          element.removeClass(CHECKED_CSS);
+        }
       }
     }
   }
-
 }
 
 
@@ -1091,11 +1715,16 @@ angular.module('material.components.content', [
 function materialContentDirective() {
   return {
     restrict: 'E',
-    controller: angular.noop,
+    controller: ['$scope', '$element', ContentController],
     link: function($scope, $element, $attr) {
       $scope.$broadcast('$materialContentLoaded', $element);
     }
   };
+
+  function ContentController($scope, $element) {
+    this.$scope = $scope;
+    this.$element = $element;
+  }
 }
 
 /**
@@ -1105,7 +1734,8 @@ function materialContentDirective() {
 angular.module('material.components.dialog', [
   'material.animations',
   'material.services.compiler',
-  'material.services.aria'
+  'material.services.aria',
+  'material.services.interimElement',
 ])
   .directive('materialDialog', [
     '$$rAF',
@@ -1113,12 +1743,11 @@ angular.module('material.components.dialog', [
   ])
   .factory('$materialDialog', [
     '$timeout',
-    '$materialCompiler',
     '$rootElement',
-    '$rootScope',
     '$materialEffects',
     '$animate',
-    '$aria',
+    '$materialAria',
+    '$$interimElement',
     MaterialDialogService
   ]);
 
@@ -1143,14 +1772,18 @@ function MaterialDialogDirective($$rAF) {
  *
  * @description
  *
- * The $materialDialog service opens a dialog over top of the app. 
+ * Used to open a dialog over top of the app, `$materialDialog` is a service created
+ * by `$$interimElement` and provides a simple promise-based, behavior API:
  *
- * The `$materialDialog` service can be used as a function, which when called will open a
- * dialog. Note: the dialog is always given an isolate scope.
+ *  - `$materialDialog.show()`
+ *  - `$materialDialog.hide()`
+ *  - `$materialDialog.cancel()`
  *
- * It takes one argument, `options`, which is defined below.
+ * #### Notes:
  *
- * Note: the dialog's template must have an outer `<material-dialog>` element. 
+ * The dialog is always given an isolate scope.
+ *
+ * The dialog's template must have an outer `<material-dialog>` element.
  * Inside, use an element with class `dialog-content` for the dialog's content, and use
  * an element with class `dialog-actions` for the dialog's actions.  
  *
@@ -1170,7 +1803,7 @@ function MaterialDialogDirective($$rAF) {
  * var app = angular.module('app', ['ngMaterial']);
  * app.controller('MyController', function($scope, $materialDialog) {
  *   $scope.openDialog = function($event) {
- *     var hideDialog = $materialDialog({
+ *     $materialDialog.show({
  *       template: '<material-dialog>Hello!</material-dialog>',
  *       targetEvent: $event
  *     });
@@ -1178,7 +1811,15 @@ function MaterialDialogDirective($$rAF) {
  * });
  * </hljs>
  *
- * @returns {function} `hideDialog` - A function that hides the dialog.
+ */
+
+/**
+ *
+ * @ngdoc method
+ * @name $materialDialog#show
+ *
+ * @description
+ * Show a dialog with the specified options
  *
  * @paramType Options
  * @param {string=} templateUrl The url of a template that will be used as the content
@@ -1201,139 +1842,142 @@ function MaterialDialogDirective($$rAF) {
  * @param {object=} resolve Similar to locals, except it takes promises as values, and the
  * toast will not open until all of the promises resolve.
  * @param {string=} controllerAs An alias to assign the controller to on the scope.
- * @param {element=} appendTo The element to append the dialog to. Defaults to appending
+ * @param {element=} parent The element to append the dialog to. Defaults to appending
  *   to the root element of the application.
+ *
+ * @returns {Promise} Returns a promise that will be resolved or rejected when
+ *  `$materialDialog.hide()` or `$materialDialog.cancel()` is called respectively.
  */
-function MaterialDialogService($timeout, $materialCompiler, $rootElement, $rootScope, $materialEffects, $animate, $aria) {
-  var recentDialog;
-  var dialogParent = $rootElement.find('body');
-  if ( !dialogParent.length ) {
-    dialogParent = $rootElement;
-  }
 
-  return showDialog;
+/**
+ * @ngdoc method
+ * @name $materialDialog#hide
+ *
+ * @description
+ * Hide an existing dialog and `resolve` the promise returned from `$materialDialog.show()`.
+ *
+ * @param {*} arg An argument to resolve the promise with.
+ *
+ */
 
-  function showDialog(options) {
-    options = angular.extend({
-      appendTo: dialogParent,
-      hasBackdrop: true, // should have an opaque backdrop
-      clickOutsideToClose: true, // should have a clickable backdrop to close
-      escapeToClose: true,
-      // targetEvent: used to find the location to start the dialog from
-      targetEvent: null,
-      transformTemplate: function(template) {
-        return '<div class="material-dialog-container">' + template + '</div>';
-      }
-      // Also supports all options from $materialCompiler.compile
-    }, options || {});
+/**
+ * @ngdoc method
+ * @name $materialDialog#cancel
+ *
+ * @description
+ * Hide an existing dialog and `reject` the promise returned from `$materialDialog.show()`.
+ *
+ * @param {*} arg An argument to reject the promise with.
+ *
+ */
 
+function MaterialDialogService($timeout, $rootElement, $materialEffects, $animate, $materialAria, $$interimElement) {
+
+  var $dialogService;
+  return $dialogService = $$interimElement({
+    hasBackdrop: true,
+    isolateScope: true,
+    onShow: onShow,
+    onRemove: onRemove,
+    clickOutsideToClose: true,
+    escapeToClose: true,
+    targetEvent: null,
+    transformTemplate: function(template) {
+      return '<div class="material-dialog-container">' + template + '</div>';
+    }
+  });
+
+  function onShow(scope, element, options) {
     // Incase the user provides a raw dom element, always wrap it in jqLite
-    options.appendTo = angular.element(options.appendTo); 
+    options.parent = angular.element(options.parent);
 
-    // Close the old dialog
-    recentDialog && recentDialog.then(function(destroyDialog) {
-      destroyDialog();
-    });
+    options.popInTarget = angular.element((options.targetEvent || {}).target); 
+    var closeButton = findCloseButton();
 
-    recentDialog = $materialCompiler.compile(options).then(function(compileData) {
-      // Controller will be passed a `$hideDialog` function
-      compileData.locals.$hideDialog = destroyDialog;
+    configureAria(element.find('material-dialog'));
 
-      var scope = $rootScope.$new(true);
-      var element = compileData.link(scope); 
-      var popInTarget = options.targetEvent && options.targetEvent.target && 
-        angular.element(options.targetEvent.target);
-      var closeButton = findCloseButton();
-      var backdrop;
-
-      configureAria(element.find('material-dialog'));
-
-      if (options.hasBackdrop) {
-        backdrop = angular.element('<material-backdrop class="opaque ng-enter">');
-        $animate.enter(backdrop, options.appendTo, null);
-      }
-
-      $materialEffects.popIn(element, options.appendTo, popInTarget)
-        .then(function() {
-
-          if (options.escapeToClose) {
-            $rootElement.on('keyup', onRootElementKeyup);
-          }
-          if (options.clickOutsideToClose) {
-            element.on('click', dialogClickOutside);
-          }
-          closeButton.focus();
-
-        });
-
-      return destroyDialog;
-
-      function findCloseButton() {
-        //If no element with class dialog-close, try to find the last 
-        //button child in dialog-actions and assume it is a close button
-        var closeButton = element[0].querySelector('.dialog-close');
-        if (!closeButton) {
-          var actionButtons = element[0].querySelectorAll('.dialog-actions button');
-          closeButton = actionButtons[ actionButtons.length - 1 ];
-        }
-        return angular.element(closeButton);
-      }
-      function destroyDialog() {
-        if (destroyDialog.called) return;
-        destroyDialog.called = true;
-
-        if (backdrop) {
-          $animate.leave(backdrop);
-        }
-        if (options.escapeToClose) {
-          $rootElement.off('keyup', onRootElementKeyup);
-        }
-        if (options.clickOutsideToClose) {
-          element.off('click', dialogClickOutside);
-        }
-        $animate.leave(element).then(function() {
-          element.remove();
-          scope.$destroy();
-          scope = null;
-          element = null;
-
-          if(popInTarget !== null) {
-            popInTarget.focus();
-          }
-        });
-      }
-      function onRootElementKeyup(e) {
-        if (e.keyCode === Constant.KEY_CODE.ESCAPE) {
-          $timeout(destroyDialog);
-        }
-      }
-      function dialogClickOutside(e) {
-        // Only close if we click the flex container outside the backdrop
-        if (e.target === element[0]) {
-          $timeout(destroyDialog);
-        }
-      }
-    });
-
-    /**
-     * Inject ARIA-specific attributes appropriate for Dialogs
-     */
-    function configureAria(element) {
-      var ROLE = Constant.ARIA.ROLE;
-
-      $aria.update(element, {
-        'role': ROLE.DIALOG
-      });
-
-      var dialogContent = element.find('.dialog-content');
-      if(dialogContent.length === 0){
-        dialogContent = element;
-      }
-      var defaultText = Util.stringFromTextBody(dialogContent.text(), 3);
-      $aria.expect(element, 'aria-label', defaultText);
+    if (options.hasBackdrop) {
+      var backdrop = angular.element('<material-backdrop class="opaque ng-enter">');
+      $animate.enter(backdrop, options.parent, null);
+      options.backdrop = backdrop;
     }
 
-    return recentDialog;
+    return $materialEffects.popIn(
+      element, 
+      options.parent, 
+      options.popInTarget.length && options.popInTarget
+    )
+    .then(function() {
+      if (options.escapeToClose) {
+        options.rootElementKeyupCallback = function(e) {
+          if (e.keyCode === Constant.KEY_CODE.ESCAPE) {
+            $timeout($dialogService.cancel);
+          }
+        };
+
+        $rootElement.on('keyup', options.rootElementKeyupCallback);
+      }
+
+      if (options.clickOutsideToClose) {
+        options.dialogClickOutsideCallback = function(e) {
+          // Only close if we click the flex container outside the backdrop
+          if (e.target === element[0]) {
+            $timeout($dialogService.cancel);
+          }
+        };
+
+        element.on('click', options.dialogClickOutsideCallback);
+      }
+      closeButton.focus();
+    });
+
+
+    function findCloseButton() {
+      //If no element with class dialog-close, try to find the last
+      //button child in dialog-actions and assume it is a close button
+      var closeButton = element[0].querySelector('.dialog-close');
+      if (!closeButton) {
+        var actionButtons = element[0].querySelectorAll('.dialog-actions button');
+        closeButton = actionButtons[ actionButtons.length - 1 ];
+      }
+      return angular.element(closeButton);
+    }
+
+  }
+
+  function onRemove(scope, element, options) {
+
+    if (options.backdrop) {
+      $animate.leave(options.backdrop);
+      element.data('backdrop', undefined);
+    }
+    if (options.escapeToClose) {
+      $rootElement.off('keyup', options.rootElementKeyupCallback);
+    }
+    if (options.clickOutsideToClose) {
+      element.off('click', options.dialogClickOutsideCallback);
+    }
+    return $animate.leave(element).then(function() {
+      element.remove();
+      options.popInTarget && options.popInTarget.focus();
+    });
+
+  }
+
+  /**
+   * Inject ARIA-specific attributes appropriate for Dialogs
+   */
+  function configureAria(element) {
+    element.attr({
+      'role': 'dialog'
+    });
+
+    var dialogContent = element.find('.dialog-content');
+    if (dialogContent.length === 0){
+      dialogContent = element;
+    }
+    var defaultText = Util.stringFromTextBody(dialogContent.text(), 3);
+    $materialAria.expect(element, 'aria-label', defaultText);
   }
 }
 
@@ -1361,8 +2005,9 @@ angular.module('material.components.textField', [])
  *
  * @usage 
  * <hljs lang="html">
- * <material-input-group>
- *   <material-input type="text" ng-model="myText"></material-input>
+ * <material-input-group ng-disabled="isDisabled">
+ *   <label for="{{fid}}">{{someLabel}}</label>
+ *   <material-input id="{{fid}}" type="text" ng-model="someText"></material-input>
  * </material-input-group>
  * </hljs>
  */
@@ -1392,9 +2037,9 @@ function materialInputGroupDirective() {
  *
  * @usage
  * <hljs lang="html">
- * <material-input-group>
- *   <material-input type="text" ng-model="user.fullName"></material-input>
- *   <material-input type="text" ng-model="user.email"></material-input>
+ * <material-input-group ng-disabled="user.isLocked">
+ *   <label for="i1">FirstName</label>
+ *   <material-input id="i1" ng-model="user.firstName"></material-input>
  * </material-input-group>
  * </hljs>
  */
@@ -1402,7 +2047,7 @@ function materialInputDirective() {
   return {
     restrict: 'E',
     replace: true,
-    template: '<input>',
+    template: '<input >',
     require: ['^?materialInputGroup', '?ngModel'],
     link: function(scope, element, attr, ctrls) {
       var inputGroupCtrl = ctrls[0];
@@ -1411,7 +2056,13 @@ function materialInputDirective() {
         return;
       }
 
-      // When the input value changes, check if it "has" a value, and 
+      // scan for disabled and transpose the `type` value to the <input> element
+      var isDisabled = Util.isParentDisabled(element);
+
+      element.attr('tabindex', isDisabled ? -1 : 0 );
+      element.attr('type', attr.type || element.parent().attr('type') || "text" );
+
+      // When the input value changes, check if it "has" a value, and
       // set the appropriate class on the input group
       if (ngModelCtrl) {
         //Add a $formatter so we don't use up the render function
@@ -1420,6 +2071,7 @@ function materialInputDirective() {
           return value;
         });
       }
+
       element.on('input', function() {
         inputGroupCtrl.setHasValue(!!element.val());
       });
@@ -1515,8 +2167,8 @@ angular.module('material.components.list', [])
  *      <img ng-src="{{item.face}}" class="face" alt="{{item.who}}">
  *    </div>
  *    <div class="material-tile-content">
- *      <h2>{{item.what}}</h2>
- *      <h3>{{item.who}}</h3>
+ *      <h3>{{item.what}}</h3>
+ *      <h4>{{item.who}}</h4>
  *      <p>
  *        {{item.notes}}
  *      </p>
@@ -1532,7 +2184,7 @@ function materialListDirective() {
     restrict: 'E',
     link: function($scope, $element, $attr) {
       $element.attr({
-        'role' : Constant.ARIA.ROLE.LIST
+        'role' : 'list'
       });
     }
   };
@@ -1563,7 +2215,7 @@ function materialItemDirective() {
     restrict: 'E',
     link: function($scope, $element, $attr) {
       $element.attr({
-        'role' : Constant.ARIA.ROLE.LIST_ITEM
+        'role' : 'listitem'
       });
     }
   };
@@ -1583,7 +2235,7 @@ angular.module('material.components.radioButton', [
     materialRadioGroupDirective
   ])
   .directive('materialRadioButton', [
-    '$aria',
+    '$materialAria',
     materialRadioButtonDirective
   ]);
 
@@ -1624,7 +2276,7 @@ function materialRadioGroupDirective() {
 
   return {
     restrict: 'E',
-    controller: RadioGroupController,
+    controller: ['$element', RadioGroupController],
     require: ['materialRadioGroup', '?ngModel'],
     link: link
   };
@@ -1636,28 +2288,28 @@ function materialRadioGroupDirective() {
       };
 
     function keydownListener(ev) {
-
-      if (ev.which === Constant.KEY_CODE.LEFT_ARROW) {
+      if (ev.which === Constant.KEY_CODE.LEFT_ARROW || ev.which === Constant.KEY_CODE.UP_ARROW) {
         ev.preventDefault();
-        rgCtrl.selectPrevious(element);
+        rgCtrl.selectPrevious();
       }
-      else if (ev.which === Constant.KEY_CODE.RIGHT_ARROW) {
+      else if (ev.which === Constant.KEY_CODE.RIGHT_ARROW || ev.which === Constant.KEY_CODE.DOWN_ARROW) {
         ev.preventDefault();
-        rgCtrl.selectNext(element);
+        rgCtrl.selectNext();
       }
     }
 
     rgCtrl.init(ngModelCtrl);
 
     element.attr({
-      'role': Constant.ARIA.ROLE.RADIO_GROUP,
+      'role': 'radiogroup',
       'tabIndex': '0'
     })
     .on('keydown', keydownListener);
   }
 
-  function RadioGroupController() {
+  function RadioGroupController($element) {
     this._radioButtonRenderFns = [];
+    this.$element = $element;
   }
 
   function createRadioGroupControllerProto() {
@@ -1688,51 +2340,37 @@ function materialRadioGroupDirective() {
       getViewValue: function() {
         return this._ngModelCtrl.$viewValue;
       },
-      selectNext: function(element) {
-        return selectButton('next', element);
+      selectNext: function() {
+        return changeSelectedButton(this.$element, 1);
       },
-      selectPrevious : function(element) {
-        return selectButton('previous', element);
+      selectPrevious : function() {
+        return changeSelectedButton(this.$element, -1);
+      },
+      setActiveDescendant: function (radioId) {
+        this.$element.attr('aria-activedescendant', radioId);
       }
     };
   }
   /**
-   * Select the grouping parent's next or previous radio/checkbox button.
-   * NOTE: this uses the iterator.js utility function...
+   * Change the radio group's selected button by a given increment.
+   * If no button is selected, select the first button.
    */
-  function selectButton( direction,  parent, loop ) {
-    loop = angular.isUndefined(loop) ? true : !!loop;
+  function changeSelectedButton(parent, increment) {
+    // Coerce all child radio buttons into an array, then wrap then in an iterator
+    var buttons = Util.iterator(
+      Array.prototype.slice.call(parent[0].querySelectorAll('material-radio-button')),
+      true
+    );
 
-    var buttons = Util.iterator( findAllButtons(parent), loop );
-
-    if ( buttons.count() ) {
-      var selected = findSelectedButton(parent);
-      var target = !selected                ? buttons.first()    :
-                   (direction =='previous') ? buttons.previous( selected ) : buttons.next( selected );
-
-      if ( target ) {
-        // Activate radioButton's click listener (triggerHandler won't send an actual click event)
-        angular.element(target).triggerHandler('click');
-      }
+    if (buttons.count()) {
+      var selected = parent[0].querySelector('material-radio-button.material-checked');
+      var target = buttons[increment < 0 ? 'previous' : 'next'](selected) || 
+        buttons.first();
+      // Activate radioButton's click listener (triggerHandler won't create a real click event)
+      angular.element(target).triggerHandler('click');
     }
   }
-  /**
-   *  Find all button children for specified element
-   *   NOTE: This guarantees giving us every radio, even grandchildren, and
-   *               us getting them in the proper order.
-   */
-  function findAllButtons(element) {
-    return Array.prototype.slice.call(
-      element[0].querySelectorAll('material-radio-button')
-    );
-  }
 
-  /**
-   * Find the currently selected button element (if any)
-   */
-  function findSelectedButton(element) {
-    return element[0].querySelector('material-radio-button.material-checked');
-  }
 }
 
 /**
@@ -1773,7 +2411,7 @@ function materialRadioGroupDirective() {
  * </hljs>
  *
  */
-function materialRadioButtonDirective($aria) {
+function materialRadioButtonDirective($materialAria) {
 
   var CHECKED_CSS = 'material-checked';
 
@@ -1792,6 +2430,8 @@ function materialRadioButtonDirective($aria) {
   function link(scope, element, attr, rgCtrl) {
     var lastChecked;
 
+    configureAria(element, scope);
+
     rgCtrl.add(render);
     attr.$observe('value', render);
 
@@ -1799,10 +2439,7 @@ function materialRadioButtonDirective($aria) {
       .on('click', listener)
       .on('$destroy', function() {
         rgCtrl.remove(render);
-      })
-      .attr('role', Constant.ARIA.ROLE.RADIO);
-
-    $aria.expect(element, Constant.ARIA.PROPERTY.LABEL, element.text());
+      });
 
     function listener(ev) {
       if (element[0].hasAttribute('disabled')) return;
@@ -1818,11 +2455,35 @@ function materialRadioButtonDirective($aria) {
         return;
       }
       lastChecked = checked;
-      element.attr(Constant.ARIA.PROPERTY.CHECKED, checked);
+      element.attr('aria-checked', checked);
       if (checked) {
         element.addClass(CHECKED_CSS);
+        rgCtrl.setActiveDescendant(element.attr('id'));
       } else {
         element.removeClass(CHECKED_CSS);
+      }
+    }
+    /**
+     * Inject ARIA-specific attributes appropriate for each radio button
+     */
+    function configureAria( element, scope ){
+      scope.ariaId = buildAriaID();
+
+      element.attr({
+        'id' :  scope.ariaId,
+        'role' : 'radio',
+        'aria-checked' : 'false'
+      });
+
+      $materialAria.expect(element, 'aria-label', element.text());
+
+      /**
+       * Build a unique ID for each radio button that will be used with aria-activedescendant.
+       * Preserve existing ID if already specified.
+       * @returns {*|string}
+       */
+      function buildAriaID() {
+        return attr.id || ( 'radio' + "_" + Util.nextUid() );
       }
     }
   }
@@ -1838,7 +2499,8 @@ function materialRadioButtonDirective($aria) {
  * A Sidenav QP component.
  */
 angular.module('material.components.sidenav', [
-  'material.services.registry'
+  'material.services.registry',
+  'material.animations'
 ])
   .factory('$materialSidenav', [
     '$materialComponentRegistry', 
@@ -1846,6 +2508,8 @@ angular.module('material.components.sidenav', [
   ])
   .directive('materialSidenav', [
     '$timeout',
+    '$materialEffects',
+    '$$rAF',
     materialSidenavDirective 
   ])
   .controller('$materialSidenavController', [
@@ -1978,7 +2642,7 @@ function materialSidenavService($materialComponentRegistry) {
  * @usage
  * <hljs lang="html">
  * <div layout="horizontal" ng-controller="MyController">
- *   <material-sidenav class="material-sidenav-left">
+ *   <material-sidenav component-id="left" class="material-sidenav-left">
  *     Left Nav!
  *   </material-sidenav>
  *
@@ -1989,7 +2653,7 @@ function materialSidenavService($materialComponentRegistry) {
  *     </material-button>
  *   </material-content>
  *
- *   <material-sidenav class="material-sidenav-right">
+ *   <material-sidenav component-id="right" class="material-sidenav-right">
  *     Right Nav!
  *   </material-sidenav>
  * </div>
@@ -2004,72 +2668,87 @@ function materialSidenavService($materialComponentRegistry) {
  * });
  * </hljs>
  */
-function materialSidenavDirective($timeout) {
+function materialSidenavDirective($timeout, $materialEffects, $$rAF) {
   return {
     restrict: 'E',
     scope: {},
     controller: '$materialSidenavController',
-    link: function($scope, $element, $attr, sidenavCtrl) {
-      var backdrop = angular.element('<material-backdrop class="material-sidenav-backdrop">');
-
-      $scope.$watch('isOpen', onShowHideSide);
-
-      /**
-       * Toggle the SideNav view and attach/detach listeners
-       * @param isOpen
-       */
-      function onShowHideSide(isOpen) {
-        var parent = $element.parent();
-
-        $element.toggleClass('open', !!isOpen);
-
-        if (isOpen) {
-          parent.append(backdrop);
-          backdrop.on( EVENT.CLICK, onBackdropClick );
-          parent.on( EVENT.KEY_DOWN, onKeyDown );
-        } else {
-          backdrop.remove();
-          backdrop.off( EVENT.CLICK, onBackdropClick);
-          parent.off( EVENT.KEY_DOWN, onKeyDown );
-        }
-      }
-
-      /**
-       *  Auto-close the sideNav when the backdrop mask is clicked
-       */
-      function onBackdropClick() {
-        close();
-      }
-
-      /**
-       * Auto-close sideNav when the `escape` key is pressed.
-       * @param evt
-       */
-      function onKeyDown(evt) {
-        if(evt.which === Constant.KEY_CODE.ESCAPE){
-          close();
-
-          evt.preventDefault();
-          evt.stopPropagation();
-        }
-      }
-
-      /**
-        * With backdrop `clicks` or `escape` key-press, immediately
-       * apply the CSS close transition... Then notify the controller
-       * to close() and perform its own actions.
-       */
-      function close() {
-
-        onShowHideSide( false );
-
-        $timeout(function(){
-          sidenavCtrl.close();
-        });
-      }
-
-    }
+    compile: compile
   };
+
+  function compile(element, attr) {
+    element.addClass('closed');
+
+    return postLink;
+  }
+  function postLink(scope, element, attr, sidenavCtrl) {
+    var backdrop = angular.element('<material-backdrop class="material-sidenav-backdrop">');
+
+    scope.$watch('isOpen', onShowHideSide);
+    element.on($materialEffects.TRANSITIONEND_EVENT, onTransitionEnd);
+
+    /**
+     * Toggle the SideNav view and attach/detach listeners
+     * @param isOpen
+     */
+    function onShowHideSide(isOpen) {
+      var parent = element.parent();
+
+      if (isOpen) {
+        element.removeClass('closed');
+
+        parent.append(backdrop);
+        backdrop.on('click', close);
+        parent.on('keydown', onKeyDown);
+
+      } else {
+        backdrop.remove();
+        backdrop.off('click', close);
+        parent.off('keydown', onKeyDown);
+      }
+
+      // Wait until the next frame, so that if the `closed` class was just removed the 
+      // element has a chance to 're-initialize' from being display: none.
+      $$rAF(function() {
+        element.toggleClass('open', !!scope.isOpen);
+      });
+    }
+
+    function onTransitionEnd(ev) {
+      if (ev.target === element[0] && !scope.isOpen) {
+        element.addClass('closed');
+      }
+    }
+
+    /**
+     * Auto-close sideNav when the `escape` key is pressed.
+     * @param evt
+     */
+    function onKeyDown(evt) {
+      if(evt.which === Constant.KEY_CODE.ESCAPE){
+        close();
+
+        evt.preventDefault();
+        evt.stopPropagation();
+      }
+    }
+
+    /**
+     * With backdrop `clicks` or `escape` key-press, immediately
+     * apply the CSS close transition... Then notify the controller
+     * to close() and perform its own actions.
+     */
+    function close() {
+
+      onShowHideSide( false );
+
+      $timeout(function(){
+        sidenavCtrl.close();
+      });
+    }
+
+  }
+
 }
 
 /**
@@ -2127,10 +2806,9 @@ function SliderDirective() {
       '$element',
       '$attrs',
       '$$rAF',
-      '$timeout',
       '$window',
       '$materialEffects',
-      '$aria',
+      '$materialAria',
       SliderController
     ],
     template:
@@ -2173,7 +2851,7 @@ function SliderDirective() {
  * We use a controller for all the logic so that we can expose a few
  * things to unit tests
  */
-function SliderController(scope, element, attr, $$rAF, $timeout, $window, $materialEffects, $aria) {
+function SliderController(scope, element, attr, $$rAF, $window, $materialEffects, $materialAria) {
 
   this.init = function init(ngModelCtrl) {
     var thumb = angular.element(element[0].querySelector('.slider-thumb'));
@@ -2197,9 +2875,9 @@ function SliderController(scope, element, attr, $$rAF, $timeout, $window, $mater
       updateAriaDisabled(!!attr.disabled);
     }
 
-    $aria.expect(element, 'aria-label');
+    $materialAria.expect(element, 'aria-label');
     element.attr('tabIndex', 0);
-    element.attr('role', Constant.ARIA.ROLE.SLIDER);
+    element.attr('role', 'slider');
     element.on('keydown', keydownListener);
 
     var hammertime = new Hammer(element[0], {
@@ -2210,6 +2888,7 @@ function SliderController(scope, element, attr, $$rAF, $timeout, $window, $mater
     hammertime.on('hammer.input', onInput);
     hammertime.on('panstart', onPanStart);
     hammertime.on('pan', onPan);
+    hammertime.on('panend', onPanEnd);
 
     // On resize, recalculate the slider's dimensions and re-render
     var updateAll = $$rAF.debounce(function() {
@@ -2283,13 +2962,13 @@ function SliderController(scope, element, attr, $$rAF, $timeout, $window, $mater
      * Refreshing Dimensions
      */
     var sliderDimensions = {};
-    var debouncedRefreshDimensions = Util.debounce(refreshSliderDimensions, 5000);
+    var throttledRefreshDimensions = Util.throttle(refreshSliderDimensions, 5000);
     refreshSliderDimensions();
     function refreshSliderDimensions() {
       sliderDimensions = trackContainer[0].getBoundingClientRect();
     }
     function getSliderDimensions() {
-      debouncedRefreshDimensions();
+      throttledRefreshDimensions();
       return sliderDimensions;
     }
 
@@ -2356,18 +3035,27 @@ function SliderController(scope, element, attr, $$rAF, $timeout, $window, $mater
      * Slide listeners
      */
     var isSliding = false;
+    var isDiscrete = angular.isDefined(attr.discrete);
+
     function onInput(ev) {
       if (!isSliding && ev.eventType === Hammer.INPUT_START &&
           !element[0].hasAttribute('disabled')) {
 
         isSliding = true;
+
         element.addClass('active');
         element[0].focus();
         refreshSliderDimensions();
-        doSlide(ev.center.x);
+
+        onPan(ev);
+
+        ev.srcEvent.stopPropagation();
 
       } else if (isSliding && ev.eventType === Hammer.INPUT_END) {
+
+        if ( isDiscrete ) onPanEnd(ev);
         isSliding = false;
+
         element.removeClass('panning active');
       }
     }
@@ -2377,8 +3065,33 @@ function SliderController(scope, element, attr, $$rAF, $timeout, $window, $mater
     }
     function onPan(ev) {
       if (!isSliding) return;
-      doSlide(ev.center.x);
+
+      // While panning discrete, update only the
+      // visual positioning but not the model value.
+
+      if ( isDiscrete ) adjustThumbPosition( ev.center.x );
+      else              doSlide( ev.center.x );
+
       ev.preventDefault();
+      ev.srcEvent.stopPropagation();
+    }
+
+    function onPanEnd(ev) {
+      if ( isDiscrete ) {
+        // Convert exact to closest discrete value.
+        // Slide animate the thumb... and then update the model value.
+
+        var exactVal = percentToValue( positionToPercent( ev.center.x ));
+        var closestVal = minMaxValidator( stepValidator(exactVal) );
+
+        setSliderPercent( valueToPercent(closestVal));
+        $$rAF(function(){
+          setModelValue( closestVal );
+        });
+
+        ev.preventDefault();
+        ev.srcEvent.stopPropagation();
+      }
     }
 
     /**
@@ -2388,15 +3101,51 @@ function SliderController(scope, element, attr, $$rAF, $timeout, $window, $mater
     this._onPanStart = onPanStart;
     this._onPan = onPan;
 
-    function doSlide(x) {
-      var percent = (x - sliderDimensions.left) / (sliderDimensions.width);
-      scope.$evalAsync(function() { setModelValue(min + percent * (max - min)); });
+    /**
+     * Slide the UI by changing the model value
+     * @param x
+     */
+    function doSlide( x ) {
+      scope.$evalAsync( function() {
+        setModelValue( percentToValue( positionToPercent(x) ));
+      });
+    }
+
+    /**
+     * Slide the UI without changing the model (while dragging/panning)
+     * @param x
+     */
+    function adjustThumbPosition( x ) {
+      setSliderPercent( positionToPercent(x) );
+    }
+
+    /**
+     * Convert horizontal position on slider to percentage value of offset from beginning...
+     * @param x
+     * @returns {number}
+     */
+    function positionToPercent( x ) {
+      return (x - sliderDimensions.left) / (sliderDimensions.width);
+    }
+
+    /**
+     * Convert percentage offset on slide to equivalent model value
+     * @param percent
+     * @returns {*}
+     */
+    function percentToValue( percent ) {
+      return (min + percent * (max - min));
+    }
+
+    function valueToPercent( val ) {
+      return (val - min)/(max - min);
     }
 
   };
 }
 
 /**
+ * @private
  * @ngdoc module
  * @name material.components.switch
  */
@@ -2413,6 +3162,7 @@ angular.module('material.components.switch', [
 ]);
 
 /**
+ * @private
  * @ngdoc directive
  * @module material.components.switch
  * @name materialSwitch
@@ -2468,10 +3218,78 @@ function MaterialSwitch(checkboxDirectives, radioButtonDirectives) {
     thumb.attr('disabled', attr.disabled);
     thumb.attr('ngDisabled', attr.ngDisabled);
 
-    return function postLink(scope, element, attr, ngModelCtrl) {
-      checkboxDirective.link(scope, thumb, attr, ngModelCtrl);
+    var link = checkboxDirective.compile(thumb, attr);
+
+    return function (scope, element, attr, ngModelCtrl) {
+      var thumb = angular.element(element[0].querySelector('.material-switch-thumb'));
+      return link(scope, thumb, attr, ngModelCtrl)
     };
   }
+}
+
+/**
+ * @ngdoc module
+ * @name material.components.subheader
+ * @description
+ * SubHeader module
+ */
+angular.module('material.components.subheader', [
+  'material.components.sticky'
+])
+.directive('materialSubheader', [
+  '$materialSticky',
+  '$compile',
+  MaterialSubheaderDirective
+]);
+
+/**
+ * @ngdoc directive
+ * @name materialSubheader
+ * @module material.components.subheader
+ *
+ * @restrict E
+ *
+ * @description
+ * The `<material-subheader>` directive is a subheader for a section
+ *
+ * @usage
+ * <hljs lang="html">
+ * <material-subheader>Online Friends</material-subheader>
+ * </hljs>
+ */
+
+function MaterialSubheaderDirective($materialSticky, $compile) {
+  return {
+    restrict: 'E',
+    replace: true,
+    transclude: true,
+    template: 
+      '<h2 class="material-subheader">' +
+        '<span class="material-subheader-content"></span>' +
+      '</h2>',
+    compile: function(element, attr, transclude) {
+      var outerHTML = element[0].outerHTML;
+      return function postLink(scope, element, attr) {
+        function getContent(el) {
+          return angular.element(el[0].querySelector('.material-subheader-content'));
+        }
+
+        // Transclude the user-given contents of the subheader
+        // the conventional way.
+        transclude(scope, function(clone) {
+          getContent(element).append(clone);
+        });
+
+        // Create another clone, that uses the outer and inner contents
+        // of the element, that will be 'stickied' as the user scrolls.
+        transclude(scope, function(clone) {
+          var stickyClone = $compile(angular.element(outerHTML))(scope);
+          getContent(stickyClone).append(clone);
+          $materialSticky(scope, element, stickyClone);
+        });
+      };
+    }
+  };
 }
 
 /**
@@ -2483,8 +3301,7 @@ function MaterialSwitch(checkboxDirectives, radioButtonDirectives) {
  */
 angular.module('material.components.tabs', [
   'material.animations',
-  'material.services.attrBind',
-  'material.services.registry'
+  'material.components.swipe'
 ]);
 
 
@@ -2493,251 +3310,374 @@ angular.module('material.components.tabs', [
  * tab selection changes. If `nobar` then do not show the
  * bar nor animate.
  */
-function linkTabInk(scope, element, tabsCtrl, $q, $materialEffects) {
-  // TODO scope.nostretch
-  if ( scope.nobar ) return;
+angular.module('material.components.tabs')
 
-  // Single inkBar is used for all tabs
-  var tabsHeader = findNode('.tabs-header-items-container', element); // excludes paginators
-  var inkBar = findNode("material-ink-bar", element);
-  var lastLeft = 0;
+.directive('materialTabsInkBar', [
+  '$materialEffects',
+  '$window',
+  '$$rAF',
+  '$timeout',
+  MaterialTabInkDirective
+]);
 
-  // Immediately place the ink bar
-  updateInkBar(true);
+function MaterialTabInkDirective($materialEffects, $window, $$rAF, $timeout) {
 
-  // Delay inkBar updates 1-frame until pagination updates...
-  return updateInkBar;
+  return {
+    restrict: 'E',
+    require: ['^?nobar', '^materialTabs'],
+    link: postLink
+  };
 
-  /**
-   * Update the position and size of the ink bar based on the
-   * specified tab DOM element. If all tabs have been removed, then
-   * hide the inkBar.
-   *
-   * @param tab
-   * @param skipAnimation
-   */
-  function updateInkBar( immediate ) {
-    var selButton = tabsCtrl.selectedElement();
-    var showInk = selButton && selButton.length && angular.isDefined(inkBar);
-    var isHiding = selButton && selButton.hasClass('pagination-hide');
+  function postLink(scope, element, attr, ctrls) {
+    var nobar = ctrls[0];
+    var tabsCtrl = ctrls[1];
 
-    var styles = { display : 'none', width : '0px' };
-    var left = 0, width = 0;
+    if (nobar) return;
 
-    if ( !showInk || isHiding ) {
-      // no animation
-      inkBar.toggleClass('animate', (immediate !== true))
-      .css({
-        display : 'none',
-        width : '0px'
-      });
+    var debouncedUpdateBar = $$rAF.debounce(updateBar);
 
-    } else {
-      // Just a linear animation...
+    scope.$watch(tabsCtrl.selected, updateBar);
+    scope.$on('$materialTabsChanged', debouncedUpdateBar);
+    scope.$on('$materialTabsPaginationChanged', debouncedUpdateBar);
+    angular.element($window).on('resize', onWindowResize);
 
-      width = selButton.prop('offsetWidth');
-      left = tabsHeader.prop('offsetLeft') + (scope.pagingOffset || 0) + selButton.prop('offsetLeft');
-
-      styles = {
-        display : width > 0 ? 'block' : 'none',
-        width: width + 'px'
-      };
-      styles[$materialEffects.TRANSFORM] = 'translate3d(' + left + 'px,0,0)';
-
-      // Before we update the CSS to create a linear slide effect,
-      // let's add/remove `animate` class for transition & duration
-
-      inkBar
-        .toggleClass('animate', (immediate !== true) )
-        .css(styles)
+    function onWindowResize() {
+      debouncedUpdateBar();
+      $timeout(debouncedUpdateBar, 100, false);
     }
 
-    // Listen for CSS transition completion and announce
-    var dfd = $q.defer();
-    inkBar.one( $materialEffects.TRANSITIONEND_EVENT, function() {
-      dfd.resolve({ width: width, left:left });
+    scope.$on('$destroy', function() {
+      angular.element($window).off('resize', onWindowResize);
     });
 
-    return dfd.promise;
+    function updateBar() {
+      var selectedElement = tabsCtrl.selected() && tabsCtrl.selected().element;
+
+      if (!selectedElement || tabsCtrl.count() < 2) {
+        element.css({
+          display : 'none',
+          width : '0px'
+        });
+      } else {
+        var width = selectedElement.prop('offsetWidth');
+        var left = selectedElement.prop('offsetLeft') + (tabsCtrl.$$pagingOffset || 0);
+
+        element.css({
+          display : width > 0 ? 'block' : 'none',
+          width: width + 'px'
+        });
+        element.css($materialEffects.TRANSFORM, 'translate3d(' + left + 'px,0,0)');
+      }
+    }
 
   }
+
 }
 
 
-/**
- * Configure pagination and add listeners for tab changes
- * and Tabs width changes...
- *
- * @returns {updatePagination}
- */
-function linkTabPagination(scope, element, tabsCtrl, $q, $materialEffects ) {
+angular.module('material.components.tabs')
+
+.directive('materialTabsPagination', [
+  '$materialEffects',
+  '$window',
+  '$$rAF',
+  '$$q',
+  '$timeout',
+  TabPaginationDirective
+]);
+
+function TabPaginationDirective($materialEffects, $window, $$rAF, $$q, $timeout) {
 
   // TODO allow configuration of TAB_MIN_WIDTH
-  var TAB_MIN_WIDTH = 8 * 12;           // Must match tab min-width rule in _tabs.scss
-  var PAGINATORS_WIDTH = (8 * 4) * 2;   // Must match (2 * width of paginators) in scss
+  // Must match tab min-width rule in _tabs.scss
+  var TAB_MIN_WIDTH = 8 * 12; 
+  // Must match (2 * width of paginators) in scss
+  var PAGINATORS_WIDTH = (8 * 4) * 2;
 
-  var tabsHeader = findNode('.tabs-header-items-container', element); // excludes paginators
-  var buttonBar = findNode('.tabs-header-items', element);
-  var pagination = scope.pagination = {
-    page : 0,
-    next: function() {
-      // selectPageAt(pagination.page + 1);
-      tabsCtrl.selectAt( pagination.endIndex + 1  );
-    },
-    prev: function() {
-      // selectPageAt(pagination.page - 1);
-      tabsCtrl.selectAt( pagination.startIndex - 1  );
-    }
+  return {
+    restrict: 'A',
+    require: '^materialTabs',
+    link: postLink
   };
 
-  scope.$on( EVENT.FOCUS_CHANGED, function() {
+  function postLink(scope, element, attr, tabsCtrl) {
 
-  });
+    var tabsParent = element.children();
+    var state = scope.pagination = {
+      page: -1,
+      active: false,
+      clickNext: function() { userChangePage(+1); },
+      clickPrevious: function() { userChangePage(-1); }
+    };
 
-  return updatePagination;
+    var debouncedUpdatePagination = $$rAF.debounce(updatePagination);
 
-  /**
-   * When the window resizes [`resize`] or the tabs are added/removed
-   * [$materialTabsChanged], then calculate pagination-width and
-   * update both the current page (if needed) and the tab headers width...
-   *
-   * @returns Promise that is resolved when the pagination transition finishes
-   */
-  function updatePagination() {
-    var dfd = $q.defer();
-    var tabs = buttonBar.children();
-    var tabsWidth = element.prop('clientWidth') - PAGINATORS_WIDTH;
+    scope.$on('$materialTabsChanged', debouncedUpdatePagination);
+    angular.element($window).on('resize', debouncedUpdatePagination);
 
-    var needPagination = (tabsWidth > 0) && ((TAB_MIN_WIDTH * tabs.length) > tabsWidth);
-    var paginationToggled = (needPagination !== pagination.active);
+    // Listen to focus events bubbling up from material-tab elements
+    tabsParent.on('focusin', onTabsFocusIn);
 
-    if (tabsWidth <= 0) {
-      //tabsWidth is 0 on initial load. Just instantly resolve the promise if it's 0
-      return $q.when();
+    scope.$on('$destroy', function() {
+      angular.element($window).off('resize', debouncedUpdatePagination);
+      tabsParent.off('focusin', onTabsFocusIn);
+    });
+
+    scope.$watch(tabsCtrl.selected, onSelectedTabChange);
+
+    // Allows pagination through focus change.
+    function onTabsFocusIn(ev) {
+      if (!state.active) return;
+
+      var tab = angular.element(ev.target).controller('materialTab');
+      var pageIndex = getPageForTab(tab);
+      if (pageIndex !== state.page) {
+        // If the focused element is on a new page, don't focus yet.
+        tab.element.blur();
+        // Go to the new page, wait for the page transition to end, then focus.
+        setPage(pageIndex).then(function() {
+          tab.element.focus();
+        });
+      }
     }
 
-    pagination.active = needPagination;
+    function onSelectedTabChange(selectedTab) {
+      if (!selectedTab) return;
 
-    if (needPagination) {
+      if (state.active) {
+        var selectedTabPage = getPageForTab(selectedTab);
+        setPage(selectedTabPage);
+      } else {
+        debouncedUpdatePagination();
+      }
+    }
 
-      pagination.pagesCount = Math.ceil((TAB_MIN_WIDTH * tabs.length) / tabsWidth);
-      pagination.itemsPerPage = Math.max(1, Math.floor(tabs.length / pagination.pagesCount));
-      pagination.tabWidth = tabsWidth / pagination.itemsPerPage;
+    // Called when page is changed by a user action (click)
+    function userChangePage(increment) {
+      var newPage = state.page + increment;
+      var newTab;
+      if (!tabsCtrl.selected() || getPageForTab(tabsCtrl.selected()) !== newPage) {
+        var startIndex;
+        if (increment < 0) {
+          // If going backward, select the previous available tab, starting from
+          // the first item on the page after newPage.
+          startIndex = (newPage + 1) * state.itemsPerPage;
+          newTab = tabsCtrl.previous( tabsCtrl.itemAt(startIndex) );
+        } else {
+          // If going forward, select the next available tab, starting with the
+          // last item before newPage.
+          startIndex = (newPage * state.itemsPerPage) - 1;
+          newTab = tabsCtrl.next( tabsCtrl.itemAt(startIndex) );
+        }
+      }
+      setPage(newPage).then(function() {
+        newTab && newTab.element.focus();
+      });
+      newTab && tabsCtrl.select(newTab);
+    }
 
-      // If we just activated pagination, go to page 0 and watch the
-      // selected tab index to be sure we're on the same page
-      var pageIndex = getPageAtTabIndex(scope.$selIndex);
-      var pageChange = (pagination.page != pageIndex);
+    function updatePagination() {
+      var tabs = element.find('material-tab');
+      var tabsWidth = element.parent().prop('clientWidth') - PAGINATORS_WIDTH;
 
-      // Manually set width of page...
-      buttonBar.css('width', pagination.tabWidth * tabs.length + 'px');
+      var needPagination = tabsWidth && TAB_MIN_WIDTH * tabsCtrl.count() > tabsWidth;
+      var paginationToggled = needPagination !== state.active;
 
-      selectPageAt( pageIndex );
+      state.active = needPagination;
 
-      // If pagination.page changed, we need to wait for the transition to complete
-      // before we announce status [and potentially update focus]
+      if (needPagination) {
 
-      if ( pageChange ) {
+        state.pagesCount = Math.ceil((TAB_MIN_WIDTH * tabsCtrl.count()) / tabsWidth);
+        state.itemsPerPage = Math.max(1, Math.floor(tabsCtrl.count() / state.pagesCount));
+        state.tabWidth = tabsWidth / state.itemsPerPage;
+        
+        tabsParent.css('width', state.tabWidth * tabsCtrl.count() + 'px');
+        tabs.css('width', state.tabWidth + 'px');
 
-        tabsHeader.one($materialEffects.TRANSITIONEND_EVENT, function() {
-            dfd.resolve(pageIndex);
-        });
+        var selectedTabPage = getPageForTab(tabsCtrl.selected());
+        setPage(selectedTabPage);
 
       } else {
 
-        dfd.resolve(pageIndex);
+        if (paginationToggled) {
+          $timeout(function() {
+            tabsParent.css('width', '');
+            tabs.css('width', '');
+            slideTabButtons(0);
+            state.page = -1;
+          });
+        }
+
       }
-
-    } else {
-
-      if (paginationToggled) {
-
-        // Release buttonBar to be self-adjust to size of all tab buttons
-        // Slide tab buttons to show all buttons (starting at first)
-
-        buttonBar.css('width', '');
-
-        selectPageAt( 0 );
-      }
-
-      dfd.resolve(0);
     }
 
-    return dfd.promise;
-  }
+    function slideTabButtons(x) {
+      if (tabsCtrl.pagingOffset === x) {
+        // Resolve instantly if no change
+        return $$q.when();
+      }
 
-  /**
-   * Select the specified page in the page group and
-   * also change the selected the tab if the current
-   * tab selected is **not** within the new page range.
-   *
-   * @param page
-   */
-  function selectPageAt(page, updateTabSelection) {
-    var lastPage = pagination.pagesCount - 1;
-    var lastTab = buttonBar.children().length - 1;
+      var deferred = $$q.defer();
 
-    if ( page < 0 ) page = 0;
-    if ( page > lastPage ) page = lastPage;
+      tabsCtrl.$$pagingOffset = x;
+      tabsParent.css($materialEffects.TRANSFORM, 'translate3d(' + x + 'px,0,0)');
+      tabsParent.on($materialEffects.TRANSITIONEND_EVENT, onTabsParentTransitionEnd);
 
-    pagination.page = page;
+      return deferred.promise;
 
-    pagination.startIndex = !pagination.active ? 0       : page * pagination.itemsPerPage;
-    pagination.endIndex   = !pagination.active ? lastTab : pagination.startIndex + pagination.itemsPerPage - 1;
-    pagination.hasPrev    = !pagination.active ? false   : page > 0;
-    pagination.hasNext    = !pagination.active ? false   : (page + 1) < pagination.pagesCount;
+      function onTabsParentTransitionEnd(ev) {
+        // Make sure this event didn't bubble up from an animation in a child element.
+        if (ev.target === tabsParent[0]) {
+          tabsParent.off($materialEffects.TRANSITIONEND_EVENT, onTabsParentTransitionEnd);
+          deferred.resolve();
+        }
+      }
+    }
 
-    slideTabButtons( -page * pagination.itemsPerPage * pagination.tabWidth );
-  }
+    function getPageForTab(tab) {
+      var tabIndex = tabsCtrl.indexOf(tab);
+      if (tabIndex === -1) return 0;
 
-  /**
-   * Determine the associated page for the specified tab index
-   * @param tabIndex
-   */
-  function getPageAtTabIndex( tabIndex ) {
+      return Math.floor(tabIndex / state.itemsPerPage);
+    }
 
-    var numPages = pagination.pagesCount;
-    var lastTab = (pagination.itemsPerPage * pagination.pagesCount) - 1;
-    var lastPage = pagination.pagesCount - 1;
+    function setPage(page) {
+      if (page === state.page) return;
 
-    return  (numPages < 1)       ? -1       :
-            (tabIndex < 0)       ?  0       :
-            (tabIndex > lastTab) ? lastPage : Math.floor(tabIndex / pagination.itemsPerPage);
-  }
+      var lastPage = state.pagesCount;
 
-  /**
-   * Perform animated CSS translation of the tab buttons container
-   * @param xOffset
-   */
-  function slideTabButtons( xOffset ) {
-    if ( scope.pagingOffset == xOffset ) return;
-    if ( isNaN(xOffset) ) xOffset = 0;
+      if (page < 0) page = 0;
+      if (page > lastPage) page = lastPage;
 
-    scope.pagingOffset = xOffset;
-    buttonBar.css( $materialEffects.TRANSFORM, 'translate3d(' + xOffset + 'px,0,0)');
-  }
+      state.hasPrev = page > 0;
+      state.hasNext = ((page + 1) * state.itemsPerPage) < tabsCtrl.count();
 
-  /**
-   * Is the specified tabIndex with the tab range allowed
-   * for the current page/pagination?
-   *
-   * @param tabIndex
-   * @returns {boolean}
-   */
-  function isTabInRange( tabIndex ){
-    return (tabIndex >= pagination.startIndex) &&
-           (tabIndex <= pagination.endIndex);
+      state.page = page;
+
+      $timeout(function() {
+        scope.$broadcast('$materialTabsPaginationChanged');
+      });
+
+      return slideTabButtons(-page * state.itemsPerPage * state.tabWidth);
+    }
   }
 
 }
 
+
 angular.module('material.components.tabs')
-  .directive('materialTab', [
-    '$attrBind',
-    '$aria',
-    '$materialInkRipple',
-    TabDirective  
-  ]);
+
+.controller('$materialTab', [
+  '$scope',
+  '$element',
+  '$compile',
+  '$animate',
+  '$materialSwipe',
+  TabItemController
+]);
+
+function TabItemController(scope, element, $compile, $animate, $materialSwipe) {
+  var self = this;
+
+  var detachSwipe = angular.noop;
+  var attachSwipe = function() { return detachSwipe };
+  var eventTypes = "swipeleft swiperight" ;
+  var configureSwipe = $materialSwipe( scope, eventTypes );
+
+  // special callback assigned by TabsController
+  self.$$onSwipe = angular.noop;
+
+  // Properties
+  self.contentContainer = angular.element('<div class="tab-content ng-hide">');
+  self.element = element;
+
+  // Methods
+  self.isDisabled = isDisabled;
+  self.onAdd = onAdd;
+  self.onRemove = onRemove;
+  self.onSelect = onSelect;
+  self.onDeselect = onDeselect;
+
+
+  function isDisabled() {
+    return element[0].hasAttribute('disabled');
+  }
+  
+  /**
+   * Add the tab's content to the DOM container area in the tabs,
+   * @param contentArea the contentArea to add the content of the tab to
+   */
+  function onAdd(contentArea) {
+    if (self.content.length) {
+
+      self.contentContainer.append(self.content);
+      self.contentScope = scope.$parent.$new();
+      contentArea.append(self.contentContainer);
+
+      $compile(self.contentContainer)(self.contentScope);
+
+      Util.disconnectScope(self.contentScope);
+
+      // For internal tab views we only use the `$materialSwipe`
+      // so we can easily attach()/detach() when the tab view is active/inactive
+
+      attachSwipe = configureSwipe( self.contentContainer, function(ev) {
+        self.$$onSwipe(ev.type);
+      }, true );
+    }
+  }
+
+
+  /**
+   * Usually called when a Tab is programmatically removed; such
+   * as in an ng-repeat
+   */
+  function onRemove() {
+    $animate.leave(self.contentContainer).then(function()
+    {
+      self.contentScope && self.contentScope.$destroy();
+      self.contentScope = null;
+    });
+  }
+
+  function onSelect() {
+    // Resume watchers and events firing when tab is selected
+    Util.reconnectScope(self.contentScope);
+    detachSwipe = attachSwipe();
+
+    element.addClass('active');
+    element.attr('aria-selected', true);
+    element.attr('tabIndex', 0);
+    $animate.removeClass(self.contentContainer, 'ng-hide');
+
+    scope.onSelect();
+  }
+
+  function onDeselect() {
+    // Stop watchers & events from firing while tab is deselected
+    Util.disconnectScope(self.contentScope);
+    detachSwipe();
+
+    element.removeClass('active');
+    element.attr('aria-selected', false);
+    // Only allow tabbing to the active tab
+    element.attr('tabIndex', -1);
+    $animate.addClass(self.contentContainer, 'ng-hide');
+
+    scope.onDeselect();
+  }
+
+}
+
+
+angular.module('material.components.tabs')
+
+.directive('materialTab', [
+  '$materialInkRipple', 
+  '$compile',
+  '$materialAria',
+  MaterialTabDirective
+]);
 
 /**
  * @ngdoc directive
@@ -2748,7 +3688,7 @@ angular.module('material.components.tabs')
  * @restrict E
  *
  * @description
- * `<material-tab>` is the nested directive used [within `<material-tabs>`] to specify each tab with a **label** and optional *view content*
+ * `<material-tab>` is the nested directive used [within `<material-tabs>`] to specify each tab with a **label** and optional *view content*.
  *
  * If the `label` attribute is not specified, then an optional `<material-tab-label>` tag can be used to specified more
  * complex tab header markup. If neither the **label** nor the **material-tab-label** are specified, then the nested
@@ -2762,8 +3702,8 @@ angular.module('material.components.tabs')
  * be initiated via data binding changes, programmatic invocation, or user gestures.
  *
  * @param {string=} label Optional attribute to specify a simple string as the tab label
- * @param {boolean=} active Flag indicates if the tab is currently selected; normally the `<material-tabs selected="">`; attribute is used instead.
- * @param {boolean=} ngDisabled Flag indicates if the tab is disabled: not selectable with no ink effects
+ * @param {boolean=} active When evaluteing to true, selects the tab.
+ * @param {boolean=} disabled If present, disabled tab selection.
  * @param {expression=} deselected Expression to be evaluated after the tab has been de-selected.
  * @param {expression=} selected Expression to be evaluated after the tab has been selected.
  *
@@ -2789,583 +3729,308 @@ angular.module('material.components.tabs')
  * </hljs>
  *
  */
-function TabDirective( $attrBind, $aria, $materialInkRipple) {
-  var noop = angular.noop;
-
+function MaterialTabDirective($materialInkRipple, $compile, $materialAria) {
   return {
     restrict: 'E',
-    replace: false,
-    require: "^materialTabs",
-    transclude: 'true',
-    scope: true,
-    link: linkTab,
-    template:
-      '<material-tab-label></material-tab-label>'
+    require: ['materialTab', '^materialTabs'],
+    controller: '$materialTab',
+    scope: {
+      onSelect: '&',
+      onDeselect: '&',
+      label: '@'
+    },
+    compile: compile
   };
 
-  function linkTab(scope, element, attrs, tabsCtrl, $transclude) {
-    var defaults = { active: false, disabled: false, deselected: noop, selected: noop };
+  function compile(element, attr) {
+    var tabLabel = element.find('material-tab-label');
 
-    // Since using scope=true for inherited new scope,
-    // then manually scan element attributes for forced local mappings...
-
-    $attrBind(scope, attrs, {
-      label: '@?',
-      active: '=?',
-      disabled: '=?ngDisabled',
-      deselected: '&onDeselect',
-      selected: '&onSelect'
-    }, defaults);
-
-    scope.$watch('active', function(isActive) {
-      element.toggleClass('active', isActive);
-    });
-
-    $materialInkRipple.attachButtonBehavior(element);
-
-    configureWatchers();
-    updateTabContent(scope);
-
-    // Update ARIA values for each tab element
-    configureAria(element, scope);
-
-    element.on('click', function onRequestSelect()
-      {
-        // Click support for entire <material-tab /> element
-        if ( !scope.disabled ) tabsCtrl.select(scope);
-        else                   tabsCtrl.focusSelected();
-
-      })
-      .on('keydown', function onRequestSelect(event)
-      {
-        if (event.which == Constant.KEY_CODE.SPACE )            tabsCtrl.select(scope);
-        else if (event.which === Constant.KEY_CODE.LEFT_ARROW)  tabsCtrl.previous(scope);
-        else if (event.which === Constant.KEY_CODE.RIGHT_ARROW) tabsCtrl.next(scope);
-
-      });
-
-    tabsCtrl.add(scope, element);
-
-    // **********************************************************
-    // Private Methods
-    // **********************************************************
-
-
-    /**
-     * Inject ARIA-specific attributes appropriate for each Tab button
-     */
-    function configureAria( element, scope ){
-      var ROLE = Constant.ARIA.ROLE;
-
-      scope.ariaId = buildAriaID();
-      $aria.update( element, {
-        'id' :  scope.ariaId,
-        'role' : ROLE.TAB,
-        'aria-selected' : false,
-        'aria-controls' : "content_" + scope.ariaId
-      });
-
-      /**
-       * Build a unique ID for each Tab that will be used for WAI-ARIA.
-       * Preserve existing ID if already specified.
-       * @returns {*|string}
-       */
-      function buildAriaID() {
-        return attrs.id || ( ROLE.TAB + "_" + tabsCtrl.$scope.$id + "_" + scope.$id );
-      }
+    // If a tab label element is found, remove it for later re-use.
+    if (tabLabel.length) {
+      tabLabel.remove();
+    // Otherwise, try to use attr.label as the label
+    } else if (angular.isDefined(attr.label)) {
+      tabLabel = angular.element('<material-tab-label>').html(attr.label);
+    // If nothing is found, use the tab's content as the label
+    } else {
+      tabLabel = angular.element('<material-tab-label>')
+        .append(element.contents().remove());
     }
 
-    /**
-     * Auto select the next tab if the current tab is active and
-     * has been disabled.
-     *
-     * Set tab index for the current tab (0), with all other tabs
-     * outside of the tab order (-1)
-     *
-     */
-    function configureWatchers() {
-      var unwatch = scope.$watch('disabled', function (isDisabled) {
-        if (scope.active && isDisabled) {
-          tabsCtrl.next(scope);
+    // Everything that's left as a child is the tab's content.
+    var tabContent = element.contents().remove();
+
+    return function postLink(scope, element, attr, ctrls) {
+
+      var tabItemCtrl = ctrls[0]; // Controller for THIS tabItemCtrl
+      var tabsCtrl = ctrls[1]; // Controller for ALL tabs
+
+      transcludeTabContent();
+
+      var detachRippleFn = $materialInkRipple.attachButtonBehavior(element);
+      tabsCtrl.add(tabItemCtrl);
+      scope.$on('$destroy', function() {
+        detachRippleFn();
+        tabsCtrl.remove(tabItemCtrl);
+      });
+
+      if (!angular.isDefined(attr.ngClick)) element.on('click', defaultClickListener);
+      element.on('keydown', keydownListener);
+
+      if (angular.isNumber(scope.$parent.$index)) watchNgRepeatIndex();
+      if (angular.isDefined(attr.active)) watchActiveAttribute();
+      watchDisabled();
+
+      configureAria();
+
+      function transcludeTabContent() {
+        // Clone the label we found earlier, and $compile and append it
+        var label = tabLabel.clone();
+        element.append(label);
+        $compile(label)(scope.$parent);
+
+        // Clone the content we found earlier, and mark it for later placement into
+        // the proper content area.
+        tabItemCtrl.content = tabContent.clone();
+      }
+
+      //defaultClickListener isn't applied if the user provides an ngClick expression.
+      function defaultClickListener() {
+        scope.$apply(function() {
+          tabsCtrl.select(tabItemCtrl);
+          tabItemCtrl.element.focus();
+        });
+      }
+      function keydownListener(ev) {
+        if (ev.which == Constant.KEY_CODE.SPACE ) {
+          // Fire the click handler to do normal selection if space is pressed
+          element.triggerHandler('click');
+          ev.preventDefault();
+
+        } else if (ev.which === Constant.KEY_CODE.LEFT_ARROW) {
+          var previous = tabsCtrl.previous(tabItemCtrl);
+          previous && previous.element.focus();
+
+        } else if (ev.which === Constant.KEY_CODE.RIGHT_ARROW) {
+          var next = tabsCtrl.next(tabItemCtrl);
+          next && next.element.focus();
         }
-      });
+      }
 
-      scope.$watch('active', function (isActive) {
+      // If tabItemCtrl is part of an ngRepeat, move the tabItemCtrl in our internal array
+      // when its $index changes
+      function watchNgRepeatIndex() {
+        // The tabItemCtrl has an isolate scope, so we watch the $index on the parent.
+        scope.$watch('$parent.$index', function $indexWatchAction(newIndex) {
+          tabsCtrl.move(tabItemCtrl, newIndex);
+        });
+      }
 
-        $aria.update( element, {
-          'aria-selected' : isActive,
-          'tabIndex' : isActive === true ? 0 : -1
+      function watchActiveAttribute() {
+        var unwatch = scope.$parent.$watch('!!(' + attr.active + ')', activeWatchAction);
+        scope.$on('$destroy', unwatch);
+        
+        function activeWatchAction(isActive) {
+          var isSelected = tabsCtrl.selected() === tabItemCtrl;
+
+          if (isActive && !isSelected) {
+            tabsCtrl.select(tabItemCtrl);
+          } else if (!isActive && isSelected) {
+            tabsCtrl.deselect(tabItemCtrl);
+          }
+        }
+      }
+
+      function watchDisabled() {
+        scope.$watch(tabItemCtrl.isDisabled, disabledWatchAction);
+        
+        function disabledWatchAction(isDisabled) {
+          element.attr('aria-disabled', isDisabled);
+
+          // Auto select `next` tab when disabled
+          var isSelected = (tabsCtrl.selected() === tabItemCtrl);
+          if (isSelected && isDisabled) {
+            tabsCtrl.select(tabsCtrl.next() || tabsCtrl.previous());
+          }
+
+        }
+      }
+
+      function configureAria() {
+        // Link together the content area and tabItemCtrl with an id
+        var tabId = attr.id || Util.nextUid();
+        var tabContentId = 'content_' + tabId;
+        element.attr({
+          id: tabId,
+          role: 'tabItemCtrl',
+          tabIndex: '-1', //this is also set on select/deselect in tabItemCtrl
+          'aria-controls': tabContentId
+        });
+        tabItemCtrl.contentContainer.attr({
+          id: tabContentId,
+          role: 'tabpanel',
+          'aria-labelledby': tabId
         });
 
-      });
+        $materialAria.expect(element, 'aria-label', element.text());
+      }
 
-      scope.$on("$destroy", function () {
-        unwatch();
-        tabsCtrl.remove(scope);
-      });
+    };
+
+  }
+
+}
+
+
+angular.module('material.components.tabs')
+
+.controller('$materialTabs', [
+  '$scope', 
+  '$element',
+  MaterialTabsController
+]);
+
+function MaterialTabsController(scope, element) {
+
+  var tabsList = Util.iterator([], false);
+  var self = this;
+
+  // Properties
+  self.element = element;
+  // The section containing the tab content elements
+  self.contentArea = angular.element(element[0].querySelector('.tabs-content'));
+
+  // Methods from iterator
+  self.inRange = tabsList.inRange;
+  self.indexOf = tabsList.indexOf;
+  self.itemAt = tabsList.itemAt;
+  self.count = tabsList.count;
+  
+  self.selected = selected;
+  self.add = add;
+  self.remove = remove;
+  self.move = move;
+  self.select = select;
+  self.deselect = deselect;
+
+  self.next = next;
+  self.previous = previous;
+
+  self.swipe = swipe;
+
+  // Get the selected tab
+  function selected() {
+    return self.itemAt(scope.selectedIndex);
+  }
+
+  // Add a new tab.
+  // Returns a method to remove the tab from the list.
+  function add(tab, index) {
+
+    tabsList.add(tab, index);
+    tab.onAdd(self.contentArea);
+
+    // Register swipe feature
+    tab.$$onSwipe = swipe;
+
+    // Select the new tab if we don't have a selectedIndex, or if the
+    // selectedIndex we've been waiting for is this tab
+    if (scope.selectedIndex === -1 || scope.selectedIndex === self.indexOf(tab)) {
+      self.select(tab);
+    }
+    scope.$broadcast('$materialTabsChanged');
+  }
+
+  function remove(tab) {
+    if (!tabsList.contains(tab)) return;
+
+    if (self.selected() === tab) {
+      if (tabsList.count() > 1) {
+        self.select(self.previous() || self.next());
+      } else {
+        self.deselect(tab);
+      }
     }
 
-    /**
-     * Transpose the optional `label` attribute value or materialTabHeader or `content` body
-     * into the body of the materialTabButton... all other content is saved in scope.content
-     * and used by TabsController to inject into the `tabs-content` container.
-     */
-    function updateTabContent(scope) {
-      var tab = scope;
+    tabsList.remove(tab);
+    tab.onRemove();
 
-      // Check to override label attribute with the content of the <material-tab-header> node,
-      // If a materialTabHeader is not specified, then the node will be considered
-      // a <material-view> content element...
-      $transclude(function ( contents ) {
+    scope.$broadcast('$materialTabsChanged');
+  }
 
-        // Transient references...
-        tab.content = [ ];
+  // Move a tab (used when ng-repeat order changes)
+  function move(tab, toIndex) {
+    var isSelected = self.selected() === tab;
 
-        angular.forEach(contents, function (node) {
+    tabsList.remove(tab);
+    tabsList.add(tab, toIndex);
+    if (isSelected) self.select(tab);
 
-          if (!isNodeEmpty(node)) {
-            if (isNodeType(node, 'material-tab-label')) {
-              // Simulate use of `label` attribute
+    scope.$broadcast('$materialTabsChanged');
+  }
 
-              tab.label = node.childNodes;
+  function select(tab) {
+    if (!tab || tab.isSelected || tab.isDisabled()) return;
+    if (!tabsList.contains(tab)) return;
 
-            } else {
-              // Transient references...
-              //
-              // Attach to scope for future transclusion into materialView(s)
-              // We need the bound scope for the content elements; which is NOT
-              // the scope of tab or material-view container...
+    self.deselect(self.selected());
 
-              tab.content.push(node);
-            }
-          }
-        });
+    scope.selectedIndex = self.indexOf(tab);
+    tab.isSelected = true;
+    tab.onSelect();
+  }
+  function deselect(tab) {
+    if (!tab || !tab.isSelected) return;
+    if (!tabsList.contains(tab)) return;
 
-      });
+    scope.selectedIndex = -1;
+    tab.isSelected = false;
+    tab.onDeselect();
+  }
 
-      // Prepare to assign the materialTabButton content
-      // Use the label attribute or fallback to TabHeader content
+  function next(tab, filterFn) {
+    return tabsList.next(tab || self.selected(), filterFn || isTabEnabled);
+  }
+  function previous(tab, filterFn) {
+    return tabsList.previous(tab || self.selected(), filterFn || isTabEnabled);
+  }
 
-      var cntr = angular.element(element[0].querySelector('material-tab-label'));
+  function isTabEnabled(tab) {
+    return tab && !tab.isDisabled();
+  }
 
-      if (angular.isDefined(scope.label)) {
-        // The `label` attribute is the default source
+  /*
+   * attach a swipe listen
+   * if it's not selected, abort
+   * check the direction
+   *   if it is right
+   *   it pan right
+   *     Now select
+   */
 
-        cntr.append(scope.label);
+  function swipe(direction) {
+    if ( !self.selected() ) return;
 
-        delete scope.label;
+    // check the direction
+    switch(direction) {
 
-      } else {
+      case "swiperight":  // if it is right
+      case "panright"  :  // it pan right
+        // Now do this...
+        self.select( self.previous() );
+        break;
 
-        // NOTE: If not specified, all markup and content is assumed
-        // to be used for the tab label.
-
-        angular.forEach(scope.content, function (node) {
-          cntr.append(node);
-        });
-
-        delete scope.content;
-      }
+      case "swipeleft":
+      case "panleft"  :
+        self.select( self.next() );
+        break;
     }
 
   }
+
 }
 
 angular.module('material.components.tabs')
-  .factory('$materialTabs', [
-    '$materialComponentRegistry',
-    TabsService
-  ])
-  .controller('materialTabsController', [
-    '$scope', 
-    '$attrs', 
-    '$materialComponentRegistry', 
-    '$timeout',
-    TabsController
-  ]);
-
-
-/**
- * @private
- * @ngdoc service
- * @name $materialTabs
- * @module material.components.tabs
- *
- * @description
- * $materialTabs makes it easy to programmatically interact with a specific Tabs group
- * in an app.
- *
- * @usage
- *
- * ```javascript
- * // Toggle the given sidenav
- * $materialTabs(tabsID).select(0);
- * ```
- */
-function TabsService($materialComponentRegistry) {
-  return function(handle) {
-    var instance = $materialComponentRegistry.get(handle);
-    if(!instance) {
-      $materialComponentRegistry.notFoundError(handle);
-    }
-
-    return {
-      /**
-       * Select the tab at the specified index
-       * @param index
-       * @returns {*}
-       */
-      select: function(index) {
-        return instance && instance.selectAt(index);
-      }
-    };
-  };
-}
-
-
-/**
- * @ngdoc object
- * @name materialTabsController
- * @module material.components.tabs
- * @description Controller used within `<material-tabs>` to manage tab selection and iteration
- *
- * @private
- */
-function TabsController($scope, $attrs, $materialComponentRegistry, $timeout ) {
-  var list = Util.iterator([], false),
-    componentID = "tabs" + $scope.$id,
-    elements = { },
-    selected = null,
-    self = this;
-
-  // Property for child access
-  self.noink = !!$scope.noink;
-  self.nobar = !!$scope.nobar;
-  self.scope = $scope;
-
-  // Special internal accessor to access scopes and tab `content`
-  // Used by TabsDirective::buildContentItems()
-
-  self.$scope = $scope;
-  self.$$tabs = findTabs;
-  self.$$hash = "";
-
-  // Methods used by <material-tab> and children
-
-  self.add = addTab;
-  self.remove = removeTab;
-  self.select = selectTab;
-  self.selectAt = selectTabAt;
-  self.next = selectNext;
-  self.previous = selectPrevious;
-
-  self.focusSelected = focusSelected;
-  self.focusNext     = focusNext;
-  self.focusPrevious = focusPrevious;
-
-  self.selectedElement = selectedElement;
-
-  $materialComponentRegistry.register( self, $attrs.componentId || componentID );
-
-
-  /**
-   * Accessor to look up the associated
-   * @returns {*}
-   */
-  function selectedElement() {
-    return findElementFor( selected );
-  };
-
-
-  /**
-   * When the selected tab changes, broadcast notification
-   */
-  function onSelectedChange() {
-    if (onSelectedChange.queued) return;
-    onSelectedChange.queued = true;
-
-    $scope.$evalAsync(function() {
-      $scope.$broadcast(EVENT.TABS_CHANGED, selected);
-      onSelectedChange.queued = false;
-    });
-  }
-
-
-  /**
-   * Make sure the currently selected tab is
-   * focused. Do not! announce focus changes..
-   *
-   * NOTE: this is primarily used within pagination/ink updates after
-   *       tab click handlers. @see tabsDirective.js
-   * @returns {*}
-   */
-  function focusSelected() {
-    return focusOn('current');
-  }
-
-  /**
-   * Focus on the next enabled tab relative to `from`
-   * Announce focus change with new focusIndex if appropriate
-   * @param from
-   */
-  function focusNext(from) {
-    var focusIndex = focusOn('next', from);
-    if ( focusIndex != list.indexOf(selected)) {
-
-      // Announce focus change
-      $scope.$broadcast(EVENT.FOCUS_CHANGED, focusIndex);
-    }
-    return focusIndex;
-  }
-
-  /**
-   * Focus on the previous enabled tab relative to `from`
-   * Announce focus change with new focusIndex if appropriate
-   * @param from
-   */
-  function focusPrevious(from) {
-    var focusIndex = focusOn('previous', from );
-
-    if ( focusIndex != list.indexOf(selected)) {
-      // Announce focus change
-      $scope.$broadcast(EVENT.FOCUS_CHANGED, focusIndex);
-    }
-
-    return focusIndex;
-  }
-
-
-  /**
-   * Find the DOM element associated with the tab/scope
-   * @param tab
-   * @returns {*}
-   */
-  function findElementFor(tab) {
-    if ( angular.isUndefined(tab) ) {
-      tab = selected;
-    }
-    return tab ? elements[ tab.$id ] : undefined;
-  }
-
-  /**
-   * Publish array of tab scope items
-   * NOTE: Tabs are not required to have `contents` and the
-   *       node may be undefined.
-   * @returns {*} Array
-   */
-  function findTabs(filterBy) {
-    return list.items().filter(filterBy || angular.identity);
-  }
-
-  /**
-   * Create unique hashKey representing all available
-   * tabs.
-   */
-  function updateHash() {
-    self.$$hash = list.items()
-      .map(function (it) {
-        return it.$id;
-      })
-      .join(',');
-  }
-
-  /**
-   * Select specified tab; deselect all others (if any selected)
-   * @param tab
-   */
-  function selectTab(tab, noUpdate) {
-    if ( tab == selected ) return;
-
-    var activate = makeActivator(true),
-      deactivate = makeActivator(false);
-
-    // Turn off all tabs (if current active)
-    angular.forEach(list.items(), deactivate);
-
-    if ( tab != null ) {
-      // Activate the specified tab (or next available)
-      selected = activate(tab.disabled ? list.next(tab, isEnabled) : tab);
-
-      // update external models and trigger databinding watchers
-      $scope.$selIndex = selected ? String(selected.$index || list.indexOf(selected)) : -1;
-
-      // update the tabs ink to indicate the selected tab
-      if (!noUpdate) {
-        onSelectedChange();
-      }
-    }
-
-    return selected;
-  }
-
-  /**
-   * Select tab based on its index position
-   * @param index
-   */
-  function selectTabAt(index, noUpdate) {
-
-    if (list.inRange(index)) {
-      var matches = list.findBy("$index", index),
-          it = matches ? matches[0] : null;
-
-      if (it != selected) {
-
-        // Tab must be selectable...
-        if ( !isEnabled(it) ) {
-          it = selectNext(it);
-        }
-
-        selectTab( it || list.first(), noUpdate );
-      }
-    }
-  }
-
-  /**
-   * Add tab to list and auto-select; default adds item to end of list
-   * @param tab
-   */
-  function addTab(tab, element) {
-
-    if (angular.isUndefined(tab.$index)) {
-      tab.$index = list.count();
-    }
-
-    // cache materialTab DOM element; these are not materialView elements
-    elements[ tab.$id ] = element;
-
-    if (!list.contains(tab)) {
-      var pos = list.add(tab, tab.$index);
-
-      // Should we auto-select it?
-      if ($scope.$selIndex == pos || tab.active) {
-        selectTab(tab);
-      } else {
-        onSelectedChange();
-      }
-    }
-
-
-    updateHash();
-
-    return tab.$index;
-  }
-
-  /**
-   * Remove the specified tab from the list
-   * Auto select the next tab or the previous tab (if last)
-   * @param tab
-   */
-  function removeTab(tab) {
-    if (list.contains(tab)) {
-
-      selectTab( list.next(tab, isEnabled) || list.previous(tab, isEnabled) );
-      list.remove(tab);
-
-      onSelectedChange();
-      // another tab was removed, make sure to update ink bar
-      $timeout(function(){
-        delete elements[tab.$id];
-      },300);
-
-    }
-
-    updateHash();
-  }
-
-  /**
-   * Focus on the specified tab (if available)
-   * @returns {*} Tab
-   */
-  function focusOn(which, from) {
-    var tab = (which === 'current' ) ? selected :
-              (which === 'next')     ? list.next(from || selected, isEnabled) :
-              (which === 'previous') ? list.previous(from || selected, isEnabled) : null;
-
-    var el = findElementFor( tab );
-    if ( el ) el[0].focus();
-
-    return list.indexOf(tab);
-  }
-
-  /**
-   * Select the next tab in the list or the
-   * @returns {*} Tab
-   */
-  function selectNext(target) {
-    return selectTab( list.next(target, isEnabled) || target );
-  }
-
-  /**
-   * Select the previous tab
-   * @returns {*} Tab
-   */
-  function selectPrevious(target) {
-    return selectTab( list.previous(target, isEnabled) || target );
-  }
-
-  /**
-   * Validation criteria for list iterator when List::next() or List::previous() is used..:
-   * In this case, the list iterator should skip items that are disabled.
-   * @param tab
-   * @returns {boolean}
-   */
-  function isEnabled(tab) {
-    return tab && !tab.disabled;
-  }
-
-  /**
-   * Partial application to build function that will
-   * mark the specified tab as active or not. This also
-   * allows the `updateStatus` function to be used as an iterator.
-   *
-   * @param active
-   */
-  function makeActivator(active) {
-
-    return function updateState(tab) {
-      if (tab && (active != tab.active)) {
-        tab.active = active;
-
-        if (active) {
-          selected = tab;
-
-          tab.selected();
-
-        } else {
-          if (selected == tab) {
-            selected = null;
-          }
-
-          tab.deselected();
-
-        }
-        return tab;
-      }
-      return null;
-    };
-  }
-
-}
-
-/* Disable Tab Pagination */
-/**
- * @ngdoc module
- * @name material.components.tabs
- * @description
- *
- * Tabs
- */
-angular.module('material.components.tabs')
-  .directive('materialTabs', [
-    '$q',
-    '$window',
-    '$timeout',
-    '$compile',
-    '$materialEffects',
-    '$$rAF',
-    '$aria',
-    TabsDirective
-  ]);
 
 /**
  * @ngdoc directive
@@ -3410,9 +4075,8 @@ angular.module('material.components.tabs')
  * *  Any markup (other than **`<material-tab>`** tags) will be transcluded into the tab header area BEFORE the tab buttons.
  *
  * @param {integer=} selected Index of the active/selected tab
- * @param {boolean=} noink Flag indicates use of ripple ink effects
- * @param {boolean=} nobar Flag indicates use of ink bar effects
- * @param {boolean=} nostretch Flag indicates use of elastic animation for inkBar width and position changes
+ * @param {boolean=} noink If present, disables ink ripple effects.
+ * @param {boolean=} nobar If present, disables the selection ink bar.
  * @param {string=}  align-tabs Attribute to indicate position of tab buttons: bottom or top; default is `top`
  *
  * @usage
@@ -3441,477 +4105,79 @@ angular.module('material.components.tabs')
  * </hljs>
  *
  */
-function TabsDirective($q, $window, $timeout, $compile, $materialEffects, $$rAF, $aria) {
+.directive('materialTabs', [
+  '$parse',
+  TabsDirective
+]);
 
+function TabsDirective($parse) {
   return {
     restrict: 'E',
-    replace: false,
-    transclude: 'true',
-
+    controller: '$materialTabs',
+    require: 'materialTabs',
+    transclude: true,
     scope: {
-      $selIndex: '=?selected'
+      selectedIndex: '=?selected'
     },
+    template: 
+      '<section class="tabs-header" ' +
+        'ng-class="{\'tab-paginating\': pagination.active}">' +
 
-    compile: compileTabsFn,
-    controller: [ '$scope', '$attrs', '$materialComponentRegistry', '$timeout', '$$rAF', TabsController ],
+        '<div class="tab-paginator prev" ' +
+          'ng-if="pagination.active && pagination.hasPrev" ' +
+          'ng-click="pagination.clickPrevious()">' +
+        '</div>' +
 
-    template:
-      '<div class="tabs-header" ng-class="{\'tab-paginating\': pagination.active}">' +
+        // overflow: hidden container when paginating
+        '<div class="tabs-header-items-container" material-tabs-pagination>' +
+          // flex container for <material-tab> elements
+          '<div class="tabs-header-items" ng-transclude></div>' +
+          '<material-tabs-ink-bar></material-tabs-ink-bar>' +
+        '</div>' +
 
-      '  <div class="tab-paginator prev" ng-if="pagination.active" ng-click="pagination.hasPrev && pagination.prev()" ng-class="{active: pagination.hasPrev}">' +
-      '  </div>' +
-      '  <div class="tabs-header-items-container">' +
-      '    <div class="tabs-header-items"></div>' +
-      '  </div>' +
-      '  <div class="tab-paginator next" ng-if="pagination.active" ng-click="pagination.hasNext && pagination.next()" ng-class="{active: pagination.hasNext}">' +
-      '  </div>' +
-      '  <material-ink-bar></material-ink-bar>' +
+        '<div class="tab-paginator next" ' +
+          'ng-if="pagination.active && pagination.hasNext" ' +
+          'ng-click="pagination.clickNext()">' +
+        '</div>' +
 
-      '</div>'+
-      '<div class="tabs-content ng-hide"></div>'
-
+      '</section>' +
+      '<section class="tabs-content"></section>',
+    link: postLink
   };
 
-  /**
-   * Use prelink to configure inherited scope attributes: noink, nobar, and nostretch;
-   * do this before the child elements are linked.
-   *
-   * @param element
-   * @param attr
-   * @returns {{pre: materialTabsLink}}
-   */
-  function compileTabsFn() {
+  function postLink(scope, element, attr, tabsCtrl) {
 
-    return {
-      pre: function tabsPreLink(scope, element, attrs, tabsCtrl) {
-        // These attributes do not have values; but their presence defaults to value == true.
-        scope.noink = angular.isDefined(attrs.noink);
-        scope.nobar = angular.isDefined(attrs.nobar);
-        scope.nostretch = angular.isDefined(attrs.nostretch);
+    configureAria();
+    watchSelected();
 
-        // Publish for access by nested `<material-tab>` elements
-        tabsCtrl.noink = scope.noink;
+    function configureAria() {
+      element.attr({
+        role: 'tablist'
+      });
+    }
 
-        scope.$watch('$selIndex', function (index) {
-          tabsCtrl.selectAt(index);
-        });
+    function watchSelected() {
+      scope.$watch('selectedIndex', function watchSelectedIndex(newIndex, oldIndex) {
+        // Note: if the user provides an invalid newIndex, all tabs will be deselected
+        // and the associated view will be hidden.
+        tabsCtrl.deselect( tabsCtrl.itemAt(oldIndex) );
 
-        // Remove the `inkBar` element if `nobar` is defined
-        var elBar = findNode("material-ink-bar",element);
-        if ( elBar && scope.nobar ) {
-          elBar.remove();
+        if (tabsCtrl.inRange(newIndex)) {
+          var newTab = tabsCtrl.itemAt(newIndex);
+
+          // If the newTab is disabled, find an enabled one to go to.
+          if (newTab && newTab.isDisabled()) {
+            newTab = newIndex > oldIndex ?
+              tabsCtrl.next(newTab) :
+              tabsCtrl.previous(newTab);
+          }
+          tabsCtrl.select(newTab);
+
         }
-
-      },
-      post: function tabsPostLink(scope, element, attrs, tabsCtrl, $transclude) {
-        var cache = {
-          length: 0,
-          contains: function (tab) {
-            return !angular.isUndefined(cache[tab.$id]);
-          }
-        };
-
-        var allowFocus = 0;   // do not auto-focus on default tab selection
-        var updateInk = linkTabInk(scope, element, tabsCtrl, $q, $materialEffects) || angular.noop;
-        var updatePagination = linkTabPagination( scope, element, tabsCtrl, $q, $materialEffects );
-
-        var updateAll = function(event) {
-
-          scope.$evalAsync(function() {
-            updatePagination().then( function(){
-
-              // Make sure the ink positioning is correct
-              $timeout( function() {
-                updateInk();
-
-                // Key focus synced with tab selection...
-                if (  (event.name == EVENT.TABS_CHANGED) && allowFocus++) {
-                  tabsCtrl.focusSelected();
-                }
-
-              },60);
-            });
-
-            // Make sure ink changes start just after pagination transitions have started...
-            $$rAF( updateInk );
-          });
-        };
-
-        var onWindowResize = $$rAF.debounce( updateAll );
-        var onWindowRelease = function() {
-          angular.element($window).off('resize', onWindowResize);
-        };
-
-        $$rAF(updateAll);
-
-        angular.element($window).on( EVENT.WINDOW_RESIZE, onWindowResize);
-        scope.$on( EVENT.TABS_CHANGED, updateAll );
-        scope.$on( EVENT.SCOPE_DESTROY, onWindowRelease );
-
-        transcludeHeaderItems();
-        transcludeContentItems();
-
-        configureAria();  // Update ARIA values for the Tab group (Tabs)
-
-        alignTabButtons();
-        selectDefaultTab();
-
-        // **********************************************************
-        // Private Methods
-        // **********************************************************
-
-        /**
-         * Inject ARIA-specific attributes appropriate for Tab Groups
-         */
-        function configureAria() {
-          var ROLE = Constant.ARIA.ROLE;
-
-          $aria.update( element, {
-            'id': buildAriaID(),
-            'role': ROLE.TAB_LIST
-          });
-
-          /**
-           * Build a unique Tabs ID for WAI-ARIA; preserve the existing ID if already
-           * specified.
-           * @returns {*|string}
-           */
-          function buildAriaID() {
-            return  attrs.id || ("tabs" + "_" + scope.$id);
-          }
-        }
-
-
-        /**
-         * Change the positioning of the tab header and buttons.
-         * If the tabs-align attribute is 'bottom', then the tabs-content
-         * container is transposed with the tabs-header
-         */
-        function alignTabButtons() {
-          var align  = attrs.tabsAlign || "top";
-          var container = findNode('.tabs-content', element);
-
-          if (align == "bottom") {
-            element.prepend(container);
-          }
-        }
-
-        /**
-         * If an initial tab selection has not been specified, then
-         * select the first tab by default
-         */
-        function selectDefaultTab() {
-          var tabs = tabsCtrl.$$tabs();
-
-          if ( tabs.length && angular.isUndefined(scope.$selIndex)) {
-            tabsCtrl.select(tabs[0]);
-          }
-        }
-
-
-        /**
-         * Transclude the materialTab items into the tabsHeaderItems container
-         *
-         */
-        function transcludeHeaderItems() {
-          $transclude( function (content) {
-            var header = findNode('.tabs-header-items', element);
-            var parent = angular.element(element[0]);
-
-            angular.forEach(content, function (node) {
-              var intoHeader = isNodeType(node, 'material-tab') || isNgRepeat(node);
-
-              if (intoHeader) {
-                header.append(node);
-              } else {
-                parent.prepend(node);
-              }
-            });
-          });
-        }
-
-
-        /**
-         * Transclude the materialTab view/body contents into materialView containers; which
-         * are stored in the tabsContent area...
-         */
-        function transcludeContentItems() {
-          var cntr = findNode('.tabs-content', element),
-              materialViewTmpl = '<div class="material-view" ng-show="active"></div>';
-
-          scope.$watch(getTabsHash, function buildContentItems() {
-            var tabs = tabsCtrl.$$tabs(notInCache),
-              views = tabs.map(extractContent);
-
-            // At least 1 tab must have valid content to build; otherwise
-            // we hide/remove the tabs-content container...
-
-            if (views.some(notEmpty)) {
-              angular.forEach(views, function (content, j) {
-
-                var tab = tabs[j++],
-                  materialView = $compile(materialViewTmpl)(tab);
-
-                // For ARIA, link the tab content container with the tab button...
-                configureAria( materialView, tab );
-
-                // Allow dynamic $digest() disconnect/reconnect of tab content's scope
-                enableDisconnect(tab, content.scope);
-
-                // Do we have content DOM nodes ?
-                // If transcluded content is not undefined then add all nodes to the materialView
-
-                if (content.nodes) {
-                  angular.forEach(content.nodes, function (node) {
-                    if ( !isNodeEmpty(node) ) {
-                      materialView.append(node);
-                    }
-                  });
-                }
-
-                cntr.append(materialView);
-                addToCache(cache, { tab:tab, element: materialView });
-
-              });
-
-              // We have some new content just added...
-              showTabContent();
-
-            } else {
-
-              showTabContent(false);
-
-            }
-
-
-            /**
-             * Add class to hide or show the container for the materialView(s)
-             * NOTE: the `<div.tabs-content>` is **hidden** by default.
-             * @param visible Boolean a value `true` will remove the `class="ng-hide"` setting
-             */
-            function showTabContent(visible) {
-              cntr.toggleClass('ng-hide', !!visible);
-            }
-
-            /**
-             * Configure ARIA attributes to link tab content back to their respective
-             * 'owning' tab buttons.
-             */
-            function configureAria( cntr, tab ) {
-
-              $aria.update( cntr, {
-                'id' : "content_" + tab.ariaId,
-                'role' : Constant.ARIA.ROLE.TAB_PANEL,
-                'aria-labelledby' : tab.ariaId
-              });
-
-            }
-
-          });
-
-          /**
-           * Allow tabs to disconnect or reconnect their content from the $digest() processes
-           * when unselected or selected (respectively).
-           *
-           * @param content Special content scope which is a direct child of a `tab` scope
-           */
-          function enableDisconnect(tab,  content) {
-            if ( !content ) return;
-
-            var selectedFn = angular.bind(tab, tab.selected),
-                deselectedFn = angular.bind(tab, tab.deselected);
-
-            addDigestConnector(content);
-
-            // 1) Tail-hook deselected()
-            tab.deselected = function() {
-              deselectedFn();
-              tab.$$postDigest(function(){
-                content.$disconnect();
-              });
-            };
-
-             // 2) Head-hook selected()
-            tab.selected = function() {
-              content.$reconnect();
-              selectedFn();
-            };
-
-            // Immediate disconnect all non-actives
-            if ( !tab.active ) {
-              tab.$$postDigest(function(){
-                content.$disconnect();
-              });
-            }
-          }
-
-          /**
-           * Add tab scope/DOM node to the cache and configure
-           * to auto-remove when the scope is destroyed.
-           * @param cache
-           * @param item
-           */
-          function addToCache(cache, item) {
-            var scope = item.tab;
-
-            cache[ scope.$id ] = item;
-            cache.length = cache.length + 1;
-
-            // When the tab is removed, remove its associated material-view Node...
-            scope.$on("$destroy", function () {
-              angular.element(item.element).remove();
-
-              delete cache[ scope.$id];
-              cache.length = cache.length - 1;
-            });
-          }
-
-          function getTabsHash() {
-            return tabsCtrl.$$hash;
-          }
-
-          /**
-           * Special function to extract transient data regarding transcluded
-           * tab content. Data includes dynamic lookup of bound scope for the transcluded content.
-           *
-           * @see TabDirective::updateTabContent()
-           *
-           * @param tab
-           * @returns {{nodes: *, scope: *}}
-           */
-          function extractContent(tab) {
-            var content = hasContent(tab) ? tab.content : undefined;
-            var scope   = (content && content.length) ? angular.element(content[0]).scope() : null;
-
-            // release immediately...
-            delete tab.content;
-
-            return { nodes:content, scope:scope };
-          }
-
-          function hasContent(tab) {
-            return tab.content && tab.content.length;
-          }
-
-          function notEmpty(view) {
-            var hasContent = false;
-            if (angular.isDefined(view.nodes)) {
-              angular.forEach(view.nodes, function(node) {
-                hasContent = hasContent || !isNodeEmpty(node);
-              });
-            }
-            return hasContent;
-          }
-
-          function notInCache(tab) {
-            return !cache.contains(tab);
-          }
-        }
-
-      }
-    };
+      });
+    }
 
   }
-}
-
-
-/**
- * Determine if the DOM element is of a certain tag type
- * or has the specified attribute type
- *
- * @param node
- * @returns {*|boolean}
- */
-var isNodeType = function (node, type) {
-  return node.tagName && (
-    node.hasAttribute(type) ||
-    node.hasAttribute('data-' + type) ||
-    node.tagName.toLowerCase() === type ||
-    node.tagName.toLowerCase() === 'data-' + type
-  );
-};
-
-var isNgRepeat = function (node) {
-  var COMMENT_NODE = 8;
-  return node.nodeType == COMMENT_NODE && node.nodeValue.indexOf('ngRepeat') > -1;
-};
-
-/**
- * Is the an empty text string
- * @param node
- * @returns {boolean}
- */
-var isNodeEmpty = function (node) {
-  var TEXT_NODE = 3,
-      COMMENT_NODE = 8;
-  return (node.nodeType == COMMENT_NODE) ||
-    (node.nodeType == TEXT_NODE && !(node.nodeValue || '').trim());
-};
-
-function findNode(selector, element) {
-  var parentNode = element[0];
-  return angular.element(parentNode.querySelector(selector));
-}
-
-/*
- *  This function() provides scope-relative features to disconnect and reconnect to the $digest() processes
- *  NOTE: this is essentially a reversible $destroy() for scopes.
- *
- *  Detaching the scope would mean:
- *
- *    Detaching the scope from the scope's current parent so that watchers no
- *    longer fire when the scope's current parent's $digest is called
- *
- *  On re-attaching to a DOM element (as a child):
- *
- *    It would be attached as he child scope of the DOM element. This is useful
- *    for optimizations such as not running watchers on hidden DOM (that could be detached).
- *
- *  @see https://github.com/angular/angular.js/issues/5301
- *
- */
-function addDigestConnector (scope) {
-  var disconnect = function () {
-
-    // we can't destroy the root scope or a scope that has been already destroyed
-    if (this.$root === this) return;
-    if (this.$$destroyed ) return;
-
-    var parent = this.$parent;
-    this.$$disconnected = true;
-
-    // See Scope.$destroy
-    if (parent.$$childHead === this) parent.$$childHead = this.$$nextSibling;
-    if (parent.$$childTail === this) parent.$$childTail = this.$$prevSibling;
-    if (this.$$prevSibling) this.$$prevSibling.$$nextSibling = this.$$nextSibling;
-    if (this.$$nextSibling) this.$$nextSibling.$$prevSibling = this.$$prevSibling;
-
-    this.$$nextSibling = this.$$prevSibling = null;
-  };
-  var reconnect = function () {
-
-    // we can't disconnect the root node or scope already disconnected
-    if (this.$root === this) return;
-    if (!this.$$disconnected) return;
-
-    var child = this;
-
-    var parent = child.$parent;
-    child.$$disconnected = false;
-    // See Scope.$new for this logic...
-    child.$$prevSibling = parent.$$childTail;
-    if (parent.$$childHead) {
-      parent.$$childTail.$$nextSibling = child;
-      parent.$$childTail = child;
-    } else {
-      parent.$$childHead = parent.$$childTail = child;
-    }
-  };
-
-  scope.$disconnect = angular.bind( scope, disconnect );
-  scope.$reconnect  = angular.bind( scope, reconnect );
-
-  return scope;
 }
 
 /**
@@ -3920,20 +4186,22 @@ function addDigestConnector (scope) {
  * @description
  * Toast
  */
-angular.module('material.components.toast', ['material.services.compiler'])
+angular.module('material.components.toast', [
+  'material.services.interimElement',
+  'material.components.swipe'
+])
   .directive('materialToast', [
-    QpToastDirective
+    MaterialToastDirective
   ])
   .factory('$materialToast', [
     '$timeout',
-    '$rootScope',
-    '$materialCompiler',
-    '$rootElement',
+    '$$interimElement',
     '$animate',
-    QpToastService
+    '$materialSwipe',
+    MaterialToastService
   ]);
 
-function QpToastDirective() {
+function MaterialToastDirective() {
   return {
     restrict: 'E'
   };
@@ -3945,36 +4213,49 @@ function QpToastDirective() {
  * @module material.components.toast
  *
  * @description
- * Open a toast notification on any position on the screen, with an optional 
- * duration.
+ *
+ * Used to open a toast notification on any position on the screen [with an optional
+ * duration], `$materialToast` is a service created by `$$interimElement` and provides a
+ * simple promise-based, behavior API:
+ *
+ *  - `$materialToast.show()`
+ *  - `$materialToast.hide()`
+ *  - `$materialToast.cancel()`
+ *
+ * #### Notes:
  *
  * Only one toast notification may ever be active at any time. If a new toast is
  * shown while a different toast is active, the old toast will be automatically
  * hidden.
  *
- * `$materialToast` takes one argument, options, which is defined below.
- *
  * @usage
  * <hljs lang="html">
- * <div ng-controller="MyController">
- *   <material-button ng-click="openToast()">
- *     Open a Toast!
- *   </material-button>
- * </div>
- * </hljs>
- * <hljs lang="js">
- * var app = angular.module('app', ['ngMaterial']);
- * app.controller('MyController', function($scope, $materialToast) {
- *   $scope.openToast = function($event) {
- *     var hideToast = $materialToast({
- *       template: '<material-toast>Hello!</material-toast>',
- *       duration: 3000
- *     });
- *   };
- * });
- * </hljs>
+ *  <script type="text/javascript">
+ *  var app = angular.module('app', ['ngMaterial']);
+ *    app.controller('MyController', function($scope, $materialToast) {
+ *      $scope.openToast = function($event) {
+ *        $materialToast.show({
+ *          template: '<material-toast>Hello!</material-toast>',
+ *          hideDelay: 3000
+ *        });
+ *      };
+ *    });
+ *  </script>
  *
- * @returns {function} `hideToast` - A function that hides the toast.
+ *  <div ng-controller="MyController">
+ *    <material-button ng-click="openToast()">
+ *      Open a Toast!
+ *    </material-button>
+ *  </div>
+ * </hljs>
+ */
+
+ /**
+ * @ngdoc method
+ * @name $materialToast#show
+ *
+ * @description
+ * Show a toast dialog with the specified options.
  *
  * @paramType Options
  * @param {string=} templateUrl The url of an html template file that will
@@ -3982,8 +4263,8 @@ function QpToastDirective() {
  * have an outer `material-toast` element.
  * @param {string=} template Same as templateUrl, except this is an actual
  * template string.
- * @param {number=} duration How many milliseconds the toast should stay
- * active before automatically closing.  Set to 0 to disable duration. 
+ * @param {number=} hideDelay How many milliseconds the toast should stay
+ * active before automatically closing.  Set to 0 to disable duration.
  * Default: 3000.
  * @param {string=} position Where to place the toast. Available: any combination
  * of 'bottom', 'left', 'top', 'right', 'fit'. Default: 'bottom left'.
@@ -3991,93 +4272,74 @@ function QpToastDirective() {
  * The controller will be injected the local `$hideToast`, which is a function
  * used to hide the toast.
  * @param {string=} locals An object containing key/value pairs. The keys will
- * be used as names of values to inject into the controller. For example, 
+ * be used as names of values to inject into the controller. For example,
  * `locals: {three: 3}` would inject `three` into the controller with the value
  * of 3.
  * @param {object=} resolve Similar to locals, except it takes promises as values
  * and the toast will not open until the promises resolve.
  * @param {string=} controllerAs An alias to assign the controller to on the scope.
+ *
+ * @returns {Promise} Returns a promise that will be resolved or rejected when
+ *  `$materialToast.hide()` or `$materialToast.cancel()` is called respectively.
  */
-function QpToastService($timeout, $rootScope, $materialCompiler, $rootElement, $animate) {
-  var recentToast;
+
+/**
+ * @ngdoc method
+ * @name $materialToast#hide
+ *
+ * @description
+ * Hide an existing toast and `resolve` the promise returned from `$materialToast.show()`.
+ *
+ * @param {*} arg An argument to resolve the promise with.
+ *
+ */
+
+/**
+ * @ngdoc method
+ * @name $materialToast#cancel
+ *
+ * @description
+ * Hide an existing toast and `reject` the promise returned from `$materialToast.show()`.
+ *
+ * @param {*} arg An argument to reject the promise with.
+ *
+ */
+
+function MaterialToastService($timeout, $$interimElement, $animate, $materialSwipe) {
+
+  var factoryDef = {
+    onShow: onShow,
+    onRemove: onRemove,
+    position: 'bottom left',
+    hideDelay: 3000,
+  };
+
+  var $materialToast = $$interimElement(factoryDef);
+  return $materialToast;
+
+  function onShow(scope, element, options) {
+    element.addClass(options.position);
+    options.parent.addClass(toastOpenClass(options.position));
+
+    var configureSwipe = $materialSwipe(scope, 'swipeleft swiperight');
+    options.detachSwipe = configureSwipe(element, function(ev) {
+      //Add swipeleft/swiperight class to element so it can animate correctly
+      element.addClass(ev.type);
+      $timeout($materialToast.hide);
+    });
+
+    return $animate.enter(element, options.parent);
+  }
+
+  function onRemove(scope, element, options) {
+    options.detachSwipe();
+    options.parent.removeClass(toastOpenClass(options.position));
+    return $animate.leave(element);
+  }
+
   function toastOpenClass(position) {
     return 'material-toast-open-' +
       (position.indexOf('top') > -1 ? 'top' : 'bottom');
-  }
-
-  // If the $rootElement is the document (<html> element), be sure to append it to the
-  // body instead.
-  var toastParent = $rootElement.find('body');
-  if ( !toastParent.length ) {
-    toastParent = $rootElement;
-  }
-
-  return showToast;
-
-  /**
-   * TODO fully document this
-   * Supports all options from $materialPopup, in addition to `duration` and `position`
-   */
-  function showToast(options) {
-    options = angular.extend({
-      // How long to keep the toast up, milliseconds
-      duration: 3000,
-      // [unimplemented] Whether to disable swiping
-      swipeDisabled: false,
-      // Supports any combination of these class names: 'bottom top left right fit'.
-      // Default: 'bottom left'
-      position: 'bottom left'
-    }, options || {});
-
-    recentToast && recentToast.then(function(destroy) { destroy(); });
-
-    recentToast = $materialCompiler.compile(options).then(function(compileData) {
-      // Controller will be passed a `$hideToast` function
-      compileData.locals.$hideToast = destroy;
-
-      var scope = $rootScope.$new();
-      var element = compileData.link(scope);
-
-      var toastParentClass = toastOpenClass(options.position);
-      element.addClass(options.position);
-      toastParent.addClass(toastParentClass);
-
-      var delayTimeout;
-      $animate.enter(element, toastParent).then(function() {
-        if (options.duration) {
-          delayTimeout = $timeout(destroy, options.duration);
-        }
-      });
-
-      var hammertime = new Hammer(element[0], {
-        recognizers: [
-          [Hammer.Swipe, { direction: Hammer.DIRECTION_HORIZONTAL }]
-        ]
-      });
-      hammertime.on('swipeleft swiperight', onSwipe);
-      
-      function onSwipe(ev) {
-        //Add swipeleft/swiperight class to element so it can animate correctly
-        element.addClass(ev.type);
-        $timeout(destroy);
-      }
-
-      return destroy;
-
-      function destroy() {
-        if (destroy.called) return;
-        destroy.called = true;
-
-        hammertime.destroy();
-        toastParent.removeClass(toastParentClass);
-        $timeout.cancel(delayTimeout);
-        $animate.leave(element).then(function() {
-          scope.$destroy();
-        });
-      }
-    });
-
-    return recentToast;
   }
 }
 
@@ -4230,6 +4492,194 @@ function materialToolbarDirective($$rAF, $materialEffects) {
 
 }
 
+/**
+ * @ngdoc module
+ * @name material.components.tooltip
+ */
+angular.module('material.components.tooltip', [])
+
+.directive('materialTooltip', [
+  '$timeout',
+  '$window',
+  '$$rAF',
+  '$document',
+  MaterialTooltipDirective
+]);
+
+/**
+ * @ngdoc directive
+ * @name materialTooltip
+ * @module material.components.tooltip
+ * @description
+ * Tooltips are used to describe elements that are interactive and primarily graphical (not textual).
+ *
+ * Place a `<material-tooltip>` as a child of the element it describes.
+ *
+ * A tooltip will activate when the user focuses, hovers over, or touches the parent.
+ *
+ * @usage
+ * <hljs lang="html">
+ * <material-icon icon="/img/icons/ic_play_arrow_24px.svg">
+ *   <material-tooltip>
+ *     Play Music
+ *   </material-tooltip>
+ * </material-icon>
+ * </hljs>
+ *
+ * @param {expression=} visible Boolean bound to whether the tooltip is 
+ * currently visible.
+ */
+function MaterialTooltipDirective($timeout, $window, $$rAF, $document) {
+
+  var TOOLTIP_SHOW_DELAY = 400;
+  var TOOLTIP_WINDOW_EDGE_SPACE = 8;
+  // We have to append tooltips to the body, because we use
+  // getBoundingClientRect().
+  // to find where to append the tooltip.
+  var tooltipParent = angular.element(document.body);
+
+  return {
+    restrict: 'E',
+    transclude: true,
+    require: '^?materialContent',
+    template: 
+      '<div class="tooltip-background"></div>' +
+      '<div class="tooltip-content" ng-transclude></div>',
+    scope: {
+      visible: '=?'
+    },
+    link: postLink
+  };
+
+  function postLink(scope, element, attr, contentCtrl) {
+    var parent = element.parent();
+
+    // We will re-attach tooltip when visible
+    element.detach();
+    element.attr('role', 'tooltip');
+    element.attr('id', attr.id || ('tooltip_' + Util.nextUid()));
+
+    parent.on('focus mouseenter touchstart', function() {
+      setVisible(true);
+    });
+    parent.on('blur mouseleave touchend touchcancel', function() {
+      // Don't hide the tooltip if the parent is still focused.
+      if (document.activeElement === parent[0]) return;
+      setVisible(false);
+    });
+
+    scope.$watch('visible', function(isVisible) {
+      if (isVisible) showTooltip();
+      else hideTooltip();
+    });
+    
+    var debouncedOnResize = $$rAF.debounce(onWindowResize);
+    angular.element($window).on('resize', debouncedOnResize);
+    function onWindowResize() {
+      // Reposition on resize
+      if (scope.visible) positionTooltip();
+    }
+
+    // Be sure to completely cleanup the element on destroy
+    scope.$on('$destroy', function() {
+      scope.visible = false;
+      element.remove();
+      angular.element($window).off('resize', debouncedOnResize);
+    });
+
+    // *******
+    // Methods
+    // *******
+
+    // If setting visible to true, debounce to TOOLTIP_SHOW_DELAY ms
+    // If setting visible to false and no timeout is active, instantly hide the tooltip.
+    function setVisible(value) {
+      setVisible.value = !!value;
+
+      if (!setVisible.queued) {
+        if (value) {
+          setVisible.queued = true;
+          $timeout(function() {
+            scope.visible = setVisible.value;
+            setVisible.queued = false;
+          }, TOOLTIP_SHOW_DELAY);
+
+        } else {
+          $timeout(function() { scope.visible = false; });
+        }
+      }
+    }
+
+    function showTooltip() {
+      // Insert the element before positioning it, so we can get position
+      // (tooltip is hidden by default)
+      element.removeClass('tooltip-hide');
+      parent.attr('aria-describedby', element.attr('id'));
+      tooltipParent.append(element);
+
+      // Wait until the element has been in the dom for two frames before 
+      // fading it in.
+      // Additionally, we position the tooltip twice to avoid positioning bugs
+      //positionTooltip();
+      $$rAF(function() {
+
+        $$rAF(function() {
+          positionTooltip();
+          if (!scope.visible) return;
+          element.addClass('tooltip-show');
+        });
+
+      });
+    }
+
+    function hideTooltip() {
+      element.removeClass('tooltip-show').addClass('tooltip-hide');
+      parent.removeAttr('aria-describedby');
+      $timeout(function() {
+        if (scope.visible) return;
+        element.detach();
+      }, 200, false);
+    }
+
+    function positionTooltip(rerun) {
+      var tipRect = element[0].getBoundingClientRect();
+      var parentRect = parent[0].getBoundingClientRect();
+
+      if (contentCtrl) {
+        parentRect.top += contentCtrl.$element.prop('scrollTop');
+        parentRect.left += contentCtrl.$element.prop('scrollLeft');
+      }
+
+      // Default to bottom position if possible
+      var tipDirection = 'bottom';
+      var newPosition = {
+        left: parentRect.left + parentRect.width / 2 - tipRect.width / 2,
+        top: parentRect.top + parentRect.height
+      };
+
+      // If element bleeds over left/right of the window, place it on the edge of the window.
+      newPosition.left = Math.min(
+        newPosition.left, 
+        $window.innerWidth - tipRect.width - TOOLTIP_WINDOW_EDGE_SPACE
+      );
+      newPosition.left = Math.max(newPosition.left, TOOLTIP_WINDOW_EDGE_SPACE);
+
+      // If element bleeds over the bottom of the window, place it above the parent.
+      if (newPosition.top + tipRect.height > $window.innerHeight) {
+        newPosition.top = parentRect.top - tipRect.height;
+        tipDirection = 'top';
+      }
+
+      element.css({top: newPosition.top + 'px', left: newPosition.left + 'px'});
+      // Tell the CSS the size of this tooltip, as a multiple of 32.
+      element.attr('width-32', Math.ceil(tipRect.width / 32));
+      element.attr('tooltip-direction', tipDirection);
+    }
+
+  }
+
+}
+
 angular.module('material.components.whiteframe', []);
 
 /**
@@ -4279,7 +4729,11 @@ angular.module('material.components.linearProgress', [
   'material.animations',
   'material.services.aria'
 ])
-  .directive('materialLinearProgress', ['$timeout', MaterialLinearProgressDirective]);
+.directive('materialLinearProgress', [
+  '$$rAF', 
+  '$materialEffects',
+  MaterialLinearProgressDirective
+]);
 
 /**
  * @ngdoc directive
@@ -4311,7 +4765,8 @@ angular.module('material.components.linearProgress', [
  * <material-linear-progress mode="query"></material-linear-progress>
  * </hljs>
  */
-function MaterialLinearProgressDirective($timeout) {
+function MaterialLinearProgressDirective($$rAF, $materialEffects) {
+
   return {
     restrict: 'E',
     template: '<div class="container">' +
@@ -4319,41 +4774,403 @@ function MaterialLinearProgressDirective($timeout) {
       '<div class="bar bar1"></div>' +
       '<div class="bar bar2"></div>' +
       '</div>',
-    link: function(scope, element, attr) {
-      var bar1 = angular.element(element[0].querySelector('.bar1')),
-          bar2 = angular.element(element[0].querySelector('.bar2')),
-          container = angular.element(element[0].querySelector('.container'));
-
-      attr.$observe('value', function(value) {
-        bar2.css('width', clamp(value).toString() + '%');
-      });
-
-      attr.$observe('secondaryvalue', function(value) {
-        bar1.css('width', clamp(value).toString() + '%');
-      });
-
-      $timeout(function() {
-        container.addClass('ready');
-      });
-    }
+    compile: compile
   };
+  
+  function compile(tElement, tAttrs, transclude) {
+    tElement.attr('aria-valuemin', 0);
+    tElement.attr('aria-valuemax', 100);
+    tElement.attr('role', 'progressbar');
+
+    return postLink;
+  }
+  function postLink(scope, element, attr) {
+    var bar1Style = element[0].querySelector('.bar1').style,
+      bar2Style = element[0].querySelector('.bar2').style,
+      container = angular.element(element[0].querySelector('.container'));
+
+    attr.$observe('value', function(value) {
+      if (attr.mode == 'query') {
+        return;
+      }
+
+      var clamped = clamp(value);
+      element.attr('aria-valuenow', clamped);
+      bar2Style[$materialEffects.TRANSFORM] = linearProgressTransforms[clamped];
+    });
+
+    attr.$observe('secondaryvalue', function(value) {
+      bar1Style[$materialEffects.TRANSFORM] = linearProgressTransforms[clamp(value)];
+    });
+
+    $$rAF(function() {
+      container.addClass('ready');
+    });
+  }
+
+  function clamp(value) {
+    if (value > 100) {
+      return 100;
+    }
+
+    if (value < 0) {
+      return 0;
+    }
+
+    return Math.ceil(value || 0);
+  }
 }
+
 
 // **********************************************************
 // Private Methods
 // **********************************************************
-
-function clamp(value) {
-  if (value > 100) {
-    return 100;
+var linearProgressTransforms = (function() {
+  var values = new Array(101);
+  for(var i = 0; i < 101; i++){
+    values[i] = makeTransform(i);
   }
 
-  if (value < 0) {
-    return 0;
+  return values;
+
+  function makeTransform(value){
+    var scale = value/100;
+    var translateX = (value-100)/2;
+    return 'translateX(' + translateX.toString() + '%) scale(' + scale.toString() + ', 1)';
+  }
+})();
+
+/**
+ * @ngdoc module
+ * @name material.components.circularProgress
+ * @description Circular Progress module!
+ */
+angular.module('material.components.circularProgress', [
+  'material.animations',
+  'material.services.aria'
+])
+  .directive('materialCircularProgress', [
+    '$$rAF',
+    '$materialEffects',
+    MaterialCircularProgressDirective
+  ]);
+
+/**
+ * @ngdoc directive
+ * @name materialCircularProgress
+ * @module material.components.circularProgress
+ * @restrict E
+ *
+* @description
+ * The circular progress directive is used to make loading content in your app as delightful and painless as possible by minimizing the amount of visual change a user sees before they can view and interact with content.
+ *
+ * For operations where the percentage of the operation completed can be determined, use a determinate indicator. They give users a quick sense of how long an operation will take.
+ *
+ * For operations where the user is asked to wait a moment while something finishes up, and it’s not necessary to expose what's happening behind the scenes and how long it will take, use an indeterminate indicator.
+ *
+ * @param {string} mode Select from one of two modes: determinate and indeterminate.
+ * @param {number=} value In determinate mode, this number represents the percentage of the circular progress. Default: 0
+ * @param {number=} diameter This specifies the diamter of the circular progress. Default: 48
+ *
+ * @usage
+ * <hljs lang="html">
+ * <material-circular-progress mode="determinate" value="..."></material-circular-progress>
+ *
+ * <material-circular-progress mode="determinate" ng-value="..."></material-circular-progress>
+ *
+ * <material-circular-progress mode="determinate" value="..." diameter="100"></material-circular-progress>
+ *
+ * <material-circular-progress mode="indeterminate"></material-circular-progress>
+ * </hljs>
+ */
+function MaterialCircularProgressDirective($$rAF, $materialEffects) {
+  var fillRotations = new Array(101),
+    fixRotations = new Array(101);
+
+  for (var i = 0; i < 101; i++) {
+    var percent = i / 100;
+    var rotation = Math.floor(percent * 180);
+
+    fillRotations[i] = 'rotate(' + rotation.toString() + 'deg)';
+    fixRotations[i] = 'rotate(' + (rotation * 2).toString() + 'deg)';
   }
 
-  return value || 0;
+  return {
+    restrict: 'E',
+    template: 
+      '<div class="wrapper1"><div class="wrapper2"><div class="circle">' +
+        '<div class="mask full">' +
+          '<div class="fill"></div>' +
+        '</div>' +
+        '<div class="mask half">' +
+          '<div class="fill"></div>' +
+          '<div class="fill fix"></div>' +
+        '</div>' +
+        '<div class="shadow"></div>' +
+      '</div>' +
+      '<div class="inset"></div></div></div>',
+    compile: compile
+  };
+
+  function compile(tElement, tAttrs, transclude) {
+    tElement.attr('aria-valuemin', 0);
+    tElement.attr('aria-valuemax', 100);
+    tElement.attr('role', 'progressbar');
+
+    return postLink;
+  }
+
+  function postLink(scope, element, attr) {
+    var circle = element[0],
+      fill = circle.querySelectorAll('.fill, .mask.full'),
+      fix = circle.querySelectorAll('.fill.fix'),
+      i, clamped, fillRotation, fixRotation;
+
+    var diameter = attr.diameter || 48;
+    var scale = diameter/48;
+
+    circle.style[$materialEffects.TRANSFORM] = 'scale(' + scale.toString() + ')';
+
+    attr.$observe('value', function(value) {
+      clamped = clamp(value);
+      fillRotation = fillRotations[clamped];
+      fixRotation = fixRotations[clamped];
+
+      element.attr('aria-valuenow', clamped);
+
+      for (i = 0; i < fill.length; i++) {
+        fill[i].style[$materialEffects.TRANSFORM] = fillRotation;
+      }
+
+      for (i = 0; i < fix.length; i++) {
+        fix[i].style[$materialEffects.TRANSFORM] = fixRotation;
+      }
+    });
+  }
+
+  function clamp(value) {
+    if (value > 100) {
+      return 100;
+    }
+
+    if (value < 0) {
+      return 0;
+    }
+
+    return Math.ceil(value || 0);
+  }
 }
+(function() {
+
+  /**
+   * @ngdoc module
+   * @name material.components.swipe
+   * @description Swipe module!
+   */
+  angular.module('material.components.swipe',['ng'])
+
+    /**
+     * @ngdoc directive
+     * @module material.components.swipe
+     * @name $materialSwipe
+     *
+     *  This service allows directives to easily attach swipe and pan listeners to
+     *  the specified element.
+     *
+     * @private
+     */
+    .factory("$materialSwipe", function() {
+
+      // match expected API functionality
+      var attachNoop = function(){ return angular.noop; };
+
+      /**
+       * SwipeService constructor pre-captures scope and customized event types
+       *
+       * @param scope
+       * @param eventTypes
+       * @returns {*}
+       * @constructor
+       */
+      return function SwipeService(scope, eventTypes) {
+        if ( !eventTypes ) eventTypes = "swipeleft swiperight";
+
+        // publish configureFor() method for specific element instance
+        return function configureFor(element, onSwipeCallback, attachLater ) {
+          var hammertime = new Hammer(element[0], {
+            recognizers : addRecognizers([], eventTypes )
+          });
+
+          // Attach swipe listeners now
+          if ( !attachLater ) attachSwipe();
+
+          // auto-disconnect during destroy
+          scope.$on('$destroy', function() {
+            hammertime.destroy();
+          });
+
+          return attachSwipe;
+
+          // **********************
+          // Internal methods
+          // **********************
+
+          /**
+           * Delegate swipe event to callback function
+           * and ensure $digest is triggered.
+           *
+           * @param ev HammerEvent
+           */
+          function swipeHandler(ev) {
+
+            // Prevent triggering parent hammer listeners
+            ev.srcEvent.stopPropagation();
+
+            if ( angular.isFunction(onSwipeCallback) ) {
+              scope.$apply(function() {
+                onSwipeCallback(ev);
+              });
+            }
+          }
+
+          /**
+           * Enable listeners and return detach() fn
+           */
+          function attachSwipe() {
+            hammertime.on(eventTypes, swipeHandler );
+
+            return function detachSwipe() {
+              hammertime.off( eventTypes );
+            };
+          }
+
+          /**
+           * Add optional recognizers such as panleft, panright
+           */
+          function addRecognizers(list, events) {
+            var hasPanning = (events.indexOf("pan") > -1);
+            var hasSwipe   = (events.indexOf("swipe") > -1);
+
+            if (hasPanning) {
+              list.push([ Hammer.Pan, { direction: Hammer.DIRECTION_HORIZONTAL } ]);
+            }
+            if (hasSwipe) {
+              list.push([ Hammer.Swipe, { direction: Hammer.DIRECTION_HORIZONTAL } ]);
+            }
+
+            return list;
+          }
+
+        };
+      };
+    })
+
+    /**
+     * @ngdoc directive
+     * @module material.components.swipe
+     * @name materialSwipeLeft
+     *
+     * @order 0
+     * @restrict A
+     *
+     * @description
+     * The `<div  material-swipe-left="<expression" >` directive identifies an element on which
+     * HammerJS horizontal swipe left and pan left support will be active. The swipe/pan action
+     * can result in custom activity trigger by evaluating `<expression>`.
+     *
+     * @param {boolean=} noPan Use of attribute indicates flag to disable detection of `panleft` activity
+     *
+     * @usage
+     * <hljs lang="html">
+     *
+     * <div class="animate-switch-container"
+     *      ng-switch on="data.selectedIndex"
+     *      material-swipe-left="data.selectedIndex+=1;"
+     *      material-swipe-right="data.selectedIndex-=1;" >
+     *
+     * </div>
+     * </hljs>
+     *
+     */
+    .directive("materialSwipeLeft", ['$parse', '$materialSwipe',
+      function MaterialSwipeLeft($parse, $materialSwipe) {
+        return {
+          restrict: 'A',
+          link :  swipePostLink( $parse, $materialSwipe, "SwipeLeft" )
+        };
+      }])
+
+    /**
+     * @ngdoc directive
+     * @module material.components.swipe
+     * @name materialSwipeRight
+     *
+     * @order 1
+     * @restrict A
+     *
+     * @description
+     * The `<div  material-swipe-right="<expression" >` directive identifies functionality
+     * that attaches HammerJS horizontal swipe right and pan right support to an element. The swipe/pan action
+     * can result in activity trigger by evaluating `<expression>`
+     *
+     * @param {boolean=} noPan Use of attribute indicates flag to disable detection of `panright` activity
+     *
+     * @usage
+     * <hljs lang="html">
+     *
+     * <div class="animate-switch-container"
+     *      ng-switch on="data.selectedIndex"
+     *      material-swipe-left="data.selectedIndex+=1;"
+     *      material-swipe-right="data.selectedIndex-=1;" >
+     *
+     * </div>
+     * </hljs>
+     *
+     */
+    .directive( "materialSwipeRight", ['$parse', '$materialSwipe',
+      function MaterialSwipeRight($parse, $materialSwipe) {
+        return {
+          restrict: 'A',
+          link: swipePostLink( $parse, $materialSwipe, "SwipeRight" )
+        };
+      }
+    ]);
+
+    /**
+     * Factory to build PostLink function specific to Swipe or Pan direction
+     *
+     * @param $parse
+     * @param $materialSwipe
+     * @param name
+     * @returns {Function}
+     */
+    function swipePostLink($parse, $materialSwipe, name ) {
+
+      return function(scope, element, attrs) {
+        var direction = name.toLowerCase();
+        var directiveName= "material" + name;
+
+        var parentGetter = $parse(attrs[directiveName]) || angular.noop;
+        var configureSwipe = $materialSwipe(scope, direction);
+        var requestSwipe = function(locals) {
+          // build function to request scope-specific swipe response
+          parentGetter(scope, locals);
+        };
+
+        configureSwipe( element, function onHandleSwipe(ev) {
+          if ( ev.type == direction ) {
+            requestSwipe();
+          }
+        });
+
+      }
+    }
+
+})();
+
+
+
+
 angular.module('material.decorators', [])
 .config(['$provide', function($provide) {
   $provide.decorator('$$rAF', ['$delegate', '$rootScope', rAFDecorator]);
@@ -4394,7 +5211,7 @@ angular.module('material.decorators', [])
 
 angular.module('material.services.aria', [])
 
-.service('$aria', [
+.service('$materialAria', [
   '$log',
   AriaService
 ]);
@@ -4404,24 +5221,8 @@ function AriaService($log) {
   var defaultValueTemplate = 'Default value was set: %s="%s".';
 
   return {
-
     expect : expectAttribute,
-    update : assignAttributes
   };
-
-  /**
-   * Assign 1..n ARIA values to the target element
-   * @param element
-   * @param options
-   */
-  function assignAttributes(element, options )
-  {
-    angular.forEach(options, Util.spread(function( attrValue, attrName ) {
-       element.attr(attrName,  attrValue);
-    }));
-
-    return element;
-  }
 
   /**
    * Check if expected ARIA has been specified on the target element
@@ -4447,10 +5248,9 @@ function AriaService($log) {
   }
 
 
-
   /**
    * Gets the tag definition from a node's outerHTML
-   * @example getTagDefinition(
+   * @example getTagString(
    *   '<material-button foo="bar">Hello</material-button>'
    * ) // => '<material-button foo="bar">'
    */
@@ -4699,6 +5499,202 @@ function materialCompilerService($q, $http, $injector, $compile, $controller, $t
 }
 
 /**
+ * @ngdoc module
+ * @name material.services.interimElement
+ * @description InterimElement
+ */
+
+angular.module('material.services.interimElement', [
+  'material.services.compiler'
+])
+.factory('$$interimElement', [
+  '$q',
+  '$rootScope',
+  '$timeout',
+  '$rootElement',
+  '$animate',
+  '$materialCompiler',
+  InterimElementFactory
+]);
+
+/**
+ * @ngdoc service
+ * @name $$interimElement
+ *
+ * @description
+ *
+ * Factory that contructs `$$interimElement.$service` services. 
+ * Used internally in material for elements that appear on screen temporarily.
+ * The service provides a promise-like API for interacting with the temporary
+ * elements.
+ *
+ * ```js
+ * app.service('$materialToast', function($$interimElement) {
+ *   var $materialToast = $$interimElement(toastDefaultOptions);
+ *   return $materialToast;
+ * });
+ * ```
+ * @param {object=} defaultOptions Options used by default for the `show` method on the service.
+ *
+ * @returns {$$interimElement.$service}
+ *
+ */
+
+function InterimElementFactory($q, $rootScope, $timeout, $rootElement, $animate, $materialCompiler) {
+
+  return function createInterimElementService(defaults) {
+
+    /**
+     * @ngdoc service
+     * @name $$interimElement.$service
+     *
+     * @description
+     * A service used to control inserting and removing an element into the DOM.
+     *
+     */
+
+
+    var stack = [];
+
+    var parent = $rootElement.find('body');
+    if (!parent.length) parent = $rootElement;
+
+    defaults = angular.extend({
+      parent: parent,
+      onShow: function(scope, $el, options) {
+        return $animate.enter($el, options.parent);
+      },
+      onRemove: function(scope, $el, options) {
+        return $animate.leave($el);
+      },
+    }, defaults || {});
+
+    var service;
+    return service = {
+      show: show,
+      hide: hide,
+      cancel: cancel
+    };
+
+    /**
+     * @ngdoc method
+     * @name $$interimElement.$service#show
+     * @kind function
+     *
+     * @description
+     * Compiles and inserts an element into the DOM.
+     *
+     * @param {Object} options Options object to compile with.
+     *
+     * @returns {Promise} Promise that will resolve when the service
+     * has `#close()` or `#cancel()` called.
+     *
+     */
+    function show(options) {
+      if (stack.length) {
+        service.hide();
+      }
+
+      var interimElement = new InterimElement(options);
+      stack.push(interimElement);
+      return interimElement.show().then(function() {
+        return interimElement.deferred.promise;
+      });
+    }
+
+    /**
+     * @ngdoc method
+     * @name $$interimElement.$service#hide
+     * @kind function
+     *
+     * @description
+     * Removes the `$interimElement` from the DOM and resolves the promise returned from `show`
+     *
+     * @param {*} resolveParam Data to resolve the promise with
+     *
+     * @returns undefined data that resolves after the element has been removed.
+     *
+     */
+    function hide(success) {
+      var interimElement = stack.shift();
+      interimElement && interimElement.remove().then(function() {
+        interimElement.deferred.resolve(success);
+      });
+    }
+
+    /**
+     * @ngdoc method
+     * @name $$interimElement.$service#cancel
+     * @kind function
+     *
+     * @description
+     * Removes the `$interimElement` from the DOM and rejects the promise returned from `show`
+     *
+     * @param {*} reason Data to reject the promise with
+     *
+     * @returns undefined
+     *
+     */
+    function cancel(reason) {
+      var interimElement = stack.shift();
+      interimElement && interimElement.remove().then(function() {
+        interimElement.deferred.reject(reason);
+      });
+    }
+
+
+    /*
+     * Internal Interim Element Object
+     * Used internally to manage the DOM element and related data
+     */
+    function InterimElement(options) {
+      var self;
+      var hideTimeout, element;
+
+      options = options || {};
+
+      options = angular.extend({
+        scope: options.scope || $rootScope.$new(options.isolateScope)
+      }, defaults, options);
+
+      self = {
+        options: options,
+        deferred: $q.defer(),
+        show: function() {
+          return $materialCompiler.compile(options).then(function(compiledData) {
+            element = compiledData.link(options.scope);
+            var ret = options.onShow(options.scope, element, options);
+            return $q.when(ret)
+              .then(startHideTimeout);
+
+            function startHideTimeout() {
+              if (options.hideDelay) {
+                hideTimeout = $timeout(service.hide, options.hideDelay) ;
+              }
+            }
+          });
+        },
+        cancelTimeout: function() {
+          if (hideTimeout) {
+            $timeout.cancel(hideTimeout);
+            hideTimeout = undefined;
+          }
+        },
+        remove: function() {
+          self.cancelTimeout();
+          var ret = options.onRemove(options.scope, element, options);
+          return $q.when(ret).then(function() {
+            options.scope.$destroy();
+          });
+        }
+      };
+      return self;
+    }
+  };
+}
+
+
+/**
  * @ngdoc overview
  * @name material.services.registry
  *
@@ -4771,289 +5767,5 @@ function materialComponentRegistry($log) {
   }
 }
 
-
-angular.module('material.services.throttle', [ ])
-  .factory('$throttle', [
-    '$timeout',
-    '$$q',
-    '$log', 
-    MaterialThrottleService
-  ]);
-  /**
-   *   var ripple, watchMouse,
-   *       parent = element.parent(),
-   *       makeRipple = $throttle({
-   *         start : function() {
-   *           ripple = ripple || $materialEffects.inkRipple( element[0], options );
-   *           watchMouse = watchMouse || buildMouseWatcher(parent, makeRipple);
-   *           // Ripples start with mouseDow (or taps)
-   *           parent.on('mousedown', makeRipple);
-   *         },
-   *         throttle : function(e, done) {
-   *           if ( effectAllowed() )
-   *           {
-   *             switch(e.type)
-   *             {
-   *               case 'mousedown' :
-   *                 watchMouse(true);
-   *                 ripple.createAt( options.forceToCenter ? null : localToCanvas(e) );
-   *                 break;
-   *               default:
-   *                 watchMouse(false);
-   *                 ripple.draw( localToCanvas(e) );
-   *                 break;
-   *             }
-   *           } else {
-   *             done();
-   *           }
-   *         },
-   *         end : function() {
-   *           watchMouse(false);
-   *         }
-   *       });
-   *
-   *   makeRipple();
-   *
-   */
-function MaterialThrottleService($timeout, $$q, $log) {
-
-  var STATE_READY= 0, STATE_START=1, STATE_THROTTLE=2, STATE_END=3;
-
-  return function( config ){
-    return function( done, otherwise ){
-      return buildInstance( angular.extend({}, config), done || angular.noop, otherwise || angular.noop );
-    };
-  };
-
-  function buildInstance( phases, done, otherwise ) {
-    var pendingActions = [ ],
-        cancel = angular.noop,
-        state = STATE_READY;
-
-    // Defer the call to the start function ... so `throttle` reference can be returned...
-    $timeout(function(){
-      start().then(function(){
-         if ( !phases.throttle ) {
-           end();
-         }
-      });
-    },0,false);
-
-    return throttle;
-
-    /**
-     * Facade function that validates throttler
-     * state BEFORE processing the `throttle` request.
-     */
-    function throttle( data, done ) {
-
-      if ( state != STATE_THROTTLE ) {
-          cacheRquest();
-      }
-
-      switch( state )
-      {
-        case STATE_READY :
-          start();
-          break;
-
-        case STATE_START:
-          break;
-
-        // Proxy throttle call to custom, user-defined throttle handler
-        case STATE_THROTTLE:
-          invokeThrottleHandler(data, done);
-          break;
-
-        case STATE_END :
-          restart();
-          break;
-      }
-
-      // **********************************************************
-      // Internal Methods
-      // **********************************************************
-
-      /**
-       *  Cache for later submission to 'throttle()'
-       */
-      function cacheRquest() {
-        pendingActions.push({ data:data, done:done });
-      }
-
-      /**
-       * Delegate to the custom throttle function...
-       * When CTF reports complete, then proceed to the `end` state
-       *
-       * @param data  Data to be delegated to the throttle function
-       * @param done  Callback when all throttle actions have completed
-       */
-      function invokeThrottleHandler(data, done) {
-
-        if ( angular.isFunction(phases.throttle) ) {
-          done = done || angular.noop;
-
-          try {
-
-            phases.throttle.apply( null, [data, function(response) {
-              done.apply( null, [response] );
-              end();
-            }]);
-
-          } catch( error ) {
-            // Report error... and end()
-
-            otherwise(error);
-            end();
-          }
-
-        } else {
-          end();
-        }
-      }
-    }
-
-
-    /**
-     * Initiate the async `start` phase of the Throttler
-     * @returns {*} promise
-     */
-    function start() {
-      return gotoState.apply(null, [ STATE_START, phases.start ] )
-                      .then( feedPendingActions, otherwise );
-
-      /**
-       * Process all pending actions (if any)
-       */
-      function feedPendingActions( response ) {
-        logResponse(response);
-
-        state = STATE_THROTTLE;
-
-        angular.forEach(pendingActions, function (it) {
-          throttle( it.data, function(response) {
-            logResponse(response);
-
-            if ( angular.isFunction(it.done) ) {
-              it.done(response);
-            }
-          });
-        });
-
-        pendingActions = [ ];
-      }
-    }
-
-    /**
-     * Initiate the async `end` phase of the Throttler
-     * @returns {*} promise
-     */
-    function end() {
-
-      return gotoState.apply(null,[ STATE_END, phases.end ])
-                      .then( finish, otherwise );
-
-      /**
-       * Mark throttle as ready to start... and announce completion
-       * of the current activity cycle
-       */
-      function finish( response ) {
-        logResponse(response);
-
-        if ( state == STATE_END ){
-          state = STATE_READY;
-          done();
-        }
-      }
-
-    }
-
-    /**
-     * Cancel any `end` process and restart state machine processes
-     */
-    function restart() {
-      try {
-
-        if ( !angular.isFunction(cancel) ) {
-          cancel = angular.noop;
-        }
-
-        cancel();
-        state = STATE_READY;
-
-      } finally {
-
-        start();
-      }
-    }
-
-    /**
-     * Change to next state and call the state function associated with that state...
-     * @param nextState
-     * @param targetFn
-     * @returns {*}
-     */
-    function gotoState( nextState , targetFn  )
-    {
-
-      var dfd = $$q.defer(),
-          hasFn = angular.isFunction(targetFn),
-          goNext = hasFn && (targetFn.length < 1),
-          fn = hasFn ? targetFn : resolved;
-
-      try {
-
-        state = nextState;
-
-        cancel = fn.apply( null, [
-          goNext ? resolved(dfd) :
-          hasFn ? callbackToResolve(dfd) : dfd
-        ]);
-
-      } catch( error ) {
-        dfd.reject( error );
-      }
-
-      return dfd.promise;
-    }
-
-  }
-
-  // **********************************************************
-  // Internal Methods
-  // **********************************************************
-
-  /**
-   * Create callback function that will resolve the specified deferred.
-   * @param dfd
-   * @returns {Function}
-   */
-  function callbackToResolve( dfd )
-  {
-    return function(response){
-      dfd.resolve.apply(null, [response ]);
-    };
-  }
-
-  /**
-   * Prepare fallback promise for start, end, throttle phases of the Throttler
-   * @param dfd
-   * @returns {*}
-   */
-  function resolved(dfd)
-  {
-    dfd = dfd || $$q.defer();
-    dfd.resolve.apply(null, arguments.length > 1 ? [].slice.call(arguments,1) : [ ]);
-
-    return dfd.promise;
-  }
-
-  function logResponse(response)
-  {
-    if ( angular.isDefined(response) ) {
-      $log.debug(response);
-    }
-  }
-}
 
 })();

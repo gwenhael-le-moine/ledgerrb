@@ -3,5 +3,6 @@ var app = angular.module( 'app', [ 'ui.router',
 				   'angularMoment',
 				   'chieffancypants.loadingBar',
 				   'ngTable',
-				   'angular-underscore'
+				   'angular-underscore',
+				   'ngMaterial'
 				 ] );
