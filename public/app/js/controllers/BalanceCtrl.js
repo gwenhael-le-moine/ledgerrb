@@ -67,9 +67,21 @@ app.controller( 'BalanceCtrl',
 			  // }
 		      } );
 
-		      $scope.update_chart_data = function() {
+		      $scope.filter_data = function() {
 			  _($scope.balance.buckets).each( function( bucket ) {
-			      bucket.chart.data = $filter('filter')( bucket.data, bucket.account_selected, true );
+			      bucket.data = [];
+
+			      if ( _(bucket.accounts_selected).isEmpty() ) {
+				  bucket.data = bucket.raw_data;
+			      } else {
+				  _(bucket.accounts_selected).each( function( account_selected ) {
+				      bucket.data = bucket.data.concat( $filter('filter')( bucket.raw_data, account_selected, true ) );
+				  } );
+			      }
+
+			      bucket.total = _( bucket.data ).reduce( function ( memo, account ) {
+				  return memo + account.amount;
+			      }, 0 );
 			  } );
 		      };
 
@@ -97,17 +109,11 @@ app.controller( 'BalanceCtrl',
 			      buckets: [ {
 				  categories: 'Expenses',
 				  data: [],
-				  total: 0,
-				  chart: {
-				      data: []
-				  }
+				  total: 0
 			      }, {
 				  categories: 'Income Equity',
 				  data: [],
-				  total: 0,
-				  chart: {
-				      data: []
-				  }
+				  total: 0
 			      } ],
 			      details: {}
 			  };
@@ -115,14 +121,14 @@ app.controller( 'BalanceCtrl',
 			  API.register( { period: period,
 					  categories: '' } )
 			      .then( function ( response ) {
-				  $scope.balance.details = _($scope.balance.details).extend( _(response.data.values).groupBy('account') );
+				  $scope.balance.details = _($scope.balance.details).extend( _(response.data.values).groupBy( 'account' ) );
 			      } );
 
 			  _($scope.balance.buckets).each( function( bucket ) {
 			      API.balance( { period: period,
 					     categories: bucket.categories } )
 				  .then( function ( response ) {
-				      bucket.data = _.chain( response.data )
+				      bucket.raw_data = _.chain( response.data )
 					  .map( function( account ) {
 					      account.amount = ( account.amount < 0 ) ? account.amount * -1 : account.amount;
 					      return account;
@@ -131,11 +137,9 @@ app.controller( 'BalanceCtrl',
 					      return 1 / account.amount;
 					  } )
 					  .value();
-				      bucket.total = _( response.data ).reduce( function ( memo, account ) {
-					  return memo + account.amount;
-				      }, 0 );
+				      bucket.accounts_selected = bucket.raw_data;
 
-				      $scope.update_chart_data();
+				      $scope.filter_data();
 				  } );
 			  } );
 		      };
