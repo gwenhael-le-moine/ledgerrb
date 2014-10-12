@@ -100,6 +100,12 @@ app.controller( 'BalanceCtrl',
 			      details: {}
 			  };
 
+			  API.register( { period: period,
+					  categories: '' } )
+			      .then( function ( response ) {
+				  $scope.balance.details = _($scope.balance.details).extend( _(response.data.values).groupBy('account') );
+			      } );
+
 			  _($scope.balance.buckets).each( function( bucket ) {
 			      API.balance( { period: period,
 					     categories: bucket.categories } )
@@ -116,11 +122,6 @@ app.controller( 'BalanceCtrl',
 				      bucket.total = _( response.data ).reduce( function ( memo, account ) {
 					  return memo + account.amount;
 				      }, 0 );
-				  } );
-			      API.register( { period: period,
-					      categories: bucket.categories } )
-				  .then( function ( response ) {
-				      $scope.balance.details = _($scope.balance.details).extend( _(response.data.values).groupBy('account') );
 				  } );
 			  } );
 		      };
