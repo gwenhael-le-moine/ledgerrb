@@ -21,7 +21,7 @@ app.controller( 'BalanceCtrl',
 		      };
 
 		      // compute an account's score: from 1 (good) to 10 (bad), 0 is neutral/undecided
-		      $scope.score_account = function ( account ) {
+		      var score_account = function ( account ) {
 			  if ( account.match( /^Income:(salaire|Sécu|Mutuelle)$/ ) ) {
 			      return 1;
 			  } else if ( account.match( /^Income:(Gift|Remboursement)$/ ) ) {
@@ -52,7 +52,7 @@ app.controller( 'BalanceCtrl',
 
 		      $scope.color = function () {
 			  return function ( d, i ) {
-			      return $scope.coloring_score( $scope.score_account( d.data.account ) );
+			      return $scope.coloring_score( score_account( d.data.account ) );
 			  };
 		      };
 
@@ -84,6 +84,14 @@ app.controller( 'BalanceCtrl',
 			      }, 0 );
 			  } );
 		      };
+		      $scope.select = { all: function( bucket ) {
+			  bucket.accounts_selected = bucket.raw_data;
+		      },
+					score_higher_than: function( bucket, score ) {
+					    bucket.accounts_selected = _(bucket.raw_data).filter( function( account ) {
+						return account.score > score;
+					    } );
+					}};
 
 		      var retrieve_data = function () {
 			  var from, to, period;
@@ -131,12 +139,16 @@ app.controller( 'BalanceCtrl',
 				      bucket.raw_data = _.chain( response.data )
 					  .map( function( account ) {
 					      account.amount = ( account.amount < 0 ) ? account.amount * -1 : account.amount;
+					      account.score = score_account( account.account );
 					      return account;
 					  } )
 					  .sortBy( function ( account ) {
 					      return 1 / account.amount;
 					  } )
 					  .value();
+				      bucket.raw_total = _( response.data ).reduce( function ( memo, account ) {
+					  return memo + account.amount;
+				      }, 0 );
 				      bucket.accounts_selected = bucket.raw_data;
 
 				      $scope.filter_data();
