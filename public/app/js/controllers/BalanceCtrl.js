@@ -14,7 +14,7 @@ app.controller( 'BalanceCtrl',
 		      $scope.toolTipContentFunction = function () {
 			  return function ( key, x, y, e, graph ) {
 			      var details = $scope.balance.details[ key ];
-			      return '<material-content><h3>' + details.key + '</h3>' + '<table>' + _( details.values ).map( function ( transaction ) {
+			      return '<material-content><h3>' + details.key + '</h3>' + '<table>' + _( details ).map( function ( transaction ) {
 				  return '<tr><td>' + transaction.date + '</td><td>' + transaction.payee + '</td><td style="text-align: right">' + $filter( 'number' )( transaction.amount, 2 ) + ' ' + transaction.currency + '</td></tr>';
 			      } ).join( '' ) + '<tr><th></th><th>Total :</th><th>' + x + ' €</th></tr>' + '</table></material-content>';
 			  };
@@ -113,17 +113,14 @@ app.controller( 'BalanceCtrl',
 					      return 1 / account.amount;
 					  } )
 					  .value();
-				      _( bucket.data ).each(
-					  function ( account ) {
-					      API.register( { period: period,
-							      categories: account.account } )
-						  .then( function ( response ) {
-						      $scope.balance.details[ account.account ] = response.data;
-						  } );
-					  } );
 				      bucket.total = _( response.data ).reduce( function ( memo, account ) {
 					  return memo + account.amount;
 				      }, 0 );
+				  } );
+			      API.register( { period: period,
+					      categories: bucket.categories } )
+				  .then( function ( response ) {
+				      $scope.balance.details = _($scope.balance.details).extend( _(response.data.values).groupBy('account') );
 				  } );
 			  } );
 		      };
