@@ -1,6 +1,6 @@
 #!/bin/sh
 
-THIN=thin
+THIN='bundle exec thin'
 THINYML=$(pwd)/config/thin.yml
 
 case $1 in
