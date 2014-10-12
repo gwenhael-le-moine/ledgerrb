@@ -1,6 +1,7 @@
 app.controller( 'BalanceCtrl',
-		[ '$scope', '$http', '$filter', 'ngTableParams',
-		  function ( $scope, $http, $filter, ngTableParams ) {
+		[ '$scope', '$filter', 'ngTableParams', 'API',
+		  function ( $scope, $filter, ngTableParams, API ) {
+		      console.log(API)
 		      $scope.xFunction = function () {
 			  return function ( d ) {
 			      return d.account;
@@ -101,12 +102,8 @@ app.controller( 'BalanceCtrl',
 			  };
 
 			  _($scope.balance.buckets).each( function( bucket ) {
-			      $http.get( '/api/ledger/balance', {
-				  params: {
-				      period: period,
-				      categories: bucket.categories
-				  }
-			      } )
+			      API.balance( { period: period,
+					     categories: bucket.categories } )
 				  .then( function ( response ) {
 				      bucket.data = _.chain( response.data )
 					  .map( function( account ) {
@@ -119,12 +116,8 @@ app.controller( 'BalanceCtrl',
 					  .value();
 				      _( bucket.data ).each(
 					  function ( account ) {
-					      $http.get( '/api/ledger/register', {
-						  params: {
-						      period: period,
-						      category: account.account
-						  }
-					      } )
+					      API.register( { period: period,
+							      categories: account.account } )
 						  .then( function ( response ) {
 						      $scope.balance.details[ account.account ] = response.data;
 						  } );
@@ -152,7 +145,7 @@ app.controller( 'BalanceCtrl',
 			  $scope.period_offset = $scope.dates_salaries.length - 1;
 		      };
 
-		      $http.get( '/api/ledger/dates_salaries' )
+		      API.dates_salaries()
 			  .then( function ( response ) {
 			      $scope.dates_salaries = response.data;
 
@@ -164,6 +157,12 @@ app.controller( 'BalanceCtrl',
 				  retrieve_data();
 			      } );
 
+			  } );
+		      API.accounts()
+			  .then( function ( response ) {
+			      $scope.accounts = response.data.map( function( account_ary ) {
+				  return account_ary.join( ':' );
+			      } );
 			  } );
 		  }
 		] );

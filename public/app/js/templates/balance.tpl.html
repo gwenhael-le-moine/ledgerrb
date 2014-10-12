@@ -5,18 +5,21 @@
       <h2>
 	From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
       </h2>
+      <div layout="horizontal" layout-align="center center" layout-padding>
+	<material-button class="material-theme-green"
+			 data-ng-click="before()"
+			 data-ng-class="{'disabled': period_offset == 0}">prev</span></material-button>
+	<material-button class="material-theme-light-blue"
+			 data-ng-click="reset_offset()"
+			 data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</material-button>
+	<material-button class="material-theme-green"
+			 data-ng-click="after()"
+			 data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</material-button>
+
+	<select data-ng-model="accounts.selected"
+		data-ng-options="account for account in accounts"></select>
+      </div>
     </material-toolbar>
-    <div layout="horizontal" layout-align="center center" layout-padding>
-      <material-button class="material-theme-green"
-		       data-ng-click="before()"
-		       data-ng-class="{'disabled': period_offset == 0}">prev</span></material-button>
-      <material-button class="material-theme-light-blue"
-		       data-ng-click="reset_offset()"
-		       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</material-button>
-      <material-button class="material-theme-green"
-		       data-ng-click="after()"
-		       data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</material-button>
-    </div>
     <material-toolbar>
       <h2 class="balance" data-ng-class="{'negative': balance.buckets[1].total - balance.buckets[0].total < 0, 'positive': balance.buckets[1].total - balance.buckets[0].total > 0}">
 	Balance: {{( balance.buckets[1].total - balance.buckets[0].total ) | number:2}} €

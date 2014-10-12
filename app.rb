@@ -35,10 +35,10 @@ class LedgerRbApp < Sinatra::Base
 
   get '/api/ledger/register/?' do
     param :period, String, default: nil
-    param :category, String, required: true
+    param :categories, String, required: true
 
-    { key: params[ :category ],
-      values: Ledger.register( params[ :period ], params[ :category ] ) }
+    { key: params[ :categories ],
+      values: Ledger.register( params[ :period ], params[ :categories ] ) }
       .to_json
   end
 
