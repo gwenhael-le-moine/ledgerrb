@@ -94,7 +94,7 @@ app.controller( 'BalanceCtrl',
 		      $scope.balance = {
 			  buckets: [ { categories: 'Expenses',
 				       score_threshold: 0 },
-				     { categories: 'Income Equity',
+				     { categories: 'Income',
 				       score_threshold: 0 } ],
 			  details: {}
 		      };
