@@ -65,6 +65,7 @@ module Ledger
   end
 
   def cleared
+    # TODO: refactor : replace awk and grep by Ruby and use run
     CSV.parse( `ledger -f #{@file} --exchange '#{CURRENCY}' --flat cleared Assets Equity | awk '{ printf "%s %s;%s %s;%s\\n", $1, $2, $3, $4, $6 }' | grep -v ";$"`, col_sep: ';' )
        .map do |row|
       { account: row[ 2 ],
