@@ -26,4 +26,8 @@ app.service( 'API',
 		   this.accounts = function(  ) {
 		       return $http.get( '/api/ledger/accounts' );
 		   };
+
+		   this.cleared = function(  ) {
+		       return $http.get( '/api/ledger/cleared' );
+		   };
 	       } ] );
