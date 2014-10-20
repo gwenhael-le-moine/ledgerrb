@@ -63,4 +63,13 @@ module Ledger
         amount: line_array[ 0 ].tr( SEPARATOR, '.' ).to_f }
     end
   end
+
+  def cleared
+    CSV.parse( `ledger -f #{@file} --exchange '#{CURRENCY}' --flat cleared Assets | grep Assets | awk '{ printf "%s %s;%s %s;%s\\n", $1, $2, $3, $4, $6 }'`, col_sep: ';' )
+       .map do |row|
+      { account: row[ 2 ],
+        amount: { cleared: row[ 1 ],
+                  all: row[ 0 ] } }
+    end
+  end
 end
