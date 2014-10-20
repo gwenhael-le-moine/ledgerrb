@@ -50,27 +50,14 @@ module Ledger
     end
   end
 
-  def balance( cleared = false, depth = nil, period = nil, categories = '' )
-    period = period.nil? ? '' : "-p '#{period}'"
-    depth = depth.nil? ? '' : "--depth #{depth}"
-    operation = cleared ? 'cleared' : 'balance'
-    run( "--flat --no-total --exchange '#{CURRENCY}' #{period} #{depth}", operation, categories )
-      .split( "\n" )
-      .map do |line|
-      line_array = line.split( "#{CURRENCY}" )
-
-      { account: line_array[ 1 ].strip,
-        amount: line_array[ 0 ].tr( SEPARATOR, '.' ).to_f }
-    end
-  end
-
   def cleared
-    # TODO: refactor : replace awk and grep by Ruby and use run
-    CSV.parse( `ledger -f #{@file} --exchange '#{CURRENCY}' --flat cleared Assets Equity | awk '{ printf "%s %s;%s %s;%s\\n", $1, $2, $3, $4, $6 }' | grep -v ";$"`, col_sep: ';' )
-       .map do |row|
-      { account: row[ 2 ],
-        amount: { cleared: row[ 1 ],
-                  all: row[ 0 ] } }
+    run( "--flat --no-total --exchange '#{CURRENCY}'", 'cleared', 'Assets Equity' )
+      .split( "\n" )
+      .map do |row|
+      fields = row.match( /\s*(\S+ €)\s*(\S+ €)\s*(\S+)\s*(\S+)/ )
+      { account: fields[ 4 ],
+        amount: { cleared: fields[ 2 ],
+                  all: fields[ 1 ] } } unless fields.nil?
     end
   end
 end
