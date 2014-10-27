@@ -55,19 +55,29 @@
 	</nvd3-pie-chart>
       </material-content>
       <material-content>
-	<table data-ng-table="tableParams" class="table">
-	  <tr data-ng-repeat="account in bucket.data"
-	      data-ng-class="{'even': $even, 'odd': $odd}"
-	      style="border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}">
-	    <td data-title="'Account'"
-		style="border-bottom:1px solid {{coloring_score( score_account( account.account ) )}}">
-	      {{account.account}}
-	    </td>
-	    <td data-title="'Amount'"
-		style="text-align:right;border-bottom:1px solid {{coloring_score( score_account( account.account ) )}}">
-	      {{account.amount | number:2}} €
-	    </td>
-	  </tr>
+	<table class="table">
+	  <thead>
+	    <tr>
+	      <th><material-buton data-ng-click="bucket.order_by( 'account' )">account</material-buton></th>
+	      <th><material-buton data-ng-click="bucket.order_by( 'amount' )">amount</material-buton></th>
+	      <th><material-buton data-ng-click="bucket.order_by( 'score' )">score</material-buton></th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    <tr data-ng-repeat="account in bucket.data | orderBy:bucket.orderBy:bucket.orderDesc"
+		data-ng-class="{'even': $even, 'odd': $odd}"
+		style="border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}">
+	      <td style="border-bottom:1px solid {{coloring_score( account.score )}}">
+		{{account.account}}
+	      </td>
+	      <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
+		{{account.amount | number:2}} €
+	      </td>
+	      <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
+		{{account.score}}
+	      </td>
+	    </tr>
+	  </tbody>
 	</table>
       </material-content>
     </div>
