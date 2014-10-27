@@ -56,17 +56,6 @@ app.controller( 'BalanceCtrl',
 			  };
 		      };
 
-		      $scope.tableParams = new ngTableParams( {
-			  page: 1, // show first page
-			  count: 999 // count per page
-		      }, {
-			  counts: [], // hide page counts control
-			  total: 1 //,  // value less than count hide pagination
-			  // getData: function($defer, params) {
-			  //     $defer.resolve(data.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-			  // }
-		      } );
-
 		      $scope.filter_data = function() {
 			  _($scope.balance.buckets).each( function( bucket ) {
 			      bucket.data = [];
@@ -91,11 +80,24 @@ app.controller( 'BalanceCtrl',
 			  } );
 		      }};
 
+		      var Bucket = function( categories ) {
+			  var _this = this;
+			  this.categories = categories;
+			  this.score_threshold = 0;
+			  this.orderBy = 'amount';
+			  this.orderDesc = false;
+			  this.order_by = function( field ) {
+			      if ( _this.orderBy == field ) {
+				  _this.orderDesc = !_this.orderDesc;
+			      } else {
+				  _this.orderBy = field;
+			      }
+			  };
+		      };
+
 		      $scope.balance = {
-			  buckets: [ { categories: 'Expenses',
-				       score_threshold: 0 },
-				     { categories: 'Income',
-				       score_threshold: 0 } ],
+			  buckets: [ new Bucket( 'Expenses' ),
+				     new Bucket( 'Income' ) ],
 			  details: {}
 		      };
 
