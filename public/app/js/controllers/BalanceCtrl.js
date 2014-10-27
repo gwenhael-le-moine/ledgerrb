@@ -1,6 +1,6 @@
 app.controller( 'BalanceCtrl',
-		[ '$scope', '$filter', 'ngTableParams', 'API',
-		  function ( $scope, $filter, ngTableParams, API ) {
+		[ '$scope', '$filter', 'API',
+		  function ( $scope, $filter, API ) {
 		      $scope.xFunction = function () {
 			  return function ( d ) {
 			      return d.account;
