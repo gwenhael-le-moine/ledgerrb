@@ -3,19 +3,21 @@ app.service( 'API',
 	       function( $http ) {
 		   this.balance = function( params ) {
 		       return $http.get( '/api/ledger/balance', {
-			   params: {
-			       period: params.period,
-			       categories: params.categories
-			   }
+			   params: { period: params.period,
+				     categories: params.categories }
+		       } );
+		   };
+
+		   this.monthly_register = function( params ) {
+		       return $http.get( '/api/ledger/monthly_register', {
+			   params: { categories: params.categories }
 		       } );
 		   };
 
 		   this.register = function( params ) {
 		       return $http.get( '/api/ledger/register', {
-			   params: {
-			       period: params.period,
-			       categories: params.categories
-			   }
+			   params: { period: params.period,
+				     categories: params.categories }
 		       } );
 		   };
 

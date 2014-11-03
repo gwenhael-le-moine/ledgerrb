@@ -42,6 +42,14 @@ class LedgerRbApp < Sinatra::Base
       .to_json
   end
 
+  get '/api/ledger/monthly_register/?' do
+    param :categories, String, required: true
+
+    { key: params[ :categories ],
+      values: Ledger.monthly_register( params[ :categories ] ) }
+      .to_json
+  end
+
   get '/api/ledger/balance/?' do
     param :depth, Integer, default: false
     param :period, String, default: nil

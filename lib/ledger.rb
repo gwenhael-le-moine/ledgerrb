@@ -36,6 +36,18 @@ module Ledger
        .uniq
   end
 
+  def monthly_register( categories = '' )
+    CSV.parse( run( '--monthly', 'csv', categories ) )
+       .map do
+      |row|
+      { date: row[ 0 ],
+        payee: row[ 2 ],
+        account: row[ 3 ],
+        amount: row[ 5 ],
+        currency: row[ 4 ] }
+    end
+  end
+
   def register( period = nil, categories = '' )
     period = period.nil? ? '' : "-p '#{period}'"
 
@@ -54,6 +66,7 @@ module Ledger
     period = period.nil? ? '' : "-p '#{period}'"
     depth = depth.nil? ? '' : "--depth #{depth}"
     operation = cleared ? 'cleared' : 'balance'
+
     run( "--flat --no-total --exchange '#{CURRENCY}' #{period} #{depth}", operation, categories )
       .split( "\n" )
       .map do |line|
