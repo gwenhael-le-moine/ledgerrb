@@ -85,9 +85,9 @@ module Ledger
       ary = line.split
 
       { currency: ary[1],
-        amount: ary[0],
-        budget: ary[2],
-        percentage: ary.last( 2 ).first,
+        amount: ary[0].to_f,
+        budget: ary[2].to_f,
+        percentage: ary.last( 2 ).first.gsub( /%/, '' ).to_f,
         account: ary.last }
     end
   end
