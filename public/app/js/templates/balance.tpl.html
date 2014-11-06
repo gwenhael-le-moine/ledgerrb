@@ -1,46 +1,44 @@
 <div layout="vertical" layout-padding>
 
   <div class="date">
-    <material-toolbar class="material-theme-light">
+    <md-toolbar>
       <h2>
 	From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
       </h2>
       <div layout="horizontal" layout-align="center center" layout-padding>
-	<material-button class="material-theme-green"
-			 data-ng-click="before()"
-			 data-ng-class="{'disabled': period_offset == 0}">prev</span></material-button>
-	<material-button class="material-theme-light-blue"
-			 data-ng-click="reset_offset()"
-			 data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</material-button>
-	<material-button class="material-theme-green"
-			 data-ng-click="after()"
-			 data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</material-button>
+	<md-button data-ng-click="before()"
+		   data-ng-class="{'disabled': period_offset == 0}">prev</span></md-button>
+	<md-button data-ng-click="reset_offset()"
+		   data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</md-button>
+	<md-button data-ng-click="after()"
+		   data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</md-button>
       </div>
-    </material-toolbar>
-    <material-toolbar>
+    </md-toolbar>
+    <md-toolbar>
       <h2 class="balance" data-ng-class="{'negative': balance.buckets[1].total - balance.buckets[0].total < 0, 'positive': balance.buckets[1].total - balance.buckets[0].total > 0}">
 	Balance: {{( balance.buckets[1].raw_total - balance.buckets[0].raw_total ) | number:2}} €
       </h2>
-    </material-toolbar>
+    </md-toolbar>
   </div>
 
   <div layout="vertical" layout-md="horizontal" layout-padding>
-    <div flex data-ng-repeat="bucket in balance.buckets">
-      <material-toolbar class="material-theme-light">
+    <div flex layout="vertical" layout-padding
+	 data-ng-repeat="bucket in balance.buckets">
+      <md-toolbar layout="vertical" layout-padding>
 	<h3>{{bucket.categories}}, total = {{bucket.total | number:2}} €</h3>
-	<material-slider discrete
-			 min="0" max="10" step="1"
-			 data-ng-model="bucket.score_threshold"
-			 data-ng-change="select.score_higher_than( bucket, bucket.score_threshold ); filter_data()">
-	</material-slider>
+	<md-slider discrete
+		   min="0" max="10" step="1"
+		   data-ng-model="bucket.score_threshold"
+		   data-ng-change="select.score_higher_than( bucket, bucket.score_threshold ); filter_data()">
+	</md-slider>
 	<select multiple
 		data-ng-model="bucket.accounts_selected"
 		data-ng-options="account.account for account in bucket.raw_data | orderBy:'account'"
 		data-ng-change="filter_data()">
 	  <option value=''>...</option>
 	</select>
-      </material-toolbar>
-      <material-content>
+      </md-toolbar>
+      <md-content>
 	<nvd3-pie-chart data="bucket.data"
 			x="xFunction()"
 			y="yFunction()"
@@ -53,14 +51,14 @@
 			labelType="value">
 	  <svg></svg>
 	</nvd3-pie-chart>
-      </material-content>
-      <material-content>
+      </md-content>
+      <md-content>
 	<table class="table">
 	  <thead>
 	    <tr>
-	      <th><material-buton data-ng-click="bucket.order_by( 'account' )">account</material-buton></th>
-	      <th><material-buton data-ng-click="bucket.order_by( 'amount' )">amount</material-buton></th>
-	      <th><material-buton data-ng-click="bucket.order_by( 'score' )">score</material-buton></th>
+	      <th><md-buton data-ng-click="bucket.order_by( 'account' )">account</md-buton></th>
+	      <th><md-buton data-ng-click="bucket.order_by( 'amount' )">amount</md-buton></th>
+	      <th><md-buton data-ng-click="bucket.order_by( 'score' )">score</md-buton></th>
 	    </tr>
 	  </thead>
 	  <tbody>
@@ -79,7 +77,7 @@
 	    </tr>
 	  </tbody>
 	</table>
-      </material-content>
+      </md-content>
     </div>
 
   </div>
