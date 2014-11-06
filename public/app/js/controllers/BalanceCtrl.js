@@ -36,7 +36,7 @@ app.controller( 'BalanceCtrl',
 			      return 4;
 			  } else if ( account.match( /^Expenses:(Food|Transport)/ ) ) {
 			      return 6;
-			  } else if ( account.match( /^Expenses:(Shopping|Entertainement)/ ) ) {
+			  } else if ( account.match( /^Expenses:(Shopping|Leisure)/ ) ) {
 			      return 9;
 			  } else if ( account.match( /^Expenses:Gadgets/ ) ) {
 			      return 10;
