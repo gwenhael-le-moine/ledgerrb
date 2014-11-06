@@ -74,4 +74,21 @@ module Ledger
                   all: fields[ 1 ] } } unless fields.nil?
     end
   end
+
+  def budget( period )
+    period = period.nil? ? '' : "-p '#{period}'"
+
+    run( "--flat --no-total --budget --exchange '#{CURRENCY}' #{period}", 'budget', '' )
+      .lines
+      .each
+      .map do |line|
+      ary = line.split
+
+      { currency: ary[1],
+        amount: ary[0],
+        budget: ary[2],
+        percentage: ary.last( 2 ).first,
+        account: ary.last }
+    end
+  end
 end
