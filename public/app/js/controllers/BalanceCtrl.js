@@ -125,6 +125,13 @@ app.controller( 'BalanceCtrl',
 					categories: 'Expenses' } )
 			      .then( function( response ) {
 				  $scope.budget = response.data;
+
+				  $scope.total_budget = _.chain($scope.budget)
+				      .pluck( 'amount' )
+				      .reduce( function( acc, amount ) { return acc + amount; },
+					       0 )
+				      .value();
+				  $scope.total_unbudgeted = _($scope.budget).findWhere( { percentage: -1 } ).amount;
 			      } );
 
 			  API.register( { period: period,

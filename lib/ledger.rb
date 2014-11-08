@@ -78,17 +78,29 @@ module Ledger
   def budget( period, categories )
     period = period.nil? ? '' : "-p '#{period}'"
 
-    run( "--flat --no-total --budget --exchange '#{CURRENCY}' #{period}", 'budget', categories )
-      .lines
-      .each
-      .map do |line|
+    budgeted = run( "--flat --no-total --budget --exchange '#{CURRENCY}' #{period}", 'budget', categories )
+               .lines
+               .map do |line|
       ary = line.split
 
       { currency: ary[1],
-        amount: ary[0].to_f,
-        budget: ary[2].to_f,
-        percentage: ary.last( 2 ).first.gsub( /%/, '' ).to_f,
+        amount: ary[0].tr( SEPARATOR, '.' ).to_f,
+        budget: ary[2].tr( SEPARATOR, '.' ).to_f,
+        percentage: ary.last( 2 ).first.gsub( /%/, '' ).tr( SEPARATOR, '.' ).to_f,
         account: ary.last }
     end
+
+    unbudgeted_amount = run( "--flat --no-total --unbudgeted -Mn --exchange '#{CURRENCY}' #{period}", 'register', categories )
+                        .lines
+                        .map do |line|
+      line.split[4].tr( SEPARATOR, '.' ).to_f
+    end
+                        .reduce( :+ )
+
+    budgeted << { currency: CURRENCY,
+                  amount: unbudgeted_amount,
+                  budget: 0,
+                  percentage: -1,
+                  account: '(unbudgeted)' }
   end
 end

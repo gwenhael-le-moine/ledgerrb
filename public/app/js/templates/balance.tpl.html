@@ -38,20 +38,48 @@
 	  <td>
 	    {{account.account}}
 	  </td>
-	  <td>
-	    {{account.amount}}{{account.currency}}
+	  <td style="text-align: right;">
+	    {{account.amount | number:2}}{{account.currency}}
 	  </td>
-	  <td>
-	    {{account.budget}}{{account.currency}}
+	  <td style="text-align: right;">
+	    <span data-ng-if="account.percentage >= 0">{{account.budget | number:2}}{{account.currency}}</span>
+	    <span data-ng-if="account.percentage < 0">
+	      {{balance.buckets[1].raw_total - total_budget | number:2}}{{account.currency}}
+	    </span>
 	  </td>
-	  <td>
-	    {{account.percentage}}%
+	  <td style="text-align: right;">
+	    <span data-ng-if="account.percentage >= 0">{{account.percentage | number:2}}%</span>
+	    <span data-ng-if="account.percentage < 0">
+	      {{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
+	    </span>
 	  </td>
 	  <td>
 	    <md-progress-linear md-theme="red" mode="determinate" value="{{account.percentage}}"
 				data-ng-if="account.percentage > 100"></md-progress-linear>
+	    <md-progress-linear md-theme="brown" mode="determinate"
+				value="{{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100}}"
+				data-ng-if="account.percentage < 0"></md-progress-linear>
 	    <md-progress-linear mode="determinate" value="{{account.percentage}}"
 				data-ng-if="account.percentage <= 100"></md-progress-linear>
+	  </td>
+	</tr>
+
+	<tr>
+	  <td>
+	    Potential savings
+	  </td>
+	  <td style="text-align: right;">
+	    {{balance.buckets[1].raw_total - total_budget - total_unbudgeted | number:2}}{{budget[0].currency}}
+	  </td>
+	  <td style="text-align: right;">
+	    {{balance.buckets[1].raw_total - total_budget | number:2}}{{budget[0].currency}}
+	  </td>
+	  <td style="text-align: right;">
+	    {{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
+	  </td>
+	  <td>
+	    <md-progress-linear md-theme="green" mode="determinate"
+				value="{{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / ( balance.buckets[1].raw_total - total_budget ) ) * 100}}"></md-progress-linear>
 	  </td>
 	</tr>
       </tbody>
