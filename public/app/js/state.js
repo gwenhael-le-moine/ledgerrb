@@ -13,10 +13,6 @@ app.config( [ '$stateProvider', '$urlRouterProvider',
 			  url: '',
 			  controller: 'AppCtrl',
 			  views: {
-			      'navbar': {
-				  templateUrl: 'js/templates/navbar.tpl.html',
-				  controller: 'NavbarCtrl'
-			      },
 			      'main': {
 				  templateUrl: 'js/templates/main.tpl.html'
 			      }
