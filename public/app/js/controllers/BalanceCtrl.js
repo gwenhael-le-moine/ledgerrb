@@ -121,9 +121,15 @@ app.controller( 'BalanceCtrl',
 			      period += ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
 			  }
 
+			  API.budget( { period: period,
+					categories: 'Expenses' } )
+			      .then( function( response ) {
+				  $scope.budget = response.data;
+			      } );
+
 			  API.register( { period: period,
 					  categories: '' } )
-			      .then( function ( response ) {
+			      .then( function( response ) {
 				  $scope.balance.details = _($scope.balance.details).extend( _(response.data.values).groupBy( 'account' ) );
 			      } );
 

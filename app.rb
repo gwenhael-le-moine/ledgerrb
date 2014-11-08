@@ -61,8 +61,10 @@ class LedgerRbApp < Sinatra::Base
 
   get '/api/ledger/budget/?' do
     param :period, String, default: 'this month'
+    param :categories, String, required: true
 
-    Ledger.budget( params[ :period ] ).to_json
+    Ledger.budget( params[ :period ],
+                   params[ :categories ] ).to_json
   end
 
   get '/api/ledger/version/?' do

@@ -19,6 +19,15 @@ app.service( 'API',
 		       } );
 		   };
 
+		   this.budget = function( params ) {
+		       return $http.get( '/api/ledger/budget', {
+			   params: {
+			       period: params.period,
+			       categories: params.categories
+			   }
+		       } );
+		   };
+
 		   this.dates_salaries = function(  ) {
 		       return $http.get( '/api/ledger/dates_salaries' );
 		   };

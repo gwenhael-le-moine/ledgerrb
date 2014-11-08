@@ -75,10 +75,10 @@ module Ledger
     end
   end
 
-  def budget( period )
+  def budget( period, categories )
     period = period.nil? ? '' : "-p '#{period}'"
 
-    run( "--flat --no-total --budget --exchange '#{CURRENCY}' #{period}", 'budget', '' )
+    run( "--flat --no-total --budget --exchange '#{CURRENCY}' #{period}", 'budget', categories )
       .lines
       .each
       .map do |line|

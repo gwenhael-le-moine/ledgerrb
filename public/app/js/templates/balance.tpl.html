@@ -21,8 +21,45 @@
     </md-toolbar>
   </div>
 
+  <div layout="vertical">
+    <table class="table" style="width: 100%">
+      <thead>
+	<tr>
+	  <th style="width: 11%">Account</th>
+	  <th style="width: 3%">Spent</th>
+	  <th style="width: 3%">Budgeted</th>
+	  <th style="width: 3%">Percentage</th>
+	  <th>Progress</th>
+	</tr>
+      </thead>
+      <tbody>
+	<tr data-ng-repeat="account in budget"
+	    data-ng-class="{'even': $even, 'odd': $odd}">
+	  <td>
+	    {{account.account}}
+	  </td>
+	  <td>
+	    {{account.amount}}{{account.currency}}
+	  </td>
+	  <td>
+	    {{account.budget}}{{account.currency}}
+	  </td>
+	  <td>
+	    {{account.percentage}}%
+	  </td>
+	  <td>
+	    <md-progress-linear md-theme="red" mode="determinate" value="{{account.percentage}}"
+				data-ng-if="account.percentage > 100"></md-progress-linear>
+	    <md-progress-linear mode="determinate" value="{{account.percentage}}"
+				data-ng-if="account.percentage <= 100"></md-progress-linear>
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+  </div>
+
   <div layout="vertical" layout-md="horizontal" layout-padding>
-    <div flex layout="vertical" layout-padding
+    <div flex="50" layout="vertical" layout-padding
 	 data-ng-repeat="bucket in balance.buckets">
       <md-toolbar layout="vertical" layout-padding>
 	<h3>{{bucket.categories}}, total = {{bucket.total | number:2}} €</h3>
