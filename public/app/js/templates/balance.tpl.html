@@ -63,25 +63,37 @@
 				data-ng-if="account.percentage <= 100"></md-progress-linear>
 	  </td>
 	</tr>
-
+      </tbody>
+    </table>
+    <table class="table" style="width: 100%">
+      <thead>
 	<tr>
-	  <td>
-	    Potential savings
-	  </td>
-	  <td style="text-align: right;">
-	    {{balance.buckets[1].raw_total - total_budget - total_unbudgeted | number:2}}{{budget[0].currency}}
-	  </td>
-	  <td style="text-align: right;">
-	    {{balance.buckets[1].raw_total - total_budget | number:2}}{{budget[0].currency}}
-	  </td>
-	  <td style="text-align: right;">
-	    {{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
-	  </td>
-	  <td>
-	    <md-progress-linear md-theme="green" mode="determinate"
-				value="{{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / ( balance.buckets[1].raw_total - total_budget ) ) * 100}}"></md-progress-linear>
-	  </td>
+	  <th style="width: 11%">Account</th>
+	  <th style="width: 3%">Can be saved</th>
+	  <th style="width: 3%">Total income</th>
+	  <th style="width: 3%">Percentage</th>
+	  <th>Progress</th>
 	</tr>
+      </thead>
+      <tbody>
+	<tr>
+      <td>
+	Potential savings
+      </td>
+      <td style="text-align: right;">
+	{{balance.buckets[1].raw_total - total_budget - total_unbudgeted | number:2}}{{budget[0].currency}}
+      </td>
+      <td style="text-align: right;">
+	{{balance.buckets[1].raw_total | number:2}}{{budget[0].currency}}
+      </td>
+      <td style="text-align: right;">
+	{{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / balance.buckets[1].raw_total ) * 100 | number:2}}%
+      </td>
+      <td>
+	<md-progress-linear md-theme="green" mode="determinate"
+			    value="{{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / balance.buckets[1].raw_total ) * 100}}"></md-progress-linear>
+      </td>
+    </tr>
       </tbody>
     </table>
   </div>
