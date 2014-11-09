@@ -1,26 +1,24 @@
-<div layout="vertical" layout-padding>
+<md-toolbar class="app-toolbar date"
+	    layout="vertical" layout-md="horizontal">
+  <h2 class="md-toolbar-tools">
+    From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
+    <md-button class="md-raised md-primary"
+	       data-ng-click="before()"
+	       data-ng-class="{'disabled': period_offset == 0}">prev</span></md-button>
+    <md-button class="md-raised"
+	       data-ng-click="reset_offset()"
+	       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</md-button>
+    <md-button class="md-raised md-primary"
+	       data-ng-click="after()"
+	       data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</md-button>
+  </h2>
+  <h3 class="md-toolbar-tools balance"
+      data-ng-class="{'negative': balance.buckets[1].total - balance.buckets[0].total < 0, 'positive': balance.buckets[1].total - balance.buckets[0].total > 0}">
+    Balance: {{( balance.buckets[1].raw_total - balance.buckets[0].raw_total ) | number:2}} €
+  </h3>
+</md-toolbar>
 
-  <div class="date" class="md-whiteframe-z1">
-    <md-toolbar>
-      <h2>
-	From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
-      </h2>
-      <div layout="horizontal" layout-align="center center" layout-padding>
-	<md-button data-ng-click="before()"
-		   data-ng-class="{'disabled': period_offset == 0}">prev</span></md-button>
-	<md-button data-ng-click="reset_offset()"
-		   data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</md-button>
-	<md-button data-ng-click="after()"
-		   data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</md-button>
-      </div>
-    </md-toolbar>
-    <md-toolbar>
-      <h2 class="balance" data-ng-class="{'negative': balance.buckets[1].total - balance.buckets[0].total < 0, 'positive': balance.buckets[1].total - balance.buckets[0].total > 0}">
-	Balance: {{( balance.buckets[1].raw_total - balance.buckets[0].raw_total ) | number:2}} €
-      </h2>
-    </md-toolbar>
-  </div>
-
+<md-content layout="vertical">
   <div layout="vertical" layout-md="horizontal" layout-padding>
     <div flex="50" class="md-whiteframe-z1">
       <table class="table" style="width: 100%">
@@ -162,4 +160,4 @@
     </div>
 
   </div>
-</div>
+  </md-content>
