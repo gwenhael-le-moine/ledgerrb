@@ -1,4 +1,4 @@
-app.controller( 'BalanceCtrl',
+app.controller( 'DashboardCtrl',
 		[ '$scope', '$filter', 'API',
 		  function ( $scope, $filter, API ) {
 		      $scope.xFunction = function () {

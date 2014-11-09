@@ -1,6 +1,6 @@
 <div layout="vertical" layout-padding>
 
-  <div class="date">
+  <div class="date" class="md-whiteframe-z1">
     <md-toolbar>
       <h2>
 	From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
@@ -22,7 +22,7 @@
   </div>
 
   <div layout="vertical" layout-md="horizontal" layout-padding>
-    <div flex="50">
+    <div flex="50" class="md-whiteframe-z1">
       <table class="table" style="width: 100%">
 	<thead>
 	  <tr>
@@ -67,7 +67,7 @@
 	</tbody>
       </table>
     </div>
-    <div flex="50">
+    <div flex="50" class="md-whiteframe-z1">
       <table class="table" style="width: 100%">
 	<thead>
 	  <tr>
@@ -103,7 +103,7 @@
   </div>
 
   <div layout="vertical" layout-md="horizontal" layout-padding>
-    <div flex="50" layout="vertical"
+    <div flex="50" layout="vertical" class="md-whiteframe-z1"
 	 data-ng-repeat="bucket in balance.buckets">
       <md-toolbar layout="vertical" layout-padding>
 	<h3>{{bucket.categories}}, total = {{bucket.total | number:2}} €</h3>
