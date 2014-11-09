@@ -3,12 +3,15 @@
   <h2 class="md-toolbar-tools">
     From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span>
     <md-button class="md-raised md-primary"
+	       aria-label="before"
 	       data-ng-click="before()"
 	       data-ng-class="{'disabled': period_offset == 0}">prev</span></md-button>
     <md-button class="md-raised"
+	       aria-label="now"
 	       data-ng-click="reset_offset()"
 	       data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</md-button>
     <md-button class="md-raised md-primary"
+	       aria-label="after"
 	       data-ng-click="after()"
 	       data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</md-button>
   </h2>
@@ -19,8 +22,9 @@
 </md-toolbar>
 
 <md-content layout="vertical">
-  <div layout="vertical" layout-md="horizontal" layout-padding>
-    <div flex="50" class="md-whiteframe-z1">
+  <md-card class="md-whiteframe-z1"
+	   layout="horizontal">
+    <div flex="50">
       <table class="table" style="width: 100%">
 	<thead>
 	  <tr>
@@ -65,7 +69,7 @@
 	</tbody>
       </table>
     </div>
-    <div flex="50" class="md-whiteframe-z1">
+    <div flex="50">
       <table class="table" style="width: 100%">
 	<thead>
 	  <tr>
@@ -98,14 +102,17 @@
 	</tbody>
       </table>
     </div>
-  </div>
+  </md-card>
 
-  <div layout="vertical" layout-md="horizontal" layout-padding>
-    <div flex="50" layout="vertical" class="md-whiteframe-z1"
+  <md-card class="md-whiteframe-z1"
+	   layout="vertical" layout-md="horizontal" layout-padding>
+    <div flex="50" layout="vertical"
 	 data-ng-repeat="bucket in balance.buckets">
       <md-toolbar layout="vertical" layout-padding>
 	<h3>{{bucket.categories}}, total = {{bucket.total | number:2}} €</h3>
 	<md-slider discrete
+		   aria-label="score threshold"
+		   md-theme="red"
 		   min="0" max="10" step="1"
 		   data-ng-model="bucket.score_threshold"
 		   data-ng-change="select.score_higher_than( bucket, bucket.score_threshold ); filter_data()">
@@ -159,5 +166,5 @@
       </md-content>
     </div>
 
-  </div>
-  </md-content>
+  </md-card>
+</md-content>
