@@ -15,10 +15,6 @@
 	       data-ng-click="after()"
 	       data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</md-button>
   </h2>
-  <h3 class="md-toolbar-tools balance"
-      data-ng-class="{'negative': balance.buckets[1].total - balance.buckets[0].total < 0, 'positive': balance.buckets[1].total - balance.buckets[0].total > 0}">
-    Balance: {{( balance.buckets[1].raw_total - balance.buckets[0].raw_total ) | number:2}} €
-  </h3>
 </md-toolbar>
 
 <md-content layout="vertical">
@@ -74,8 +70,8 @@
 	<thead>
 	  <tr>
 	    <th style="width: 11%">Account</th>
-	    <th style="width: 3%">Savable</th>
-	    <th style="width: 3%">Income</th>
+	    <th style="width: 3%">Left</th>
+	    <th style="width: 3%">Total</th>
 	    <th style="width: 3%">Percentage</th>
 	    <th>Progress</th>
 	  </tr>
@@ -83,16 +79,34 @@
 	<tbody>
 	  <tr class="odd">
 	    <td>
+	      Balance
+	    </td>
+	    <td style="text-align: right;">
+	      {{balance.buckets[1].raw_total - balance.buckets[0].raw_total | number:2}}{{budget[0].currency}}
+	    </td>
+	    <td style="text-align: right;">
+	      {{balance.buckets[1].raw_total | number:2}}{{budget[0].currency}}
+	    </td>
+	    <td style="text-align: right;">
+	      {{( ( balance.buckets[1].raw_total - balance.buckets[0].raw_total ) / balance.buckets[1].raw_total ) * 100 | number:2}}%
+	    </td>
+	    <td>
+	      <md-progress-linear md-theme="green" mode="determinate"
+				  value="{{( ( balance.buckets[1].raw_total - balance.buckets[0].raw_total ) / balance.buckets[1].raw_total ) * 100}}"></md-progress-linear>
+	    </td>
+	  </tr>
+	  <tr class="even">
+	    <td>
 	      Potential savings
 	    </td>
 	    <td style="text-align: right;">
 	      {{balance.buckets[1].raw_total - total_budget - total_unbudgeted | number:2}}{{budget[0].currency}}
 	    </td>
 	    <td style="text-align: right;">
-	      {{balance.buckets[1].raw_total | number:2}}{{budget[0].currency}}
+	      {{balance.buckets[1].raw_total - total_budget | number:2}}{{budget[0].currency}}
 	    </td>
 	    <td style="text-align: right;">
-	      {{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / balance.buckets[1].raw_total ) * 100 | number:2}}%
+	      {{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
 	    </td>
 	    <td>
 	      <md-progress-linear md-theme="green" mode="determinate"
