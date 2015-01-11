@@ -1,9 +1,11 @@
 #!/bin/sh
 
-PIDFILE=./puma.pid
+CWD=$(pwd)
 
-SERVER='bundle exec puma'
-SERVER_OPTIONS=' --daemon --pidfile $PIDFILE'
+PIDFILE=$CWD/puma.pid
+
+SERVER=bundle exec puma
+SERVER_OPTIONS=--daemon --pidfile $PIDFILE
 
 function start() {
     $SERVER $SERVER_OPTIONS
