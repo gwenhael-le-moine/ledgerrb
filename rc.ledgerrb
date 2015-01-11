@@ -1,15 +1,16 @@
 #!/bin/sh
 
+PIDFILE=./puma.pid
+
 SERVER='bundle exec puma'
 SERVER_OPTIONS=' --daemon --pidfile $PIDFILE'
-PIDFILE=./puma.pid
 
 function start() {
     $SERVER $SERVER_OPTIONS
 }
 
 function stop() {
-    [ -e $PIDFILE ] && kill $(cat $PIDFILE)
+    [ -e $PIDFILE ] && kill $(cat $PIDFILE) && rm $PIDFILE
 }
 
 function restart() {
