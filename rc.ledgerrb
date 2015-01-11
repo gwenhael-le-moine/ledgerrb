@@ -1,19 +1,32 @@
 #!/bin/sh
 
-THIN='bundle exec thin'
-THINYML=$(pwd)/config/thin.yml
+SERVER='bundle exec puma'
+SERVER_OPTIONS=' --daemon --pidfile $PIDFILE'
+PIDFILE=./puma.pid
+
+function start() {
+    $SERVER $SERVER_OPTIONS
+}
+
+function stop() {
+    [ -e $PIDFILE ] && kill $(cat $PIDFILE)
+}
+
+function restart() {
+    stop && sleep 3 && start
+}
 
 case $1 in
     "start")
-	$THIN -C $THINYML start
+	start
 	;;
 
     "stop")
-	$THIN -C $THINYML stop
+	stop
 	;;
 
     "restart")
-	$THIN -C $THINYML restart
+	restart
 	;;
     *)
 	echo "Usage; start|stop|restart"
