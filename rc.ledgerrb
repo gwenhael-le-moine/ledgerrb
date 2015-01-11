@@ -2,10 +2,10 @@
 
 CWD=$(pwd)
 
-PIDFILE=$CWD/puma.pid
+PIDFILE='$CWD/puma.pid'
 
-SERVER=bundle exec puma
-SERVER_OPTIONS=--daemon --pidfile $PIDFILE
+SERVER='bundle exec puma'
+SERVER_OPTIONS=' --daemon --pidfile $PIDFILE'
 
 function start() {
     $SERVER $SERVER_OPTIONS
