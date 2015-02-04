@@ -14,9 +14,9 @@ app.controller( 'DashboardCtrl',
 		      $scope.toolTipContentFunction = function () {
 			  return function ( key, x, y, e, graph ) {
 			      var details = $scope.balance.details[ key ];
-			      return '<material-content><h3>' + key + '</h3>' + '<table>' + _( details ).map( function ( transaction ) {
+			      return '<md-content><h3>' + key + '</h3>' + '<table>' + _( details ).map( function ( transaction ) {
 				  return '<tr><td>' + transaction.date + '</td><td>' + transaction.payee + '</td><td style="text-align: right">' + $filter( 'number' )( transaction.amount, 2 ) + ' ' + transaction.currency + '</td></tr>';
-			      } ).join( '' ) + '<tr><th></th><th>Total :</th><th>' + x + ' €</th></tr>' + '</table></material-content>';
+			      } ).join( '' ) + '<tr><th></th><th>Total :</th><th>' + x + ' €</th></tr>' + '</table></md-content>';
 			  };
 		      };
 

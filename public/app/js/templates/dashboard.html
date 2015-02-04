@@ -1,6 +1,6 @@
 <md-toolbar flex="100" layout="column" layout-gt-md="row" layout-align="center center">
     <h2 flex="48">From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span></h2>
-    <div flex="48" layout="row" layout-align="center center">
+    <div flex="48" layout="row" layout-align="space-around center">
 	<md-button class="md-raised md-primary"
 		   aria-label="before"
 		   data-ng-click="before()"
