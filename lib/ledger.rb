@@ -96,11 +96,15 @@ module Ledger
       line.split[4].tr( SEPARATOR, '.' ).to_f
     end
                         .reduce( :+ )
-
+    
+    budget = budgeted.map { |account| account[:budget] }.reduce( :+ )
+    income = run( "--flat --no-total --unbudgeted -Mn --exchange '#{CURRENCY}' -p 'from 2015-04-28 to 2015-05-28'", 'register', 'Income' ).lines.last.split[4].tr( SEPARATOR, '.' ).to_f * -1
+    disposable_income = income - budget
+    
     budgeted << { currency: CURRENCY,
                   amount: unbudgeted_amount,
-                  budget: 0,
-                  percentage: -1,
+                  budget: disposable_income,
+                  percentage: (unbudgeted_amount / disposable_income) * 100,
                   account: '(unbudgeted)' }
   end
 end

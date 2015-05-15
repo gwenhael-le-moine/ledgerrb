@@ -49,13 +49,10 @@
 						</span>
 					</td>
 					<td>
-						<md-progress-linear md-theme="red" mode="determinate" value="{{account.percentage}}"
-							data-ng-if="account.percentage > 100"></md-progress-linear>
-						<md-progress-linear md-theme="brown" mode="determinate"
-							value="{{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100}}"
-							data-ng-if="account.percentage < 0"></md-progress-linear>
-						<md-progress-linear mode="determinate" value="{{account.percentage}}"
-							data-ng-if="account.percentage <= 100"></md-progress-linear>
+						<md-progress-linear
+							ng-class="{'md-warn': account.percentage > 100, 'md-warn md-hue-3': account.account == '(unbudgeted)' }"
+							md-mode="determinate"
+							value="{{account.percentage}}"></md-progress-linear>
 					</td>
 				</tr>
 			</tbody>
