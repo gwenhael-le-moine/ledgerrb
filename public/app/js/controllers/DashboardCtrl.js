@@ -35,7 +35,7 @@ app.controller( 'DashboardCtrl',
 			  } else if ( account.match( /^Expenses:Car/ ) ) {
 			      return 4;
 			  } else if ( account.match( /^Expenses:(Food|Transport)/ ) ) {
-			      return 6;
+			      return 5;
 			  } else if ( account.match( /^Expenses:(Shopping|Leisure)/ ) ) {
 			      return 9;
 			  } else if ( account.match( /^Expenses:Gadgets/ ) ) {
