@@ -64,7 +64,7 @@ app.controller( 'DashboardCtrl',
 			  } else if ( score >= 11 ) {
 			      // Income
 			      adjusted_score = score - 11;
-			      color_scale = [ '#ff0', '#ff9' ];
+			      color_scale = [ '#360', '#369' ];
 			  }
 
 			  return color_scale[ adjusted_score ];
