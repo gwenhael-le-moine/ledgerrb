@@ -62,12 +62,12 @@
 		data-ng-repeat="bucket in balance.buckets">
 		<md-toolbar>
 			<h3>{{bucket.categories}}, total = {{bucket.total | number:2}} €</h3>
-			<md-slider discrete
-				aria-label="score threshold"
-				min="0" max="10" step="1"
-				data-ng-model="bucket.score_threshold"
-				data-ng-change="select.score_higher_than( bucket, bucket.score_threshold ); filter_data()">
-			</md-slider>
+			<!-- <md-slider discrete
+			aria-label="score threshold"
+			min="0" max="10" step="1"
+			data-ng-model="bucket.score_threshold"
+			data-ng-change="select.score_higher_than( bucket, bucket.score_threshold ); filter_data()">
+			</md-slider> -->
 			<select multiple
 				data-ng-model="bucket.accounts_selected"
 				data-ng-options="account.account for account in bucket.raw_data | orderBy:'account'"
