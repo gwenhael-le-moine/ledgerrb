@@ -23,9 +23,9 @@ app.controller( 'DashboardCtrl',
 		      // compute an account's score: from 1 (good) to 10 (bad), 0 is neutral/undecided
 		      var score_account = function ( account ) {
 			  if ( account.match( /^Income:(salaire|Sécu|Mutuelle)$/ ) ) {
-			      return 1;
+			      return 11;
 			  } else if ( account.match( /^Income:(Gift|Remboursement)$/ ) ) {
-			      return 6;
+			      return 12;
 			  } else if ( account.match( /^Expenses:(courses|Hang)$/ ) ) {
 			      return 1;
 			  } else if ( account.match( /^Expenses:Home/ ) ) {
@@ -40,14 +40,34 @@ app.controller( 'DashboardCtrl',
 			      return 9;
 			  } else if ( account.match( /^Expenses:Gadgets/ ) ) {
 			      return 10;
+			  } else if ( account.match( /^Liabilities/ ) ) {
+			      return 1000;
+			  } else if ( account.match( /^Assets/ ) ) {
+			      return 100;
 			  } else {
 			      return 0;
 			  }
 		      };
 
 		      $scope.coloring_score = function ( score ) {
+			  var adjusted_score = score;
 			  var color_scale = [ '#99f', '#0f0', '#3f0', '#6f0', '#9f0', '#cf0', '#fc0', '#f90', '#f60', '#f30', '#f00' ];
-			  return color_scale[ score ];
+
+			  if ( score >= 1000 ) {
+			      // Liabilities
+			      adjusted_score = score - 1000;
+			      color_scale = [ '#0ff' ];
+			  } else if ( score >= 100 ) {
+			      // Assets
+			      adjusted_score = score - 100;
+			      color_scale = [ '#f0f' ];
+			  } else if ( score >= 11 ) {
+			      // Income
+			      adjusted_score = score - 11;
+			      color_scale = [ '#ff0', '#ff9' ];
+			  }
+
+			  return color_scale[ adjusted_score ];
 		      };
 
 		      $scope.color = function () {
@@ -96,8 +116,7 @@ app.controller( 'DashboardCtrl',
 		      };
 
 		      $scope.balance = {
-			  buckets: [ new Bucket( 'Expenses' ),
-				     new Bucket( 'Income' ) ],
+			  buckets: [ new Bucket( 'Expenses Assets Liabilities Income' ) ],
 			  details: {}
 		      };
 
@@ -134,12 +153,6 @@ app.controller( 'DashboardCtrl',
 				  $scope.total_unbudgeted = _($scope.budget).findWhere( { percentage: -1 } ).amount;
 			      } );
 
-			  API.register( { period: period,
-					  categories: '' } )
-			      .then( function( response ) {
-				  $scope.balance.details = _($scope.balance.details).extend( _(response.data.values).groupBy( 'account' ) );
-			      } );
-
 			  _($scope.balance.buckets).each( function( bucket ) {
 			      API.balance( { period: period,
 					     categories: bucket.categories } )
@@ -153,7 +166,11 @@ app.controller( 'DashboardCtrl',
 					  .sortBy( function ( account ) {
 					      return 1 / account.amount;
 					  } )
-					  .value();
+					  .sortBy( function ( account ) {
+					      return account.account.split(":")[0];
+					  } )
+					  .value()
+					  .reverse();
 				      bucket.raw_total = _( response.data ).reduce( function ( memo, account ) {
 					  return memo + account.amount;
 				      }, 0 );

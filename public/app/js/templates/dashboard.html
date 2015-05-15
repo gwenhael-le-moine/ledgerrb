@@ -1,177 +1,127 @@
 <md-toolbar flex="100" layout="column" layout-gt-md="row" layout-align="center center">
-    <h2 flex="48">From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span></h2>
-    <div flex="48" layout="row" layout-align="space-around center">
-	<md-button class="md-raised md-primary"
-		   aria-label="before"
-		   data-ng-click="before()"
-		   data-ng-class="{'disabled': period_offset == 0}">prev</span></md-button>
-	<md-button class="md-raised"
-		   aria-label="now"
-		   data-ng-click="reset_offset()"
-		   data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</md-button>
-	<md-button class="md-raised md-primary"
-		   aria-label="after"
-		   data-ng-click="after()"
-		   data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</buttmd-on>
-    </div>
+	<h2 flex="48">From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span></h2>
+	<div flex="48" layout="row" layout-align="space-around center">
+		<md-button class="md-raised md-primary"
+			aria-label="before"
+			data-ng-click="before()"
+			data-ng-class="{'disabled': period_offset == 0}">prev</span></md-button>
+		<md-button class="md-raised"
+			aria-label="now"
+			data-ng-click="reset_offset()"
+			data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</md-button>
+		<md-button class="md-raised md-primary"
+			aria-label="after"
+			data-ng-click="after()"
+			data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</buttmd-on>
+	</div>
 </md-toolbar>
 <md-content flex="100" layout="column" layout-gt-md="row">
-    <md-card flex="48" layout="column">
-	<table class="table">
-	    <thead>
-		<tr>
-		    <th style="width: 11%">Account</th>
-		    <th style="width: 3%">Spent</th>
-		    <th style="width: 3%">Budgeted</th>
-		    <th style="width: 3%">Percentage</th>
-		    <th>Progress</th>
-		</tr>
-	    </thead>
-	    <tbody>
-		<tr data-ng-repeat="account in budget"
-		    data-ng-class="{'even': $even, 'odd': $odd}">
-		    <td>
-			{{account.account}}
-		    </td>
-		    <td style="text-align: right;">
-			{{account.amount | number:2}}{{account.currency}}
-		    </td>
-		    <td style="text-align: right;">
-			<span data-ng-if="account.percentage >= 0">{{account.budget | number:2}}{{account.currency}}</span>
-			<span data-ng-if="account.percentage < 0">
-			    {{balance.buckets[1].raw_total - total_budget | number:2}}{{account.currency}}
-			</span>
-		    </td>
-		    <td style="text-align: right;">
-			<span data-ng-if="account.percentage >= 0">{{account.percentage | number:2}}%</span>
-			<span data-ng-if="account.percentage < 0">
-			    {{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
-			</span>
-		    </td>
-		    <td>
-			<md-progress-linear md-theme="red" mode="determinate" value="{{account.percentage}}"
-					    data-ng-if="account.percentage > 100"></md-progress-linear>
-			<md-progress-linear md-theme="brown" mode="determinate"
-					    value="{{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100}}"
-					    data-ng-if="account.percentage < 0"></md-progress-linear>
-			<md-progress-linear mode="determinate" value="{{account.percentage}}"
-					    data-ng-if="account.percentage <= 100"></md-progress-linear>
-		    </td>
-		</tr>
-	    </tbody>
-	</table>
-    </md-card>
-    <md-card flex="48" layout="column">
-	<table class="table">
-	    <thead>
-		<tr>
-		    <th style="width: 11%">Account</th>
-		    <th style="width: 3%">Left</th>
-		    <th style="width: 3%">Total</th>
-		    <th style="width: 3%">Percentage</th>
-		    <th>Progress</th>
-		</tr>
-	    </thead>
-	    <tbody>
-		<tr class="odd">
-		    <td>
-			Balance
-		    </td>
-		    <td style="text-align: right;">
-			{{balance.buckets[1].raw_total - balance.buckets[0].raw_total | number:2}}{{budget[0].currency}}
-		    </td>
-		    <td style="text-align: right;">
-			{{balance.buckets[1].raw_total | number:2}}{{budget[0].currency}}
-		    </td>
-		    <td style="text-align: right;">
-			{{( ( balance.buckets[1].raw_total - balance.buckets[0].raw_total ) / balance.buckets[1].raw_total ) * 100 | number:2}}%
-		    </td>
-		    <td>
-			<md-progress-linear md-theme="green" mode="determinate"
-					    value="{{( ( balance.buckets[1].raw_total - balance.buckets[0].raw_total ) / balance.buckets[1].raw_total ) * 100}}"></md-progress-linear>
-		    </td>
-		</tr>
-		<tr class="even">
-		    <td>
-			Potential savings
-		    </td>
-		    <td style="text-align: right;">
-			{{balance.buckets[1].raw_total - total_budget - total_unbudgeted | number:2}}{{budget[0].currency}}
-		    </td>
-		    <td style="text-align: right;">
-			{{balance.buckets[1].raw_total - total_budget | number:2}}{{budget[0].currency}}
-		    </td>
-		    <td style="text-align: right;">
-			{{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
-		    </td>
-		    <td>
-			<md-progress-linear md-theme="green" mode="determinate"
-					    value="{{( ( balance.buckets[1].raw_total - total_budget - total_unbudgeted ) / balance.buckets[1].raw_total ) * 100}}"></md-progress-linear>
-		    </td>
-		</tr>
-	    </tbody>
-	</table>
-    </md-card>
-</md-content>
-<md-content flex="100" layout="column" layout-gt-md="row">
-    <md-card flex="48" layout="column"
-	     data-ng-repeat="bucket in balance.buckets">
-	<md-toolbar>
-	    <h3>{{bucket.categories}}, total = {{bucket.total | number:2}} €</h3>
-	    <md-slider discrete
-		       aria-label="score threshold"
-		       min="0" max="10" step="1"
-		       data-ng-model="bucket.score_threshold"
-		       data-ng-change="select.score_higher_than( bucket, bucket.score_threshold ); filter_data()">
-	    </md-slider>
-	    <select multiple
-		    data-ng-model="bucket.accounts_selected"
-		    data-ng-options="account.account for account in bucket.raw_data | orderBy:'account'"
-		    data-ng-change="filter_data()">
-		<option value=''>...</option>
-	    </select>
-	</md-toolbar>
-	<md-content>
-	    <md-card>
-		<nvd3-pie-chart data="bucket.data"
-				x="xFunction()"
-				y="yFunction()"
-				height="300"
-				margin="{left:0,top:0,bottom:0,right:0}"
-				color="color()"
-				tooltips="true"
-				tooltipcontent="toolTipContentFunction()"
-				showLabels="true"
-				labelType="value">
-		    <svg></svg>
-		</nvd3-pie-chart>
-	    </md-card>
-	    <md-card>
+	<md-card flex="48" layout="column">
 		<table class="table">
-		    <thead>
-			<tr>
-			    <th><md-buton data-ng-click="bucket.order_by( 'account' )">account</md-buton></th>
-			    <th><md-buton data-ng-click="bucket.order_by( 'amount' )">amount</md-buton></th>
-			    <th><md-buton data-ng-click="bucket.order_by( 'score' )">score</md-buton></th>
-			</tr>
-		    </thead>
-		    <tbody>
-			<tr data-ng-repeat="account in bucket.data | orderBy:bucket.orderBy:bucket.orderDesc"
-			    data-ng-class="{'even': $even, 'odd': $odd}"
-			    style="border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}">
-			    <td style="border-bottom:1px solid {{coloring_score( account.score )}}">
-				{{account.account}}
-			    </td>
-			    <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
-				{{account.amount | number:2}} €
-			    </td>
-			    <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
-				{{account.score}}
-			    </td>
-			</tr>
-		    </tbody>
+			<thead>
+				<tr>
+					<th style="width: 11%">Account</th>
+					<th style="width: 3%">Spent</th>
+					<th style="width: 3%">Budgeted</th>
+					<th style="width: 3%">Percentage</th>
+					<th>Progress</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr data-ng-repeat="account in budget"
+					data-ng-class="{'even': $even, 'odd': $odd}">
+					<td>
+						{{account.account}}
+					</td>
+					<td style="text-align: right;">
+						{{account.amount | number:2}}{{account.currency}}
+					</td>
+					<td style="text-align: right;">
+						<span data-ng-if="account.percentage >= 0">{{account.budget | number:2}}{{account.currency}}</span>
+						<span data-ng-if="account.percentage < 0">
+							{{balance.buckets[1].raw_total - total_budget | number:2}}{{account.currency}}
+						</span>
+					</td>
+					<td style="text-align: right;">
+						<span data-ng-if="account.percentage >= 0">{{account.percentage | number:2}}%</span>
+						<span data-ng-if="account.percentage < 0">
+							{{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
+						</span>
+					</td>
+					<td>
+						<md-progress-linear md-theme="red" mode="determinate" value="{{account.percentage}}"
+							data-ng-if="account.percentage > 100"></md-progress-linear>
+						<md-progress-linear md-theme="brown" mode="determinate"
+							value="{{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100}}"
+							data-ng-if="account.percentage < 0"></md-progress-linear>
+						<md-progress-linear mode="determinate" value="{{account.percentage}}"
+							data-ng-if="account.percentage <= 100"></md-progress-linear>
+					</td>
+				</tr>
+			</tbody>
 		</table>
-	    </md-card>
-	</md-content>
-    </md-card>
+	</md-card>
+	<md-card flex="48" layout="column"
+		data-ng-repeat="bucket in balance.buckets">
+		<md-toolbar>
+			<h3>{{bucket.categories}}, total = {{bucket.total | number:2}} €</h3>
+			<md-slider discrete
+				aria-label="score threshold"
+				min="0" max="10" step="1"
+				data-ng-model="bucket.score_threshold"
+				data-ng-change="select.score_higher_than( bucket, bucket.score_threshold ); filter_data()">
+			</md-slider>
+			<select multiple
+				data-ng-model="bucket.accounts_selected"
+				data-ng-options="account.account for account in bucket.raw_data | orderBy:'account'"
+				data-ng-change="filter_data()">
+				<option value=''>...</option>
+			</select>
+		</md-toolbar>
+		<md-content>
+			<md-card>
+				<nvd3-pie-chart
+					data="bucket.data"
+					x="xFunction()"
+					y="yFunction()"
+					height="300"
+					margin="{left:0,top:0,bottom:0,right:0}"
+					color="color()"
+					tooltips="true"
+					tooltipcontent="toolTipContentFunction()"
+					showLabels="true"
+					labelType="value"
+					donut="true"
+					donutRatio="0.25">
+					<svg></svg>
+				</nvd3-pie-chart>
+			</md-card>
+			<md-card>
+				<table class="table">
+					<thead>
+						<tr>
+							<th><md-buton data-ng-click="bucket.order_by( 'account' )">account</md-buton></th>
+							<th><md-buton data-ng-click="bucket.order_by( 'amount' )">amount</md-buton></th>
+							<th><md-buton data-ng-click="bucket.order_by( 'score' )">score</md-buton></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr data-ng-repeat="account in bucket.data | orderBy:bucket.orderBy:bucket.orderDesc"
+							data-ng-class="{'even': $even, 'odd': $odd}"
+							style="border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}">
+							<td style="border-bottom:1px solid {{coloring_score( account.score )}}">
+								{{account.account}}
+							</td>
+							<td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
+								{{account.amount | number:2}} €
+							</td>
+							<td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
+								{{account.score}}
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</md-card>
+		</md-content>
+	</md-card>
 </md-content>
