@@ -75,7 +75,7 @@ module Ledger
     end
   end
 
-  def budget( period, categories )
+  def budget( period = nil, categories = '' )
     period = period.nil? ? '' : "-p '#{period}'"
 
     budgeted = run( "--flat --no-total --budget --exchange '#{CURRENCY}' #{period}", 'budget', categories )
