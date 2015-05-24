@@ -5,7 +5,8 @@ app.service( 'API',
 		       return $http.get( '/api/ledger/balance', {
 			   params: {
 			       period: params.period,
-			       categories: params.categories
+			       categories: params.categories,
+			       depth: params.depth
 			   }
 		       } );
 		   };

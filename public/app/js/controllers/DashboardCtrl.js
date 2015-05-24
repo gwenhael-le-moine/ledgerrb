@@ -135,6 +135,7 @@ app.controller( 'DashboardCtrl',
 			  details: {}
 		      };
 
+		      $scope.depth = 99;
 		      var retrieve_data = function () {
 			  var from, to, period;
 
@@ -170,7 +171,8 @@ app.controller( 'DashboardCtrl',
 
 			  _($scope.balance.buckets).each( function( bucket ) {
 			      API.balance( { period: period,
-					     categories: bucket.categories } )
+					     categories: bucket.categories,
+					     depth: $scope.depth } )
 				  .then( function ( response ) {
 				      bucket.raw_data = _.chain( response.data )
 					  .map( function( account ) {
