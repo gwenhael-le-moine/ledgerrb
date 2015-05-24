@@ -88,9 +88,24 @@ app.controller( 'DashboardCtrl',
 				  } );
 			      }
 
-			      bucket.total = _( bucket.data ).reduce( function ( memo, account ) {
-				  return memo + account.amount;
-			      }, 0 );
+			      bucket.total_detailed = _.chain( bucket.data )
+				  .groupBy( function( account ) {
+				      return account.account.split(':')[0];
+				  } )
+				  .each( function( category ) {
+				      category.total = _( category ).reduce( function ( memo, account ) {
+					  return memo + account.amount;
+				      }, 0 );
+				  } )
+				  .value();
+			      bucket.total_detailed = _.chain(bucket.total_detailed)
+				  .keys()
+				  .map( function( key ) {
+				      return { account: key,
+					       amount: bucket.total_detailed[key].total };
+				  } )
+				  .value();
+
 			  } );
 		      };
 
