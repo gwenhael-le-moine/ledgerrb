@@ -19,7 +19,7 @@
 	<md-card flex="48" layout="column"
 		data-ng-repeat="bucket in balance.buckets">
 		<md-toolbar>
-			<h4 data-ng-repeat="account in bucket.total_detailed">{{account.account}}, total = {{account.amount | number:2}} €</h4>
+			<h4 data-ng-repeat="account in bucket.total_detailed">{{account.account}} = {{account.amount | number:2}} €</h4>
 			<!-- <md-slider discrete
 			aria-label="score threshold"
 			min="0" max="10" step="1"
