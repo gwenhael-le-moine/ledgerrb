@@ -115,9 +115,10 @@ app.controller( 'DashboardCtrl',
 			  } );
 		      }};
 
-		      var Bucket = function( categories ) {
+		      var Bucket = function( categories, period ) {
 			  var _this = this;
 			  this.categories = categories;
+			  this.period = period;
 			  this.score_threshold = 0;
 			  this.orderBy = 'amount';
 			  this.orderDesc = false;
@@ -128,11 +129,6 @@ app.controller( 'DashboardCtrl',
 				  _this.orderBy = field;
 			      }
 			  };
-		      };
-
-		      $scope.balance = {
-			  buckets: [ new Bucket( 'Expenses Assets Liabilities Income' ) ],
-			  details: {}
 		      };
 
 		      $scope.depth = 99;
@@ -169,8 +165,14 @@ app.controller( 'DashboardCtrl',
 			  //	  $scope.total_unbudgeted = _($scope.budget).findWhere( { percentage: -1 } ).amount;
 			  //     } );
 
+			  $scope.balance = {
+			      buckets: [ new Bucket( 'Expenses Liabilities Equity Income', period ),
+					 new Bucket( 'Assets', null ) ],
+			      details: {}
+			  };
+
 			  _($scope.balance.buckets).each( function( bucket ) {
-			      API.balance( { period: period,
+			      API.balance( { period: bucket.period,
 					     categories: bucket.categories,
 					     depth: $scope.depth } )
 				  .then( function ( response ) {
