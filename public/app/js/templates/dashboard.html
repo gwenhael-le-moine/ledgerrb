@@ -79,46 +79,46 @@
 			</md-card>
 		</md-content>
 	</md-card>
-	<md-card flex="48" layout="column">
-		<table class="table">
-			<thead>
-				<tr>
-					<th style="width: 11%">Account</th>
-					<th style="width: 3%">Spent</th>
-					<th style="width: 3%">Budgeted</th>
-					<th style="width: 3%">Percentage</th>
-					<th>Progress</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr data-ng-repeat="account in budget"
-					data-ng-class="{'even': $even, 'odd': $odd}">
-					<td>
-						{{account.account}}
-					</td>
-					<td style="text-align: right;">
-						{{account.amount | number:2}}{{account.currency}}
-					</td>
-					<td style="text-align: right;">
-						<span data-ng-if="account.percentage >= 0">{{account.budget | number:2}}{{account.currency}}</span>
-						<span data-ng-if="account.percentage < 0">
-							{{balance.buckets[1].raw_total - total_budget | number:2}}{{account.currency}}
-						</span>
-					</td>
-					<td style="text-align: right;">
-						<span data-ng-if="account.percentage >= 0">{{account.percentage | number:2}}%</span>
-						<span data-ng-if="account.percentage < 0">
-							{{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
-						</span>
-					</td>
-					<td>
-						<md-progress-linear
-							ng-class="{'md-warn': account.percentage > 100, 'md-warn md-hue-3': account.account == '(unbudgeted)' }"
-							md-mode="determinate"
-							value="{{account.percentage}}"></md-progress-linear>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	</md-card>
+	<!-- <md-card flex="48" layout="column">
+	<table class="table">
+	<thead>
+	<tr>
+	<th style="width: 11%">Account</th>
+	<th style="width: 3%">Spent</th>
+	<th style="width: 3%">Budgeted</th>
+	<th style="width: 3%">Percentage</th>
+	<th>Progress</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr data-ng-repeat="account in budget"
+	data-ng-class="{'even': $even, 'odd': $odd}">
+	<td>
+	{{account.account}}
+	</td>
+	<td style="text-align: right;">
+	{{account.amount | number:2}}{{account.currency}}
+	</td>
+	<td style="text-align: right;">
+	<span data-ng-if="account.percentage >= 0">{{account.budget | number:2}}{{account.currency}}</span>
+	<span data-ng-if="account.percentage < 0">
+	{{balance.buckets[1].raw_total - total_budget | number:2}}{{account.currency}}
+	</span>
+	</td>
+	<td style="text-align: right;">
+	<span data-ng-if="account.percentage >= 0">{{account.percentage | number:2}}%</span>
+	<span data-ng-if="account.percentage < 0">
+	{{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
+	</span>
+	</td>
+	<td>
+	<md-progress-linear
+	ng-class="{'md-warn': account.percentage > 100, 'md-warn md-hue-3': account.account == '(unbudgeted)' }"
+	md-mode="determinate"
+	value="{{account.percentage}}"></md-progress-linear>
+	</td>
+	</tr>
+	</tbody>
+	</table>
+	</md-card> -->
 </md-content>

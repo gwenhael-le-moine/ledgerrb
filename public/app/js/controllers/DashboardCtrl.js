@@ -156,18 +156,18 @@ app.controller( 'DashboardCtrl',
 			      period += ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
 			  }
 
-			  API.budget( { period: period,
-					categories: 'Expenses' } )
-			      .then( function( response ) {
-				  $scope.budget = response.data;
+			  // API.budget( { period: period,
+			  //		categories: 'Expenses' } )
+			  //     .then( function( response ) {
+			  //	  $scope.budget = response.data;
 
-				  $scope.total_budget = _.chain($scope.budget)
-				      .pluck( 'amount' )
-				      .reduce( function( acc, amount ) { return acc + amount; },
-					       0 )
-				      .value();
-				  $scope.total_unbudgeted = _($scope.budget).findWhere( { percentage: -1 } ).amount;
-			      } );
+			  //	  $scope.total_budget = _.chain($scope.budget)
+			  //	      .pluck( 'amount' )
+			  //	      .reduce( function( acc, amount ) { return acc + amount; },
+			  //		       0 )
+			  //	      .value();
+			  //	  $scope.total_unbudgeted = _($scope.budget).findWhere( { percentage: -1 } ).amount;
+			  //     } );
 
 			  _($scope.balance.buckets).each( function( bucket ) {
 			      API.balance( { period: period,
