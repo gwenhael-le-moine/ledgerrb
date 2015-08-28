@@ -113,7 +113,6 @@ module Ledger
   end
 
   def graph_values( period = nil, categories = [ 'Expenses' ] )
-    # ledger reg Income -X '€' -MAn --no-revalued -j
     period = period.nil? ? '' : "-p '#{period}'"
 
     result = {}
