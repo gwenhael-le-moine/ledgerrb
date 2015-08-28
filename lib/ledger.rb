@@ -10,6 +10,7 @@ module Ledger
   @file = ENV[ 'LEDGER_FILE' ]
 
   def run( options, command = '', command_parameters = '' )
+    STDERR.puts "#{@binary} -f #{@file} #{options} #{command} #{command_parameters}"
     `#{@binary} -f #{@file} #{options} #{command} #{command_parameters}`
   end
 
@@ -109,5 +110,23 @@ module Ledger
                   budget: disposable_income,
                   percentage: (unbudgeted_amount / disposable_income) * 100,
                   account: '(unbudgeted)' }
+  end
+
+  def graph_values( period = nil, categories = [ 'Expenses' ] )
+    # ledger reg Income -X '€' -MAn --no-revalued -j
+    period = period.nil? ? '' : "-p '#{period}'"
+
+    result = {}
+    categories.each do |category|
+      result[ category ] = CSV
+                           .parse( run( "-MAn --exchange '#{CURRENCY}' #{period}", 'csv --no-revalued', category ) )
+                           .map do |row|
+        { date: row[ 0 ],
+          amount: row[ 5 ],
+          currency: row[ 4 ] }
+      end
+    end
+
+    result
   end
 end
