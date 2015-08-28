@@ -22,26 +22,24 @@ module Ledger
       .split( "\n" )
       .map do |a|
       a.split( ':' )
-       .each_slice( depth )
-       .to_a.first
+        .each_slice( depth )
+        .to_a.first
     end.uniq
   end
 
   def dates_salaries( category = 'salaire' )
     CSV.parse( run( '', 'csv', category ) )
-       .map do
-      |row|
+      .map do |row|
       Date.parse row[ 0 ]
     end
-       .uniq
+      .uniq
   end
 
   def register( period = nil, categories = '' )
     period = period.nil? ? '' : "-p '#{period}'"
 
-    CSV.parse( run( "--exchange '#{CURRENCY}' #{period}", 'csv', categories ) )
-       .map do
-      |row|
+    CSV.parse( run( "--no-revalued --exchange '#{CURRENCY}' #{period}", 'csv', categories ) )
+      .map do |row|
       { date: row[ 0 ],
         payee: row[ 2 ],
         account: row[ 3 ],
@@ -96,11 +94,16 @@ module Ledger
       line.split[4].tr( SEPARATOR, '.' ).to_f
     end
                         .reduce( :+ )
-    
+
     budget = budgeted.map { |account| account[:budget] }.reduce( :+ )
-    income = run( "--flat --no-total --unbudgeted -Mn --exchange '#{CURRENCY}' #{period}", 'register', 'Income' ).lines.last.split[4].tr( SEPARATOR, '.' ).to_f * -1
+    income = run( "--flat --no-total --unbudgeted -Mn --exchange '#{CURRENCY}' #{period}", 'register', 'Income' )
+             .lines
+             .last
+             .split[4]
+             .tr( SEPARATOR, '.' )
+             .to_f * -1
     disposable_income = income - budget
-    
+
     budgeted << { currency: CURRENCY,
                   amount: unbudgeted_amount,
                   budget: disposable_income,
