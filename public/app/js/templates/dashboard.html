@@ -1,20 +1,27 @@
 <md-toolbar flex="100" layout="column" layout-gt-md="row" layout-align="center center">
-	<h2 flex="48">From {{from_date | date:'longDate'}} <span data-ng-if="to_date">to {{to_date | date:'longDate'}}</span></h2>
-	<div flex="48" layout="row" layout-align="space-around center">
-		<md-button class="md-raised md-primary"
-			aria-label="before"
-			data-ng-click="before()"
-			data-ng-class="{'disabled': period_offset == 0}">prev</span></md-button>
-		<md-button class="md-raised"
-			aria-label="now"
-			data-ng-click="reset_offset()"
-			data-ng-class="{'disabled': period_offset == dates_salaries.length - 1}">Now</md-button>
-		<md-button class="md-raised md-primary"
-			aria-label="after"
-			data-ng-click="after()"
-			data-ng-class="{'disabled': period_offset == dates_salaries.length}">next</buttmd-on>
-	</div>
+	<h2>
+		<md-select data-ng-model="period">
+			<md-option data-ng-repeat="period in periods">{{period}}</md-option>
+		</md-select>
+	</h2>
 </md-toolbar>
+
+<md-content flex="100">
+	<nvd3-multi-bar-chart
+		data="monthly_values"
+		id="monthlyValues"
+		height="350"
+		showXAxis="true"
+		showYAxis="true"
+		showLegend="true"
+		interactive="true"
+		tooltips="true"
+		tooltipContent="barGraphToolTipContentFunction()"
+		rotateLabels="67">
+		<svg></svg>
+	</nvd3-multi-bar-chart>
+</md-content>
+
 <md-content flex="100" layout="column" layout-gt-md="row">
 	<md-card flex="48" layout="column"
 		data-ng-repeat="bucket in balance.buckets">

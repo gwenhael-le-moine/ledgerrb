@@ -20,6 +20,15 @@ app.service( 'API',
 		       } );
 		   };
 
+		   this.graph_values = function( params ) {
+		       return $http.get( '/api/ledger/graph_values', {
+			   params: {
+			       period: params.period,
+			       categories: params.categories
+			   }
+		       } );
+		   };
+
 		   this.budget = function( params ) {
 		       return $http.get( '/api/ledger/budget', {
 			   params: {

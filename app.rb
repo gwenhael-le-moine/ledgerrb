@@ -66,6 +66,13 @@ class LedgerRbApp < Sinatra::Base
     Ledger.budget( params[ :period ],
                    params[ :categories ] ).to_json
   end
+  
+  get '/api/ledger/graph_values/?' do
+    param :period, String, default: nil
+    param :categories, String, default: 'Expenses'
+
+    Ledger.graph_values( params[:period], params[:categories].split(' ') ).to_json
+  end
 
   get '/api/ledger/version/?' do
     Ledger.version

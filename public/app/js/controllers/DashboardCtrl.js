@@ -132,41 +132,10 @@ app.controller( 'DashboardCtrl',
 		      };
 
 		      $scope.depth = 99;
-		      var retrieve_data = function () {
-			  var from, to, period;
 
-			  if ( $scope.period_offset === $scope.dates_salaries.length ) {
-			      $scope.from_date = moment( _($scope.dates_salaries).last() ).add( 1, 'month' ).toDate();
-
-			      from = moment( $scope.from_date );
-
-			      period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date();
-			  } else {
-			      $scope.from_date = new Date( $scope.dates_salaries[ $scope.period_offset ] );
-			      $scope.to_date = ( $scope.period_offset < $scope.dates_salaries.length - 1 ) ? new Date( $scope.dates_salaries[ $scope.period_offset + 1 ] ) : moment( $scope.from_date ).add( 1, 'month' ).toDate();
-
-			      from = moment( $scope.from_date );
-			      to = moment( $scope.to_date );
-
-			      period = 'from ' + from.year() + '-' + ( from.month() + 1 ) + '-' + from.date();
-			      period += ' to ' + to.year() + '-' + ( to.month() + 1 ) + '-' + to.date();
-			  }
-
-			  // API.budget( { period: period,
-			  //		categories: 'Expenses' } )
-			  //     .then( function( response ) {
-			  //	  $scope.budget = response.data;
-
-			  //	  $scope.total_budget = _.chain($scope.budget)
-			  //	      .pluck( 'amount' )
-			  //	      .reduce( function( acc, amount ) { return acc + amount; },
-			  //		       0 )
-			  //	      .value();
-			  //	  $scope.total_unbudgeted = _($scope.budget).findWhere( { percentage: -1 } ).amount;
-			  //     } );
-
+		      var retrieve_period_detailed_data = function () {
 			  $scope.balance = {
-			      buckets: [ new Bucket( 'Expenses Liabilities Equity Income', period ),
+			      buckets: [ new Bucket( 'Expenses Liabilities Equity Income', $scope.period ),
 					 new Bucket( 'Assets', null ) ],
 			      details: {}
 			  };
@@ -203,38 +172,59 @@ app.controller( 'DashboardCtrl',
 
 		      $scope.dates_salaries = [];
 		      $scope.period_offset = 0;
-		      $scope.after = function () {
-			  if ( $scope.period_offset < $scope.dates_salaries.length ) {
-			      $scope.period_offset++;
-			  }
-		      };
-		      $scope.before = function () {
-			  if ( $scope.period_offset > 0 ) {
-			      $scope.period_offset--;
-			  }
-		      };
-		      $scope.reset_offset = function () {
-			  $scope.period_offset = $scope.dates_salaries.length - 1;
-		      };
 
-		      API.accounts()
-			  .then( function ( response ) {
-			      $scope.accounts = response.data.map( function( account_ary ) {
-				  return account_ary.join( ':' );
+		      var retrieve_dates_salaries = function() {
+			  API.dates_salaries()
+			      .then( function ( response ) {
+				  $scope.dates_salaries = response.data;
+				  $scope.periods= [];
+				  for ( var i = 0 ; i < ( $scope.dates_salaries.length - 1 ) ; i++ ) {
+				      $scope.periods.push( 'from ' + $scope.dates_salaries[i] + ' to ' + $scope.dates_salaries[i+1] );
+				  }
+				  $scope.period = _($scope.periods).last();
+				  $scope.periods.push( 'from ' + _($scope.dates_salaries).last() );
+				  $scope.periods = _($scope.periods).reverse();
 			      } );
-			      API.dates_salaries()
-				  .then( function ( response ) {
-				      $scope.dates_salaries = response.data;
+		      };
+		      $scope.$watch( 'period', function () {
+			  retrieve_period_detailed_data();
+		      } );
 
-				      $scope.reset_offset();
-
-				      // retrieve_data() when the value of week_offset changes
-				      // n.b.: triggered when week_offset is initialized above
-				      $scope.$watch( 'period_offset', function () {
-					  retrieve_data();
-				      } );
-
+		      var retrieve_accounts = function() {
+			  API.accounts()
+			      .then( function ( response ) {
+				  $scope.accounts = response.data.map( function( account_ary ) {
+				      return account_ary.join( ':' );
 				  } );
+			      } );
+		      };
+
+		      var retrieve_graph_values = function( params ) {
+			  API.graph_values( params ).then( function( response ) {
+			      $scope.monthly_values = _.chain( response.data )
+				  .keys()
+				  .reverse()
+				  .map( function( key ) {
+				      var multiplicator = ( key == "Income" ) ? -1 : 1;
+				      return { "key": key,
+					       "values": _(response.data[ key ]).map( function( value ) {
+						   var date = new Date( value.date );
+						   return [ date.getFullYear() + '-' + ( date.getMonth() < 9 ? '0' : '' ) + ( date.getMonth() + 1 ),
+							    parseInt( value.amount ) * multiplicator ];
+					       } ) };
+				  } )
+				  .value();
 			  } );
+		      };
+		      $scope.barGraphToolTipContentFunction = function () {
+			  return function ( key, x, y, e, graph ) {
+			      return '<md-content><h3><em>' + key + '</em> during ' + x + '</h3><h2>' + y + ' €</h2></md-content>';
+			  };
+		      };
+
+		      retrieve_accounts();
+		      retrieve_dates_salaries();
+		      retrieve_graph_values( { period: '',
+					       categories: 'Expenses Income'} );
 		  }
-		] );
+				  ] );
