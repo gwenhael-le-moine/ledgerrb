@@ -181,9 +181,9 @@ app.controller( 'DashboardCtrl',
 				  for ( var i = 0 ; i < ( $scope.dates_salaries.length - 1 ) ; i++ ) {
 				      $scope.periods.push( 'from ' + $scope.dates_salaries[i] + ' to ' + $scope.dates_salaries[i+1] );
 				  }
-				  $scope.period = _($scope.periods).last();
 				  $scope.periods.push( 'from ' + _($scope.dates_salaries).last() );
 				  $scope.periods = _($scope.periods).reverse();
+				  $scope.period = _($scope.periods).first();
 			      } );
 		      };
 		      $scope.$watch( 'period', function () {
