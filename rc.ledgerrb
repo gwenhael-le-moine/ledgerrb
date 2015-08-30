@@ -4,8 +4,8 @@ CWD=$(pwd)
 
 PIDFILE=./ledgerrb.pid
 PORT=9292
-SERVER='bundle exec rackup'
-SERVER_OPTIONS=' --daemonize --pid $PIDFILE --port $PORT --host 0.0.0.0 --server puma'
+SERVER='bundle exec puma'
+SERVER_OPTIONS=' --daemon --pidfile $PIDFILE --port $PORT'
 
 function start() {
     $SERVER $SERVER_OPTIONS
