@@ -1,4 +1,26 @@
-### 5.0
+### 5.2.0 (May 1, 2015)
+
+* Update jQuery to `v1.11.3`
+  ([#1699](https://github.com/h5bp/html5-boilerplate/issues/1699)).
+* Deprecate protocol-relative URLs
+  ([#1694](https://github.com/h5bp/html5-boilerplate/issues/1694)).
+* Update high resolution media query
+  ([#1474](https://github.com/h5bp/html5-boilerplate/issues/1474)).
+* Update Apache Server Configs to `v2.14.0`.
+
+### 5.1.0 (April 1, 2015)
+
+* Update Normalize.css to `v3.0.3`.
+* Use `https://` in the Google Universal Analytics snippet
+  ([eee759b](https://github.com/h5bp/html5-boilerplate/commit/eee759bfe175e850bbc8e4ad0682ec4fe4bd05d6)).
+* Remove the `visibility: hidden` declaration from `.hidden`
+  ([#1663](https://github.com/h5bp/html5-boilerplate/issues/1663)).
+* Use `<meta http-equiv="x-ua-compatible" content="ie=edge">`<br>
+  instead of `<meta http-equiv="X-UA-Compatible" content="IE=edge">`
+  ([#1656](https://github.com/h5bp/html5-boilerplate/issues/1656)).
+* Update Apache Server Configs to `v2.13.0`.
+
+### 5.0.0 (February 1, 2015)
 
 * Update to jQuery 1.11.2.
 * Update Apache Server Configs to v2.11.0.

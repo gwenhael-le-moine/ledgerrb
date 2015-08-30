@@ -2,12 +2,14 @@ var fs = require('fs');
 var path = require('path');
 
 var gulp = require('gulp');
-var plugins = require('gulp-load-plugins')(); // Load all gulp plugins
-                                              // automatically and attach
-                                              // them to the `plugins` object
 
-var runSequence = require('run-sequence');    // Temporary solution until gulp 4
-                                              // https://github.com/gulpjs/gulp/issues/355
+// Load all gulp plugins automatically
+// and attach them to the `plugins` object
+var plugins = require('gulp-load-plugins')();
+
+// Temporary solution until gulp 4
+// https://github.com/gulpjs/gulp/issues/355
+var runSequence = require('run-sequence');
 
 var pkg = require('./package.json');
 var dirs = pkg['h5bp-configs'].directories;
@@ -66,6 +68,7 @@ gulp.task('copy', [
     'copy:.htaccess',
     'copy:index.html',
     'copy:jquery',
+    'copy:license',
     'copy:main.css',
     'copy:misc',
     'copy:normalize'
@@ -89,6 +92,11 @@ gulp.task('copy:jquery', function () {
                .pipe(gulp.dest(dirs.dist + '/js/vendor'));
 });
 
+gulp.task('copy:license', function () {
+    return gulp.src('LICENSE.txt')
+               .pipe(gulp.dest(dirs.dist));
+});
+
 gulp.task('copy:main.css', function () {
 
     var banner = '/*! HTML5 Boilerplate v' + pkg.version +
@@ -97,8 +105,11 @@ gulp.task('copy:main.css', function () {
 
     return gulp.src(dirs.src + '/css/main.css')
                .pipe(plugins.header(banner))
+               .pipe(plugins.autoprefixer({
+                   browsers: ['last 2 versions', 'ie >= 8', '> 1%'],
+                   cascade: false
+               }))
                .pipe(gulp.dest(dirs.dist + '/css'));
-
 });
 
 gulp.task('copy:misc', function () {

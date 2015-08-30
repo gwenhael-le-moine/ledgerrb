@@ -5,25 +5,23 @@
   "homepage": "https://github.com/cycojesus/ledgerrb",
   "license": "MIT",
   "dependencies": {
-      "angular": "~1.3.1",
-      "angular-i18n": "~1.3.1",
-      "angular-animate": "~1.3.1",
-      "angular-aria": "~1.3.1",
-      "angular-loader": "~1.3.1",
-      "angular-loading-bar": "latest",
-      "angular-material": "latest",
-      "angular-mocks": "~1.3.1",
-      "angular-moment": "latest",
-      "angular-ui-router": "latest",
-      "angularjs-nvd3-directives": "latest",
-      "html5-boilerplate": "latest",
-      "underscore": "latest",
-      "angular-underscore": "latest"
+    "angular": "latest",
+    "angular-i18n": "latest",
+    "angular-animate": "latest",
+    "angular-aria": "latest",
+    "angular-loader": "latest",
+    "angular-loading-bar": "latest",
+    "angular-material": "latest",
+    "angular-mocks": "latest",
+    "angular-moment": "latest",
+    "angular-ui-router": "latest",
+    "angularjs-nvd3-directives": "latest",
+    "html5-boilerplate": "latest",
+    "underscore": "latest",
+    "angular-underscore": "latest"
   },
-    "resolutions": {
-	"d3": "~3.4.1",
-	"angular": "~1.3.1",
-	"angular-animate": "~1.3.1",
-	"angular-aria": "~1.3.1"
+  "resolutions": {
+      "angular": "~1.4.5",
+    "d3": "~3.4.1"
   }
 }
