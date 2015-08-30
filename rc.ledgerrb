@@ -2,15 +2,17 @@
 
 CWD=$(pwd)
 
+PIDFILE=./ledgerrb.pid
+PORT=9292
 SERVER='bundle exec rackup'
-SERVER_OPTIONS=' -D -P ./ledgerrb.pid'
+SERVER_OPTIONS=' --daemonize --pid $PIDFILE --port $PORT --host 0.0.0.0 --server puma'
 
 function start() {
     $SERVER $SERVER_OPTIONS
 }
 
 function stop() {
-    [ -e ./ledgerrb.pid ] && kill $(cat ./ledgerrb.pid)
+    [ -e $PIDFILE ] && kill $(cat $PIDFILE)
 }
 
 function restart() {
