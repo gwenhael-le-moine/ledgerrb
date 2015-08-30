@@ -10,7 +10,7 @@ function start() {
 }
 
 function stop() {
-    [ -e $PIDFILE ] && kill $(cat ./puma.pid)
+    [ -e ./ledgerrb.pid ] && kill $(cat ./ledgerrb.pid)
 }
 
 function restart() {
