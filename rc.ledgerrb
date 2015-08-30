@@ -2,8 +2,8 @@
 
 CWD=$(pwd)
 
-SERVER='bundle exec puma'
-SERVER_OPTIONS=' --daemon --pidfile ./puma.pid'
+SERVER='bundle exec rackup'
+SERVER_OPTIONS=' -D -P ./ledgerrb.pid'
 
 function start() {
     $SERVER $SERVER_OPTIONS
