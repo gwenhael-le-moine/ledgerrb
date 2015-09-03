@@ -1,25 +1,37 @@
 <md-toolbar flex="100" layout="column" layout-gt-md="row" layout-align="center center">
 	<h2>
-		<md-select data-ng-model="period">
-			<md-option data-ng-repeat="period in periods">{{period}}</md-option>
-		</md-select>
+		<md-input-container>
+			<md-select data-ng-model="period">
+				<md-option data-ng-repeat="period in periods">{{period}}</md-option>
+			</md-select>
+		</md-input-container>
 	</h2>
 </md-toolbar>
 
-<md-content flex="100">
-	<nvd3-multi-bar-chart
-		data="monthly_values"
-		id="monthlyValues"
-		height="350"
-		showXAxis="true"
-		showYAxis="true"
-		showLegend="true"
-		interactive="true"
-		tooltips="true"
-		tooltipContent="barGraphToolTipContentFunction()"
-		rotateLabels="67">
-		<svg></svg>
-	</nvd3-multi-bar-chart>
+<md-content flex="100" layout="column" layout-gt-md="row">
+	<md-card flex="20">
+		<md-input-container>
+			<md-select multiple="true" data-ng-model="graphed_accounts">
+				<md-option data-ng-repeat="account in accounts">{{account}}</md-option>
+			</md-select>
+		</md-input-container>
+	</md-card>
+	<md-card flex="75">
+		<nvd3-multi-bar-chart
+			data="monthly_values"
+			id="monthlyValues"
+			height="350"
+			showXAxis="true"
+			showYAxis="true"
+			showLegend="true"
+			interactive="true"
+			tooltips="true"
+			tooltipContent="barGraphToolTipContentFunction()"
+			rotateLabels="67"
+			margin="{left:70,top:70,bottom:70,right:125}" >
+			<svg></svg>
+		</nvd3-multi-bar-chart>
+	</md-card>
 </md-content>
 
 <md-content flex="100" layout="column" layout-gt-md="row">

@@ -221,10 +221,14 @@ app.controller( 'DashboardCtrl',
 			      return '<md-content><h3><em>' + key + '</em> during ' + x + '</h3><h2>' + y + ' €</h2></md-content>';
 			  };
 		      };
+		      $scope.graphed_accounts = [ 'Expenses', 'Income' ];
 
 		      retrieve_accounts();
 		      retrieve_dates_salaries();
-		      retrieve_graph_values( { period: '',
-					       categories: 'Expenses Income'} );
+		      $scope.$watch( 'graphed_accounts', function () {
+			  retrieve_graph_values( { period: '',
+						   categories: $scope.graphed_accounts.join(' ') } );
+		      } );
+
 		  }
 				  ] );
