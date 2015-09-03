@@ -19,13 +19,17 @@ module Ledger
   end
 
   def accounts( depth = 9999 )
-    run( '', 'accounts' )
-      .split( "\n" )
-      .map do |a|
+    accounts = run( '', 'accounts' )
+               .split( "\n" )
+               .map do |a|
       a.split( ':' )
-        .each_slice( depth )
-        .to_a.first
+      .each_slice( depth )
+      .to_a.first
     end.uniq
+
+    top_level_accounts = accounts.map(&:first).uniq.map { |account| [ account ] }
+
+    ( accounts + top_level_accounts ).sort
   end
 
   def dates_salaries( category = 'salaire' )
