@@ -20,31 +20,33 @@ module Ledger
 
   def accounts( depth = 9999 )
     accounts = run( '', 'accounts' )
-               .split( "\n" )
+               .split( "\n" ) 
                .map do |a|
       a.split( ':' )
       .each_slice( depth )
       .to_a.first
     end.uniq
 
-    top_level_accounts = accounts.map(&:first).uniq.map { |account| [ account ] }
+    accounts.map(&:length).max.times do |i|
+      accounts += accounts.map { |acc| acc.first( i ) }
+    end
 
-    ( accounts + top_level_accounts ).sort
+    accounts.uniq.sort.reject { |a| a.empty? }
   end
 
   def dates_salaries( category = 'salaire' )
     CSV.parse( run( '', 'csv', category ) )
-      .map do |row|
+       .map do |row|
       Date.parse row[ 0 ]
     end
-      .uniq
+       .uniq
   end
 
   def register( period = nil, categories = '' )
     period = period.nil? ? '' : "-p '#{period}'"
 
     CSV.parse( run( "--no-revalued --exchange '#{CURRENCY}' #{period}", 'csv', categories ) )
-      .map do |row|
+       .map do |row|
       { date: row[ 0 ],
         payee: row[ 2 ],
         account: row[ 3 ],
