@@ -31,7 +31,11 @@ module Ledger
       accounts += accounts.map { |acc| acc.first( i ) }
     end
 
-    accounts.uniq.sort.reject { |a| a.empty? }
+    accounts
+      .uniq
+      .sort
+      .reject { |a| a.empty? }
+      .sort_by { |a| a.length }
   end
 
   def dates_salaries( category = 'salaire' )
