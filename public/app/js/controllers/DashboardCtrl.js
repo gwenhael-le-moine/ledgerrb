@@ -170,25 +170,22 @@ app.controller( 'DashboardCtrl',
 			  } );
 		      };
 
-		      $scope.dates_salaries = [];
-		      $scope.period_offset = 0;
+		      // $scope.dates_salaries = [];
 
-		      var retrieve_dates_salaries = function() {
-			  API.dates_salaries()
-			      .then( function ( response ) {
-				  $scope.dates_salaries = response.data;
-				  $scope.periods= [];
-				  for ( var i = 0 ; i < ( $scope.dates_salaries.length - 1 ) ; i++ ) {
-				      $scope.periods.push( 'from ' + $scope.dates_salaries[i] + ' to ' + $scope.dates_salaries[i+1] );
-				  }
-				  $scope.periods.push( 'from ' + _($scope.dates_salaries).last() );
-				  $scope.periods = _($scope.periods).reverse();
-				  $scope.period = _($scope.periods).first();
-			      } );
-		      };
-		      $scope.$watch( 'period', function () {
-			  retrieve_period_detailed_data();
-		      } );
+		      // var retrieve_dates_salaries = function() {
+		      //	  API.dates_salaries()
+		      //	      .then( function ( response ) {
+		      //		  $scope.dates_salaries = response.data;
+		      //		  $scope.periods= [];
+		      //		  for ( var i = 0 ; i < ( $scope.dates_salaries.length - 1 ) ; i++ ) {
+		      //		      $scope.periods.push( 'from ' + $scope.dates_salaries[i] + ' to ' + $scope.dates_salaries[i+1] );
+		      //		  }
+		      //		  $scope.periods.push( 'from ' + _($scope.dates_salaries).last() );
+		      //		  $scope.periods = _($scope.periods).reverse();
+		      //		  $scope.period = _($scope.periods).first();
+		      //	      } );
+		      // };
+		      //retrieve_dates_salaries();
 
 		      var retrieve_accounts = function() {
 			  API.accounts()
@@ -201,6 +198,7 @@ app.controller( 'DashboardCtrl',
 
 		      var retrieve_graph_values = function( params ) {
 			  API.graph_values( params ).then( function( response ) {
+			      $scope.periods = [];
 			      $scope.monthly_values = _.chain( response.data )
 				  .keys()
 				  .reverse()
@@ -209,11 +207,15 @@ app.controller( 'DashboardCtrl',
 				      return { "key": key,
 					       "values": _(response.data[ key ]).map( function( value ) {
 						   var date = new Date( value.date );
-						   return [ date.getFullYear() + '-' + ( date.getMonth() < 9 ? '0' : '' ) + ( date.getMonth() + 1 ),
+						   var period = date.getFullYear() + '-' + ( date.getMonth() < 9 ? '0' : '' ) + ( date.getMonth() + 1 );
+						   $scope.periods.push( period );
+						   return [ period,
 							    parseInt( value.amount ) * multiplicator ];
 					       } ) };
 				  } )
 				  .value();
+			      $scope.periods = _.chain($scope.periods).uniq().reverse().value();
+			      $scope.period = _($scope.periods).first();
 			  } );
 		      };
 		      $scope.barGraphToolTipContentFunction = function () {
@@ -223,12 +225,19 @@ app.controller( 'DashboardCtrl',
 		      };
 		      $scope.graphed_accounts = [ 'Expenses', 'Income' ];
 
+		      $scope.$watch( 'period', function () {
+			  retrieve_period_detailed_data();
+		      } );
+
 		      retrieve_accounts();
-		      retrieve_dates_salaries();
 		      $scope.$watch( 'graphed_accounts', function () {
 			  retrieve_graph_values( { period: '',
 						   categories: $scope.graphed_accounts.join(' ') } );
 		      } );
 
+		      $scope.$on( 'elementClick.directive', function( angularEvent, event ) {
+			  $scope.period = event.point[ 0 ];
+			  retrieve_period_detailed_data();
+		      } );
 		  }
-				  ] );
+		] );
