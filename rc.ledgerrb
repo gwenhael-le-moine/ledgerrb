@@ -2,10 +2,9 @@
 
 CWD=$(pwd)
 
-PIDFILE=./ledgerrb.pid
-PORT=9292
+PIDFILE=./puma.pid
 SERVER='bundle exec puma'
-SERVER_OPTIONS=' --daemon --pidfile $PIDFILE --port $PORT'
+SERVER_OPTIONS=" --daemon --pidfile $PIDFILE"
 
 function start() {
     $SERVER $SERVER_OPTIONS
