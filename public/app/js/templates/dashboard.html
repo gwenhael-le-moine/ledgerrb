@@ -1,11 +1,11 @@
 <md-content flex="100" layout="column">
 	<md-card flex="100" layout="row">
-		<md-card flex="15">
+		<md-card flex="20">
 			<select multiple="true" data-ng-model="graphed_accounts">
 				<option data-ng-repeat="account in accounts">{{account}}</option>
 			</select>
 		</md-card>
-		<md-card flex="75">
+		<md-card flex="81">
 			<nvd3-multi-bar-chart
 				data="monthly_values"
 				id="monthlyValues"
@@ -29,7 +29,7 @@
 			<span data-ng-repeat="account in bucket.total_detailed">{{account.account}} = {{account.amount | number:2}} €</span>
 		</md-toolbar>
 		<md-content layout="row">
-			<md-card flex="15">
+			<md-card flex="20">
 				<select multiple
 					data-ng-model="bucket.accounts_selected"
 					data-ng-options="account.account for account in bucket.raw_data | orderBy:'account'"
@@ -54,7 +54,7 @@
 					<svg></svg>
 				</nvd3-pie-chart>
 			</md-card>
-			<md-card flex="55">
+			<md-card flex="56">
 				<table class="table">
 					<thead>
 						<tr>
