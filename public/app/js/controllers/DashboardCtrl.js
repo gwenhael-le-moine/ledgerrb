@@ -22,10 +22,8 @@ app.controller( 'DashboardCtrl',
 
 		      // compute an account's score: from 1 (good) to 10 (bad), 0 is neutral/undecided
 		      var score_account = function ( account ) {
-			  if ( account.match( /^Income:(salaire|Sécu|Mutuelle)$/ ) ) {
-			      return 11;
-			  } else if ( account.match( /^Income:(Gift|Remboursement)$/ ) ) {
-			      return 12;
+			  if ( account.match( /^Income/ ) ) {
+			      return -10;
 			  } else if ( account.match( /^Expenses:(courses|Hang)$/ ) ) {
 			      return 1;
 			  } else if ( account.match( /^Expenses:Home/ ) ) {
@@ -41,9 +39,9 @@ app.controller( 'DashboardCtrl',
 			  } else if ( account.match( /^Expenses:Gadgets/ ) ) {
 			      return 10;
 			  } else if ( account.match( /^Liabilities/ ) ) {
-			      return 1000;
+			      return 0;
 			  } else if ( account.match( /^Assets/ ) ) {
-			      return 100;
+			      return -100;
 			  } else {
 			      return 0;
 			  }
@@ -53,18 +51,14 @@ app.controller( 'DashboardCtrl',
 			  var adjusted_score = score;
 			  var color_scale = [ '#99f', '#0f0', '#3f0', '#6f0', '#9f0', '#cf0', '#fc0', '#f90', '#f60', '#f30', '#f00' ];
 
-			  if ( score >= 1000 ) {
-			      // Liabilities
-			      adjusted_score = score - 1000;
-			      color_scale = [ '#0ff' ];
-			  } else if ( score >= 100 ) {
+			  if ( score <= -100 ) {
 			      // Assets
-			      adjusted_score = score - 100;
+			      adjusted_score = ( score * -1 ) - 100;
 			      color_scale = [ '#f0f' ];
-			  } else if ( score >= 11 ) {
+			  } else if ( score <= -10 ) {
 			      // Income
-			      adjusted_score = score - 11;
-			      color_scale = [ '#360', '#369' ];
+			      adjusted_score = ( score * -1 ) - 10;
+			      color_scale = [ '#360' ];
 			  }
 
 			  return color_scale[ adjusted_score ];
@@ -97,7 +91,7 @@ app.controller( 'DashboardCtrl',
 					  return memo + account.amount;
 				      }, 0 );
 				  } )
-				  .value();
+				      .value();
 			      bucket.total_detailed = _.chain(bucket.total_detailed)
 				  .keys()
 				  .map( function( key ) {
@@ -108,12 +102,6 @@ app.controller( 'DashboardCtrl',
 
 			  } );
 		      };
-
-		      $scope.select = { score_higher_than: function( bucket, score ) {
-			  bucket.accounts_selected = _(bucket.raw_data).filter( function( account ) {
-			      return account.score >= score;
-			  } );
-		      }};
 
 		      var Bucket = function( categories, period ) {
 			  var _this = this;
@@ -164,28 +152,10 @@ app.controller( 'DashboardCtrl',
 				      }, 0 );
 				      bucket.accounts_selected = bucket.raw_data;
 
-				      $scope.select.score_higher_than( bucket, bucket.score_threshold );
 				      $scope.filter_data();
 				  } );
 			  } );
 		      };
-
-		      // $scope.dates_salaries = [];
-
-		      // var retrieve_dates_salaries = function() {
-		      //	  API.dates_salaries()
-		      //	      .then( function ( response ) {
-		      //		  $scope.dates_salaries = response.data;
-		      //		  $scope.periods= [];
-		      //		  for ( var i = 0 ; i < ( $scope.dates_salaries.length - 1 ) ; i++ ) {
-		      //		      $scope.periods.push( 'from ' + $scope.dates_salaries[i] + ' to ' + $scope.dates_salaries[i+1] );
-		      //		  }
-		      //		  $scope.periods.push( 'from ' + _($scope.dates_salaries).last() );
-		      //		  $scope.periods = _($scope.periods).reverse();
-		      //		  $scope.period = _($scope.periods).first();
-		      //	      } );
-		      // };
-		      //retrieve_dates_salaries();
 
 		      var retrieve_accounts = function() {
 			  API.accounts()
