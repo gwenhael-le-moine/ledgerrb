@@ -211,10 +211,11 @@ app.controller( 'DashboardCtrl',
 						   $scope.periods.push( period );
 						   return [ period,
 							    parseInt( value.amount ) * multiplicator ];
-					       } ) };
+					       } )
+					     };
 				  } )
 				  .value();
-			      $scope.periods = _.chain($scope.periods).uniq().reverse().value();
+			      $scope.periods = _.chain($scope.periods).uniq().sort().reverse().value();
 			      $scope.period = _($scope.periods).first();
 			  } );
 		      };
