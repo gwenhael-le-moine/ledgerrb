@@ -2,7 +2,7 @@
  * Angular Material Design
  * https://github.com/angular/material
  * @license MIT
- * v0.10.1
+ * v1.1.0-rc4-master-c26842a
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -52,23 +52,21 @@ angular.module('material.components.tabs', [
  * Please note that if you use `<md-tab-label>`, your content **MUST** be wrapped in the `<md-tab-body>` tag.  This
  * is to define a clear separation between the tab content and the tab label.
  *
- * If a tab **label** has been identified, then any **non-**`<md-tab-label>` markup
- * will be considered tab content and will be transcluded to the internal `<div class="md-tabs-content">` container.
- *
  * This container is used by the TabsController to show/hide the active tab's content view. This synchronization is
  * automatically managed by the internal TabsController whenever the tab selection changes. Selection changes can
  * be initiated via data binding changes, programmatic invocation, or user gestures.
  *
  * @param {string=} label Optional attribute to specify a simple string as the tab label
- * @param {boolean=} disabled If present, disabled tab selection.
+ * @param {boolean=} ng-disabled If present and expression evaluates to truthy, disabled tab selection.
  * @param {expression=} md-on-deselect Expression to be evaluated after the tab has been de-selected.
  * @param {expression=} md-on-select Expression to be evaluated after the tab has been selected.
+ * @param {boolean=} md-active When true, sets the active tab.  Note: There can only be one active tab at a time.
  *
  *
  * @usage
  *
  * <hljs lang="html">
- * <md-tab label="" disabled="" md-on-select="" md-on-deselect="" >
+ * <md-tab label="" ng-disabled md-on-select="" md-on-deselect="" >
  *   <h3>My Tab content</h3>
  * </md-tab>
  *
@@ -97,19 +95,19 @@ function MdTab () {
     require:  '^?mdTabs',
     terminal: true,
     compile:  function (element, attr) {
-      var label = element.find('md-tab-label'),
-          body  = element.find('md-tab-body');
+      var label = firstChild(element, 'md-tab-label'),
+          body  = firstChild(element, 'md-tab-body');
 
       if (label.length == 0) {
         label = angular.element('<md-tab-label></md-tab-label>');
         if (attr.label) label.text(attr.label);
         else label.append(element.contents());
-      }
 
-      if (body.length == 0) {
-        var contents = element.contents().detach();
-        body         = angular.element('<md-tab-body></md-tab-body>');
-        body.append(contents);
+        if (body.length == 0) {
+          var contents = element.contents().detach();
+          body         = angular.element('<md-tab-body></md-tab-body>');
+          body.append(contents);
+        }
       }
 
       element.append(label);
@@ -127,10 +125,9 @@ function MdTab () {
 
   function postLink (scope, element, attr, ctrl) {
     if (!ctrl) return;
-    var tabs  = element.parent()[ 0 ].getElementsByTagName('md-tab'),
-        index = Array.prototype.indexOf.call(tabs, element[ 0 ]),
-        body  = element.find('md-tab-body').eq(0).remove(),
-        label = element.find('md-tab-label').eq(0).remove(),
+    var index = ctrl.getTabElementIndex(element),
+        body  = firstChild(element, 'md-tab-body').remove(),
+        label = firstChild(element, 'md-tab-label').remove(),
         data  = ctrl.insertTab({
           scope:    scope,
           parent:   scope.$parent,
@@ -143,11 +140,11 @@ function MdTab () {
     scope.select   = scope.select || angular.noop;
     scope.deselect = scope.deselect || angular.noop;
 
-    scope.$watch('active', function (active) { if (active) ctrl.select(data.getIndex()); });
+    scope.$watch('active', function (active) { if (active) ctrl.select(data.getIndex(), true); });
     scope.$watch('disabled', function () { ctrl.refreshIndex(); });
     scope.$watch(
         function () {
-          return Array.prototype.indexOf.call(tabs, element[ 0 ]);
+          return ctrl.getTabElementIndex(element);
         },
         function (newIndex) {
           data.index = newIndex;
@@ -155,7 +152,15 @@ function MdTab () {
         }
     );
     scope.$on('$destroy', function () { ctrl.removeTab(data); });
+  }
 
+  function firstChild (element, tagName) {
+    var children = element[0].children;
+    for (var i = 0, len = children.length; i < len; i++) {
+      var child = children[i];
+      if (child.tagName === tagName.toUpperCase()) return angular.element(child);
+    }
+    return angular.element();
   }
 }
 
@@ -208,7 +213,7 @@ angular
  * ngInject
  */
 function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipple,
-                           $mdUtil, $animate, $attrs, $compile, $mdTheming) {
+                           $mdUtil, $animateCss, $attrs, $compile, $mdTheming) {
   // define private properties
   var ctrl      = this,
       locked    = false,
@@ -234,7 +239,8 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
   defineBooleanAttribute('swipeContent');
   defineBooleanAttribute('noDisconnect');
   defineBooleanAttribute('autoselect');
-  defineBooleanAttribute('centerTabs', handleCenterTabs);
+  defineBooleanAttribute('noSelectClick');
+  defineBooleanAttribute('centerTabs', handleCenterTabs, false);
   defineBooleanAttribute('enableDisconnect');
 
   // define public properties
@@ -261,6 +267,7 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
   ctrl.canPageBack        = canPageBack;
   ctrl.refreshIndex       = refreshIndex;
   ctrl.incrementIndex     = incrementIndex;
+  ctrl.getTabElementIndex = getTabElementIndex;
   ctrl.updateInkBarStyles = $mdUtil.debounce(updateInkBarStyles, 100);
   ctrl.updateTabOrder     = $mdUtil.debounce(updateTabOrder, 100);
 
@@ -276,6 +283,10 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
     bindEvents();
     $mdTheming($element);
     $mdUtil.nextTick(function () {
+      // Note that the element references need to be updated, because certain "browsers"
+      // (IE/Edge) lose them and start throwing "Invalid calling object" errors, when we
+      // compile the element contents down in `compileElement`.
+      elements = getElements();
       updateHeightFromContent();
       adjustOffset();
       updateInkBarStyles();
@@ -291,7 +302,8 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
    */
   function compileTemplate () {
     var template = $attrs.$mdTabsTemplate,
-        element  = angular.element(elements.data);
+        element  = angular.element($element[0].querySelector('md-tab-data'));
+
     element.html(template);
     $compile(element.contents())(ctrl.parent);
     delete $attrs.$mdTabsTemplate;
@@ -364,6 +376,9 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
 
   function handleMaxTabWidth (newWidth, oldWidth) {
     if (newWidth !== oldWidth) {
+      angular.forEach(elements.tabs, function(tab) {
+        tab.style.maxWidth = newWidth + 'px';
+      });
       $mdUtil.nextTick(ctrl.updateInkBarStyles);
     }
   }
@@ -427,6 +442,11 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
     ctrl.tabs[ newValue ] && ctrl.tabs[ newValue ].scope.select();
   }
 
+  function getTabElementIndex(tabEl){
+    var tabs = $element[0].getElementsByTagName('md-tab');
+    return Array.prototype.indexOf.call(tabs, tabEl[0]);
+  }
+
   /**
    * Queues up a call to `handleWindowResize` when a resize occurs while the tabs component is
    * hidden.
@@ -445,7 +465,6 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
           handleResizeWhenVisible.watcher();
           handleResizeWhenVisible.watcher = null;
 
-          // we have to trigger our own $apply so that the DOM bindings will update
           handleWindowResize();
         }
       }, false);
@@ -471,20 +490,23 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
       case $mdConstant.KEY_CODE.SPACE:
       case $mdConstant.KEY_CODE.ENTER:
         event.preventDefault();
-        if (!locked) ctrl.selectedIndex = ctrl.focusIndex;
+        if (!locked) select(ctrl.focusIndex);
         break;
     }
     ctrl.lastClick = false;
   }
 
   /**
-   * Update the selected index and trigger a click event on the original `md-tab` element in order
-   * to fire user-added click events.
+   * Update the selected index. Triggers a click event on the original `md-tab` element in order
+   * to fire user-added click events if canSkipClick or `md-no-select-click` are false.
    * @param index
+   * @param canSkipClick Optionally allow not firing the click event if `md-no-select-click` is also true.
    */
-  function select (index) {
+  function select (index, canSkipClick) {
     if (!locked) ctrl.focusIndex = ctrl.selectedIndex = index;
     ctrl.lastClick = true;
+    // skip the click event if noSelectClick is enabled
+    if (canSkipClick && ctrl.noSelectClick) return;
     // nextTick is required to prevent errors in user-defined click events
     $mdUtil.nextTick(function () {
       ctrl.tabs[ index ].element.triggerHandler('click');
@@ -531,11 +553,11 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
    * Update size calculations when the window is resized.
    */
   function handleWindowResize () {
-    $scope.$apply(function () {
-      ctrl.lastSelectedIndex = ctrl.selectedIndex;
-      ctrl.offsetLeft        = fixOffset(ctrl.offsetLeft);
-      $mdUtil.nextTick(ctrl.updateInkBarStyles, false);
-      $mdUtil.nextTick(updatePagination);
+    ctrl.lastSelectedIndex = ctrl.selectedIndex;
+    ctrl.offsetLeft        = fixOffset(ctrl.offsetLeft);
+    $mdUtil.nextTick(function () {
+      ctrl.updateInkBarStyles();
+      updatePagination();
     });
   }
 
@@ -618,19 +640,17 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
    */
   function getElements () {
     var elements = {};
+    var node = $element[0];
 
     // gather tab bar elements
-    elements.wrapper = $element[ 0 ].getElementsByTagName('md-tabs-wrapper')[ 0 ];
-    elements.data    = $element[ 0 ].getElementsByTagName('md-tab-data')[ 0 ];
-    elements.canvas  = elements.wrapper.getElementsByTagName('md-tabs-canvas')[ 0 ];
-    elements.paging  = elements.canvas.getElementsByTagName('md-pagination-wrapper')[ 0 ];
-    elements.tabs    = elements.paging.getElementsByTagName('md-tab-item');
-    elements.dummies = elements.canvas.getElementsByTagName('md-dummy-tab');
-    elements.inkBar  = elements.paging.getElementsByTagName('md-ink-bar')[ 0 ];
+    elements.wrapper = node.querySelector('md-tabs-wrapper');
+    elements.canvas  = elements.wrapper.querySelector('md-tabs-canvas');
+    elements.paging  = elements.canvas.querySelector('md-pagination-wrapper');
+    elements.inkBar  = elements.paging.querySelector('md-ink-bar');
 
-    // gather tab content elements
-    elements.contentsWrapper = $element[ 0 ].getElementsByTagName('md-tabs-content-wrapper')[ 0 ];
-    elements.contents        = elements.contentsWrapper.getElementsByTagName('md-tab-content');
+    elements.contents = node.querySelectorAll('md-tabs-content-wrapper > md-tab-content');
+    elements.tabs    = elements.paging.querySelectorAll('md-tab-item');
+    elements.dummies = elements.canvas.querySelectorAll('md-dummy-tab');
 
     return elements;
   }
@@ -683,7 +703,7 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
    */
   function shouldPaginate () {
     if (ctrl.noPagination || !loaded) return false;
-    var canvasWidth = Math.min($element.prop('clientWidth'), ctrl.maxTabWidth);
+    var canvasWidth = $element.prop('clientWidth');
     angular.forEach(elements.dummies, function (tab) { canvasWidth -= tab.offsetWidth; });
     return canvasWidth < 0;
   }
@@ -731,7 +751,37 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
    * Updates whether or not pagination should be displayed.
    */
   function updatePagination () {
+    updatePagingWidth();
+    ctrl.maxTabWidth = getMaxTabWidth();
     ctrl.shouldPaginate = shouldPaginate();
+  }
+
+  /**
+   * Sets or clears fixed width for md-pagination-wrapper depending on if tabs should stretch.
+   */
+  function updatePagingWidth() {
+    if (shouldStretchTabs()) {
+      angular.element(elements.paging).css('width', '');
+    } else {
+      angular.element(elements.paging).css('width', calcPagingWidth() + 'px');
+    }
+  }
+
+  /**
+   * @returns {number}
+   */
+  function calcPagingWidth () {
+    var width = 1;
+
+    angular.forEach(elements.dummies, function (element) {
+      //-- Uses the larger value between `getBoundingClientRect().width` and `offsetWidth`.  This
+      //   prevents `offsetWidth` value from being rounded down and causing wrapping issues, but
+      //   also handles scenarios where `getBoundingClientRect()` is inaccurate (ie. tabs inside
+      //   of a dialog)
+      width += Math.max(element.offsetWidth, element.getBoundingClientRect().width);
+    });
+
+    return Math.ceil(width);
   }
 
   function getMaxTabWidth () {
@@ -769,7 +819,7 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
   }
 
   /**
-   * This is used to forward focus to dummy elements.  This method is necessary to avoid aniation
+   * This is used to forward focus to dummy elements.  This method is necessary to avoid animation
    * issues when attempting to focus an item that is out of view.
    */
   function redirectFocus () {
@@ -786,7 +836,7 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
     var tab         = elements.tabs[ index ],
         left        = tab.offsetLeft,
         right       = tab.offsetWidth + left;
-    ctrl.offsetLeft = Math.max(ctrl.offsetLeft, fixOffset(right - elements.canvas.clientWidth));
+    ctrl.offsetLeft = Math.max(ctrl.offsetLeft, fixOffset(right - elements.canvas.clientWidth + 32 * 2));
     ctrl.offsetLeft = Math.min(ctrl.offsetLeft, fixOffset(left));
   }
 
@@ -825,23 +875,58 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
   function updateHeightFromContent () {
     if (!ctrl.dynamicHeight) return $element.css('height', '');
     if (!ctrl.tabs.length) return queue.push(updateHeightFromContent);
+
     var tabContent    = elements.contents[ ctrl.selectedIndex ],
         contentHeight = tabContent ? tabContent.offsetHeight : 0,
         tabsHeight    = elements.wrapper.offsetHeight,
         newHeight     = contentHeight + tabsHeight,
         currentHeight = $element.prop('clientHeight');
+
     if (currentHeight === newHeight) return;
+
+    // Adjusts calculations for when the buttons are bottom-aligned since this relies on absolute
+    // positioning.  This should probably be cleaned up if a cleaner solution is possible.
+    if ($element.attr('md-align-tabs') === 'bottom') {
+      currentHeight -= tabsHeight;
+      newHeight -= tabsHeight;
+      // Need to include bottom border in these calculations
+      if ($element.attr('md-border-bottom') !== undefined) ++currentHeight;
+    }
+
+    // Lock during animation so the user can't change tabs
     locked = true;
-    $animate
-        .animate(
-        $element,
-        { height: currentHeight + 'px' },
-        { height: newHeight + 'px' }
-    )
-        .then(function () {
-                $element.css('height', '');
-                locked = false;
-              });
+
+    var fromHeight = { height: currentHeight + 'px' },
+        toHeight = { height: newHeight + 'px' };
+
+    // Set the height to the current, specific pixel height to fix a bug on iOS where the height
+    // first animates to 0, then back to the proper height causing a visual glitch
+    $element.css(fromHeight);
+
+    // Animate the height from the old to the new
+    $animateCss($element, {
+      from: fromHeight,
+      to: toHeight,
+      easing: 'cubic-bezier(0.35, 0, 0.25, 1)',
+      duration: 0.5
+    }).start().done(function () {
+      // Then (to fix the same iOS issue as above), disable transitions and remove the specific
+      // pixel height so the height can size with browser width/content changes, etc.
+      $element.css({
+        transition: 'none',
+        height: ''
+      });
+
+      // In the next tick, re-allow transitions (if we do it all at once, $element.css is "smart"
+      // enough to batch it for us instead of doing it immediately, which undoes the original
+      // transition: none)
+      $mdUtil.nextTick(function() {
+        $element.css('transition', '');
+      });
+
+      // And unlock so tab changes can occur
+      locked = false;
+    });
   }
 
   /**
@@ -849,7 +934,10 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
    * @returns {*}
    */
   function updateInkBarStyles () {
-    if (!elements.tabs[ ctrl.selectedIndex ]) return;
+    if (!elements.tabs[ ctrl.selectedIndex ]) {
+      angular.element(elements.inkBar).css({ left: 'auto', right: 'auto' });
+      return;
+    }
     if (!ctrl.tabs.length) return queue.push(ctrl.updateInkBarStyles);
     // if the element is not visible, we will not be able to calculate sizes until it is
     // we should treat that as a resize event rather than just updating the ink bar
@@ -907,7 +995,7 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
     $mdTabInkRipple.attach(scope, element, options);
   }
 }
-MdTabsController.$inject = ["$scope", "$element", "$window", "$mdConstant", "$mdTabInkRipple", "$mdUtil", "$animate", "$attrs", "$compile", "$mdTheming"];
+MdTabsController.$inject = ["$scope", "$element", "$window", "$mdConstant", "$mdTabInkRipple", "$mdUtil", "$animateCss", "$attrs", "$compile", "$mdTheming"];
 
 /**
  * @ngdoc directive
@@ -964,15 +1052,17 @@ MdTabsController.$inject = ["$scope", "$element", "$window", "$mdConstant", "$md
  *
  * @param {integer=} md-selected Index of the active/selected tab
  * @param {boolean=} md-no-ink If present, disables ink ripple effects.
- * @param {boolean=} md-no-bar If present, disables the selection ink bar.
+ * @param {boolean=} md-no-ink-bar If present, disables the selection ink bar.
  * @param {string=}  md-align-tabs Attribute to indicate position of tab buttons: `bottom` or `top`; default is `top`
  * @param {string=} md-stretch-tabs Attribute to indicate whether or not to stretch tabs: `auto`, `always`, or `never`; default is `auto`
  * @param {boolean=} md-dynamic-height When enabled, the tab wrapper will resize based on the contents of the selected tab
+ * @param {boolean=} md-border-bottom If present, shows a solid `1px` border between the tabs and their content
  * @param {boolean=} md-center-tabs When enabled, tabs will be centered provided there is no need for pagination
  * @param {boolean=} md-no-pagination When enabled, pagination will remain off
  * @param {boolean=} md-swipe-content When enabled, swipe gestures will be enabled for the content area to jump between tabs
- * @param {boolean=} md-no-disconnect If your tab content has background tasks (ie. event listeners), you will want to include this to prevent the scope from being disconnected
+ * @param {boolean=} md-enable-disconnect When enabled, scopes will be disconnected for tabs that are not being displayed.  This provides a performance boost, but may also cause unexpected issues and is not recommended for most users.
  * @param {boolean=} md-autoselect When present, any tabs added after the initial load will be automatically selected
+ * @param {boolean=} md-no-select-click When enabled, click events will not be fired when selecting tabs
  *
  * @usage
  * <hljs lang="html">
@@ -1006,105 +1096,104 @@ function MdTabs () {
     },
     template:         function (element, attr) {
       attr[ "$mdTabsTemplate" ] = element.html();
-      return '\
-        <md-tabs-wrapper>\
-          <md-tab-data></md-tab-data>\
-          <md-prev-button\
-              tabindex="-1"\
-              role="button"\
-              aria-label="Previous Page"\
-              aria-disabled="{{!$mdTabsCtrl.canPageBack()}}"\
-              ng-class="{ \'md-disabled\': !$mdTabsCtrl.canPageBack() }"\
-              ng-if="$mdTabsCtrl.shouldPaginate"\
-              ng-click="$mdTabsCtrl.previousPage()">\
-            <md-icon md-svg-icon="md-tabs-arrow"></md-icon>\
-          </md-prev-button>\
-          <md-next-button\
-              tabindex="-1"\
-              role="button"\
-              aria-label="Next Page"\
-              aria-disabled="{{!$mdTabsCtrl.canPageForward()}}"\
-              ng-class="{ \'md-disabled\': !$mdTabsCtrl.canPageForward() }"\
-              ng-if="$mdTabsCtrl.shouldPaginate"\
-              ng-click="$mdTabsCtrl.nextPage()">\
-            <md-icon md-svg-icon="md-tabs-arrow"></md-icon>\
-          </md-next-button>\
-          <md-tabs-canvas\
-              tabindex="0"\
-              aria-activedescendant="tab-item-{{$mdTabsCtrl.tabs[$mdTabsCtrl.focusIndex].id}}"\
-              ng-focus="$mdTabsCtrl.redirectFocus()"\
-              ng-class="{\
-                  \'md-paginated\': $mdTabsCtrl.shouldPaginate,\
-                  \'md-center-tabs\': $mdTabsCtrl.shouldCenterTabs\
-              }"\
-              ng-keydown="$mdTabsCtrl.keydown($event)"\
-              role="tablist">\
-            <md-pagination-wrapper\
-                ng-class="{ \'md-center-tabs\': $mdTabsCtrl.shouldCenterTabs }"\
-                md-tab-scroll="$mdTabsCtrl.scroll($event)">\
-              <md-tab-item\
-                  tabindex="-1"\
-                  class="md-tab"\
-                  style="max-width: {{ $mdTabsCtrl.maxTabWidth + \'px\' }}"\
-                  ng-repeat="tab in $mdTabsCtrl.tabs"\
-                  role="tab"\
-                  aria-controls="tab-content-{{::tab.id}}"\
-                  aria-selected="{{tab.isActive()}}"\
-                  aria-disabled="{{tab.scope.disabled || \'false\'}}"\
-                  ng-click="$mdTabsCtrl.select(tab.getIndex())"\
-                  ng-class="{\
-                      \'md-active\':    tab.isActive(),\
-                      \'md-focused\':   tab.hasFocus(),\
-                      \'md-disabled\':  tab.scope.disabled\
-                  }"\
-                  ng-disabled="tab.scope.disabled"\
-                  md-swipe-left="$mdTabsCtrl.nextPage()"\
-                  md-swipe-right="$mdTabsCtrl.previousPage()"\
-                  md-template="::tab.label"\
-                  md-scope="::tab.parent"></md-tab-item>\
-              <md-ink-bar></md-ink-bar>\
-            </md-pagination-wrapper>\
-            <div class="md-visually-hidden md-dummy-wrapper">\
-              <md-dummy-tab\
-                  class="md-tab"\
-                  tabindex="-1"\
-                  id="tab-item-{{::tab.id}}"\
-                  role="tab"\
-                  aria-controls="tab-content-{{::tab.id}}"\
-                  aria-selected="{{tab.isActive()}}"\
-                  aria-disabled="{{tab.scope.disabled || \'false\'}}"\
-                  ng-focus="$mdTabsCtrl.hasFocus = true"\
-                  ng-blur="$mdTabsCtrl.hasFocus = false"\
-                  ng-repeat="tab in $mdTabsCtrl.tabs"\
-                  md-template="::tab.label"\
-                  md-scope="::tab.parent"></md-dummy-tab>\
-            </div>\
-          </md-tabs-canvas>\
-        </md-tabs-wrapper>\
-        <md-tabs-content-wrapper ng-show="$mdTabsCtrl.hasContent && $mdTabsCtrl.selectedIndex >= 0">\
-          <md-tab-content\
-              id="tab-content-{{::tab.id}}"\
-              role="tabpanel"\
-              aria-labelledby="tab-item-{{::tab.id}}"\
-              md-swipe-left="$mdTabsCtrl.swipeContent && $mdTabsCtrl.incrementIndex(1)"\
-              md-swipe-right="$mdTabsCtrl.swipeContent && $mdTabsCtrl.incrementIndex(-1)"\
-              ng-if="$mdTabsCtrl.hasContent"\
-              ng-repeat="(index, tab) in $mdTabsCtrl.tabs"\
-              ng-class="{\
-                \'md-no-transition\': $mdTabsCtrl.lastSelectedIndex == null,\
-                \'md-active\':        tab.isActive(),\
-                \'md-left\':          tab.isLeft(),\
-                \'md-right\':         tab.isRight(),\
-                \'md-no-scroll\':     $mdTabsCtrl.dynamicHeight\
-              }">\
-            <div\
-                md-template="::tab.template"\
-                md-connected-if="tab.isActive()"\
-                md-scope="::tab.parent"\
-                ng-if="$mdTabsCtrl.enableDisconnect || tab.shouldRender()"></div>\
-          </md-tab-content>\
-        </md-tabs-content-wrapper>\
-      ';
+      return '' +
+        '<md-tabs-wrapper> ' +
+          '<md-tab-data></md-tab-data> ' +
+          '<md-prev-button ' +
+              'tabindex="-1" ' +
+              'role="button" ' +
+              'aria-label="Previous Page" ' +
+              'aria-disabled="{{!$mdTabsCtrl.canPageBack()}}" ' +
+              'ng-class="{ \'md-disabled\': !$mdTabsCtrl.canPageBack() }" ' +
+              'ng-if="$mdTabsCtrl.shouldPaginate" ' +
+              'ng-click="$mdTabsCtrl.previousPage()"> ' +
+            '<md-icon md-svg-icon="md-tabs-arrow"></md-icon> ' +
+          '</md-prev-button> ' +
+          '<md-next-button ' +
+              'tabindex="-1" ' +
+              'role="button" ' +
+              'aria-label="Next Page" ' +
+              'aria-disabled="{{!$mdTabsCtrl.canPageForward()}}" ' +
+              'ng-class="{ \'md-disabled\': !$mdTabsCtrl.canPageForward() }" ' +
+              'ng-if="$mdTabsCtrl.shouldPaginate" ' +
+              'ng-click="$mdTabsCtrl.nextPage()"> ' +
+            '<md-icon md-svg-icon="md-tabs-arrow"></md-icon> ' +
+          '</md-next-button> ' +
+          '<md-tabs-canvas ' +
+              'tabindex="{{ $mdTabsCtrl.hasFocus ? -1 : 0 }}" ' +
+              'aria-activedescendant="tab-item-{{$mdTabsCtrl.tabs[$mdTabsCtrl.focusIndex].id}}" ' +
+              'ng-focus="$mdTabsCtrl.redirectFocus()" ' +
+              'ng-class="{ ' +
+                  '\'md-paginated\': $mdTabsCtrl.shouldPaginate, ' +
+                  '\'md-center-tabs\': $mdTabsCtrl.shouldCenterTabs ' +
+              '}" ' +
+              'ng-keydown="$mdTabsCtrl.keydown($event)" ' +
+              'role="tablist"> ' +
+            '<md-pagination-wrapper ' +
+                'ng-class="{ \'md-center-tabs\': $mdTabsCtrl.shouldCenterTabs }" ' +
+                'md-tab-scroll="$mdTabsCtrl.scroll($event)"> ' +
+              '<md-tab-item ' +
+                  'tabindex="-1" ' +
+                  'class="md-tab" ' +
+                  'ng-repeat="tab in $mdTabsCtrl.tabs" ' +
+                  'role="tab" ' +
+                  'aria-controls="tab-content-{{::tab.id}}" ' +
+                  'aria-selected="{{tab.isActive()}}" ' +
+                  'aria-disabled="{{tab.scope.disabled || \'false\'}}" ' +
+                  'ng-click="$mdTabsCtrl.select(tab.getIndex())" ' +
+                  'ng-class="{ ' +
+                      '\'md-active\':    tab.isActive(), ' +
+                      '\'md-focused\':   tab.hasFocus(), ' +
+                      '\'md-disabled\':  tab.scope.disabled ' +
+                  '}" ' +
+                  'ng-disabled="tab.scope.disabled" ' +
+                  'md-swipe-left="$mdTabsCtrl.nextPage()" ' +
+                  'md-swipe-right="$mdTabsCtrl.previousPage()" ' +
+                  'md-tabs-template="::tab.label" ' +
+                  'md-scope="::tab.parent"></md-tab-item> ' +
+              '<md-ink-bar></md-ink-bar> ' +
+            '</md-pagination-wrapper> ' +
+            '<div class="_md-visually-hidden md-dummy-wrapper"> ' +
+              '<md-dummy-tab ' +
+                  'class="md-tab" ' +
+                  'tabindex="-1" ' +
+                  'id="tab-item-{{::tab.id}}" ' +
+                  'role="tab" ' +
+                  'aria-controls="tab-content-{{::tab.id}}" ' +
+                  'aria-selected="{{tab.isActive()}}" ' +
+                  'aria-disabled="{{tab.scope.disabled || \'false\'}}" ' +
+                  'ng-focus="$mdTabsCtrl.hasFocus = true" ' +
+                  'ng-blur="$mdTabsCtrl.hasFocus = false" ' +
+                  'ng-repeat="tab in $mdTabsCtrl.tabs" ' +
+                  'md-tabs-template="::tab.label" ' +
+                  'md-scope="::tab.parent"></md-dummy-tab> ' +
+            '</div> ' +
+          '</md-tabs-canvas> ' +
+        '</md-tabs-wrapper> ' +
+        '<md-tabs-content-wrapper ng-show="$mdTabsCtrl.hasContent && $mdTabsCtrl.selectedIndex >= 0" class="_md"> ' +
+          '<md-tab-content ' +
+              'id="tab-content-{{::tab.id}}" ' +
+              'class="_md" ' +
+              'role="tabpanel" ' +
+              'aria-labelledby="tab-item-{{::tab.id}}" ' +
+              'md-swipe-left="$mdTabsCtrl.swipeContent && $mdTabsCtrl.incrementIndex(1)" ' +
+              'md-swipe-right="$mdTabsCtrl.swipeContent && $mdTabsCtrl.incrementIndex(-1)" ' +
+              'ng-if="$mdTabsCtrl.hasContent" ' +
+              'ng-repeat="(index, tab) in $mdTabsCtrl.tabs" ' +
+              'ng-class="{ ' +
+                '\'md-no-transition\': $mdTabsCtrl.lastSelectedIndex == null, ' +
+                '\'md-active\':        tab.isActive(), ' +
+                '\'md-left\':          tab.isLeft(), ' +
+                '\'md-right\':         tab.isRight(), ' +
+                '\'md-no-scroll\':     $mdTabsCtrl.dynamicHeight ' +
+              '}"> ' +
+            '<div ' +
+                'md-tabs-template="::tab.template" ' +
+                'md-connected-if="tab.isActive()" ' +
+                'md-scope="::tab.parent" ' +
+                'ng-if="$mdTabsCtrl.enableDisconnect || tab.shouldRender()"></div> ' +
+          '</md-tab-content> ' +
+        '</md-tabs-content-wrapper>';
     },
     controller:       'MdTabsController',
     controllerAs:     '$mdTabsCtrl',
@@ -1114,14 +1203,14 @@ function MdTabs () {
 
 angular
     .module('material.components.tabs')
-    .directive('mdTemplate', MdTemplate);
+    .directive('mdTabsTemplate', MdTabsTemplate);
 
-function MdTemplate ($compile, $mdUtil) {
+function MdTabsTemplate ($compile, $mdUtil) {
   return {
     restrict: 'A',
     link:     link,
     scope:    {
-      template:     '=mdTemplate',
+      template:     '=mdTabsTemplate',
       connected:    '=?mdConnectedIf',
       compileScope: '=mdScope'
     },
@@ -1152,6 +1241,6 @@ function MdTemplate ($compile, $mdUtil) {
     }
   }
 }
-MdTemplate.$inject = ["$compile", "$mdUtil"];
+MdTabsTemplate.$inject = ["$compile", "$mdUtil"];
 
 })(window, window.angular);
