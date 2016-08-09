@@ -199,6 +199,29 @@ app.controller( 'DashboardCtrl',
 		      var retrieve_graph_values = function( params ) {
 			  API.graph_values( params ).then( function( response ) {
 			      $scope.periods = [];
+
+			      var largest_cat = _(response.data).reduce( function( memo, cat ) {
+				  return cat.length > memo.length ? cat : memo;
+			      }, [] );
+			      _.chain(largest_cat)
+				  .pluck( 'date' )
+				  .each( function( date ) {
+				      _(response.data).each( function( cat ) {
+					  var value = _(cat).find( { date: date } );
+					  if ( _(value).isUndefined() ) {
+					      cat.push( { date: date,
+							  amount: 0,
+							  currency: _(cat).first().currency } );
+					  }
+				      } );
+				  } );
+			      _(response.data).each( function( cat ) {
+				  cat = _(cat).sortBy( function( month ) {
+				      return month.date;
+				  } );
+			      } );
+			      console.log( response.data )
+
 			      $scope.monthly_values = _.chain( response.data )
 				  .keys()
 				  .reverse()
