@@ -1,141 +1,85 @@
-<md-content flex="100" layout="column" layout-gt-md="row">
-	<md-card flex="20">
-		<select multiple="true" data-ng-model="graphed_accounts" style="height: 100%">
-			<option data-ng-repeat="account in accounts">{{account}}</option>
-		</select>
-	</md-card>
-	<md-card flex="75">
-		<nvd3-multi-bar-chart
-			data="monthly_values"
-			id="monthlyValues"
-			height="350"
-			showXAxis="true"
-			showYAxis="true"
-			showLegend="true"
-			interactive="true"
-			tooltips="true"
-			tooltipContent="barGraphToolTipContentFunction()"
-			rotateLabels="67"
-			margin="{left:70,top:70,bottom:70,right:125}" >
-			<svg></svg>
-		</nvd3-multi-bar-chart>
-	</md-card>
-</md-content>
+<md-content flex="100" layout="column">
+        <md-card flex="100" layout="row">
+                <md-card flex="20">
+                        <select multiple="true" data-ng-model="graphed_accounts">
+                                <option data-ng-repeat="account in accounts">{{account}}</option>
+                        </select>
+                </md-card>
+                <md-card flex="81">
+                        <nvd3-multi-bar-chart
+                                data="monthly_values"
+                                id="monthlyValues"
+                                height="300"
+                                showXAxis="true"
+                                showYAxis="true"
+                                showLegend="true"
+                                interactive="true"
+                                tooltips="true"
+                                tooltipContent="barGraphToolTipContentFunction()"
+                                rotateLabels="67"
+                                margin="{left:70,top:70,bottom:70,right:125}" >
+                                <svg></svg>
+                        </nvd3-multi-bar-chart>
+                </md-card>
+        </md-card>
 
-<md-toolbar flex="100" layout="column" layout-gt-md="row" layout-align="center center">
-	<h2>
-		<md-input-container>
-			<md-select data-ng-model="period" aria-label="what">
-				<md-option data-ng-repeat="period in periods">{{period}}</md-option>
-			</md-select>
-		</md-input-container>
-	</h2>
-</md-toolbar>
-
-<md-content flex="100" layout="column" layout-gt-md="row">
-	<md-card flex="48" layout="column"
-		data-ng-repeat="bucket in balance.buckets">
-		<md-toolbar>
-			<h4 data-ng-repeat="account in bucket.total_detailed">{{account.account}} = {{account.amount | number:2}} €</h4>
-			<!-- <md-slider discrete
-			aria-label="score threshold"
-			min="0" max="10" step="1"
-			data-ng-model="bucket.score_threshold"
-			data-ng-change="select.score_higher_than( bucket, bucket.score_threshold ); filter_data()">
-			</md-slider> -->
-			<select multiple
-				data-ng-model="bucket.accounts_selected"
-				data-ng-options="account.account for account in bucket.raw_data | orderBy:'account'"
-				data-ng-change="filter_data()">
-				<option value=''>...</option>
-			</select>
-		</md-toolbar>
-		<md-content>
-			<md-card>
-				<nvd3-pie-chart
-					data="bucket.data"
-					x="xFunction()"
-					y="yFunction()"
-					height="300"
-					margin="{left:0,top:0,bottom:0,right:0}"
-					color="color()"
-					tooltips="true"
-					tooltipcontent="toolTipContentFunction()"
-					showLabels="true"
-					labelType="value"
-					donut="true"
-					donutRatio="0.25">
-					<svg></svg>
-				</nvd3-pie-chart>
-			</md-card>
-			<md-card>
-				<table class="table">
-					<thead>
-						<tr>
-							<th><md-buton data-ng-click="bucket.order_by( 'account' )">account</md-buton></th>
-							<th><md-buton data-ng-click="bucket.order_by( 'amount' )">amount</md-buton></th>
-							<th><md-buton data-ng-click="bucket.order_by( 'score' )">score</md-buton></th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr data-ng-repeat="account in bucket.data | orderBy:bucket.orderBy:bucket.orderDesc"
-							data-ng-class="{'even': $even, 'odd': $odd}"
-							style="border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}">
-							<td style="border-bottom:1px solid {{coloring_score( account.score )}}">
-								{{account.account}}
-							</td>
-							<td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
-								{{account.amount | number:2}} €
-							</td>
-							<td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
-								{{account.score}}
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</md-card>
-		</md-content>
-	</md-card>
-	<!-- <md-card flex="48" layout="column">
-	<table class="table">
-	<thead>
-	<tr>
-	<th style="width: 11%">Account</th>
-	<th style="width: 3%">Spent</th>
-	<th style="width: 3%">Budgeted</th>
-	<th style="width: 3%">Percentage</th>
-	<th>Progress</th>
-	</tr>
-	</thead>
-	<tbody>
-	<tr data-ng-repeat="account in budget"
-	data-ng-class="{'even': $even, 'odd': $odd}">
-	<td>
-	{{account.account}}
-	</td>
-	<td style="text-align: right;">
-	{{account.amount | number:2}}{{account.currency}}
-	</td>
-	<td style="text-align: right;">
-	<span data-ng-if="account.percentage >= 0">{{account.budget | number:2}}{{account.currency}}</span>
-	<span data-ng-if="account.percentage < 0">
-	{{balance.buckets[1].raw_total - total_budget | number:2}}{{account.currency}}
-	</span>
-	</td>
-	<td style="text-align: right;">
-	<span data-ng-if="account.percentage >= 0">{{account.percentage | number:2}}%</span>
-	<span data-ng-if="account.percentage < 0">
-	{{( account.amount / ( balance.buckets[1].raw_total - total_budget ) ) * 100 | number:2}}%
-	</span>
-	</td>
-	<td>
-	<md-progress-linear
-	ng-class="{'md-warn': account.percentage > 100, 'md-warn md-hue-3': account.account == '(unbudgeted)' }"
-	md-mode="determinate"
-	value="{{account.percentage}}"></md-progress-linear>
-	</td>
-	</tr>
-	</tbody>
-	</table>
-	</md-card> -->
+        <md-card flex="100" layout="column"
+data-ng-repeat="bucket in balance.buckets">
+            <md-toolbar>
+                <span data-ng-repeat="account in bucket.total_detailed">{{account.account}} = {{account.amount | number:2}} €</span>
+            </md-toolbar>
+            <md-content layout="row">
+                <md-card flex="20">
+                    <select multiple
+                            data-ng-model="bucket.accounts_selected"
+                            data-ng-options="account.account for account in bucket.raw_data | orderBy:'account'"
+                            data-ng-change="filter_data()">
+                        <option value=''>...</option>
+                    </select>
+                </md-card>
+                <md-card flex="20">
+                    <nvd3-pie-chart
+                        data="bucket.data"
+                        x="xFunction()"
+                        y="yFunction()"
+                        height="300"
+                        margin="{left:0,top:0,bottom:0,right:0}"
+                        color="color()"
+                        tooltips="true"
+                        tooltipcontent="toolTipContentFunction()"
+                        showLabels="true"
+                        labelType="value"
+                        donut="true"
+                        donutRatio="0.25">
+                        <svg></svg>
+                    </nvd3-pie-chart>
+                </md-card>
+                <md-card flex="56">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th><md-buton data-ng-click="bucket.order_by( 'account' )">account</md-buton></th>
+                                <th><md-buton data-ng-click="bucket.order_by( 'amount' )">amount</md-buton></th>
+                                <th><md-buton data-ng-click="bucket.order_by( 'score' )">score</md-buton></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-ng-repeat="account in bucket.data | orderBy:bucket.orderBy:bucket.orderDesc"
+                                data-ng-class="{'even': $even, 'odd': $odd}"
+                                style="border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}">
+                                <td style="border-bottom:1px solid {{coloring_score( account.score )}}">
+                                    {{account.account}}
+                                </td>
+                                <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
+                                    {{account.amount | number:2}} €
+                                </td>
+                                <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
+                                    {{account.score}}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </md-card>
+            </md-content>
+        </md-card>
 </md-content>
