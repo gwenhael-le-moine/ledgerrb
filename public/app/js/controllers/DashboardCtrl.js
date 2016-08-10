@@ -228,7 +228,7 @@ app.controller( 'DashboardCtrl',
                                                                       .map( function( key ) {
                                                                           var multiplicator = ( key == "Income" ) ? -1 : 1;
                                                                           return { key: key,
-                                                                                   values: _(response.data[ key ]).map( function( value ) {
+                                                                                   values: _.chain(response.data[ key ]).map( function( value ) {
                                                                                        var date = new Date( value.date );
                                                                                        var period = date.getFullYear() + '-' + ( date.getMonth() < 9 ? '0' : '' ) + ( date.getMonth() + 1 );
                                                                                        $scope.periods.push( period );
@@ -237,6 +237,8 @@ app.controller( 'DashboardCtrl',
                                                                                                 x: period,
                                                                                                 y: parseInt( value.amount ) * multiplicator };
                                                                                    } )
+                                                                                   .sortBy( function( item ) { return item.x; } )
+                                                                                   .value()
                                                                                  };
                                                                       } )
                                                                       .value()
