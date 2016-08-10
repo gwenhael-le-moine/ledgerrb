@@ -6,25 +6,13 @@
                         </select>
                 </md-card>
                 <md-card flex="81">
-                        <nvd3-multi-bar-chart
-                                data="monthly_values"
-                                id="monthlyValues"
-                                height="300"
-                                showXAxis="true"
-                                showYAxis="true"
-                                showLegend="true"
-                                interactive="true"
-                                tooltips="true"
-                                tooltipContent="barGraphToolTipContentFunction()"
-                                rotateLabels="67"
-                                margin="{left:70,top:70,bottom:70,right:125}" >
-                                <svg></svg>
-                        </nvd3-multi-bar-chart>
+                    <nvd3 data="graphiques.monthly_values.data"
+                          options="graphiques.monthly_values.options"></nvd3>
                 </md-card>
         </md-card>
-
+        <h1>{{period | amDateFormat:'MMMM YYYY'}}</h1>
         <md-card flex="100" layout="column"
-data-ng-repeat="bucket in balance.buckets">
+                 data-ng-repeat="bucket in balance.buckets">
             <md-toolbar>
                 <span data-ng-repeat="account in bucket.total_detailed">{{account.account}} = {{account.amount | number:2}} €</span>
             </md-toolbar>
@@ -38,21 +26,9 @@ data-ng-repeat="bucket in balance.buckets">
                     </select>
                 </md-card>
                 <md-card flex="20">
-                    <nvd3-pie-chart
-                        data="bucket.data"
-                        x="xFunction()"
-                        y="yFunction()"
-                        height="300"
-                        margin="{left:0,top:0,bottom:0,right:0}"
-                        color="color()"
-                        tooltips="true"
-                        tooltipcontent="toolTipContentFunction()"
-                        showLabels="true"
-                        labelType="value"
-                        donut="true"
-                        donutRatio="0.25">
-                        <svg></svg>
-                    </nvd3-pie-chart>
+                    <nvd3 data="bucket.data"
+                          options="bucket.pie_graph_options" >
+                    </nvd3>
                 </md-card>
                 <md-card flex="56">
                     <table class="table">
