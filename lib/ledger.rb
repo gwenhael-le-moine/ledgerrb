@@ -63,6 +63,7 @@ module Ledger
     period = period.nil? ? '' : "-p '#{period}'"
     depth = depth.nil? ? '' : "--depth #{depth}"
     operation = cleared ? 'cleared' : 'balance'
+    
     run( "--flat --no-total --exchange '#{CURRENCY}' #{period} #{depth}", operation, categories )
       .split( "\n" )
       .map do |line|
@@ -72,7 +73,20 @@ module Ledger
         amount: line_array[ 0 ].tr( SEPARATOR, '.' ).to_f }
     end
   end
-
+  
+  # def int_treefied_balance( node )
+  #   return { name: node[:account], size: node[:amount] } unless node[:account].include( ':' )
+    
+  #   { name: node[:account].split(':').first,
+  #     children: int_treefied_balance( ... ) }
+  # end
+  
+  # def treefeid_balance( cleared = false, depth = nil, period = nil, categories = '' )
+  #   bal = balance( cleared, depth, period, categories )
+    
+    
+  # end
+  
   def cleared
     run( "--flat --no-total --exchange '#{CURRENCY}'", 'cleared', 'Assets Equity' )
       .split( "\n" )
