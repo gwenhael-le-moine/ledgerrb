@@ -25,37 +25,37 @@
                         <option value=''>...</option>
                     </select>
                 </md-card>
-                <md-card flex="20">
+                <md-card flex="78">
                     <nvd3 data="bucket.data"
                           options="bucket.pie_graph_options" >
                     </nvd3>
                 </md-card>
-                <md-card flex="56">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th><md-buton data-ng-click="bucket.order_by( 'account' )">account</md-buton></th>
-                                <th><md-buton data-ng-click="bucket.order_by( 'amount' )">amount</md-buton></th>
-                                <th><md-buton data-ng-click="bucket.order_by( 'score' )">score</md-buton></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr data-ng-repeat="account in bucket.data | orderBy:bucket.orderBy:bucket.orderDesc"
-                                data-ng-class="{'even': $even, 'odd': $odd}"
-                                style="border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}">
-                                <td style="border-bottom:1px solid {{coloring_score( account.score )}}">
-                                    {{account.account}}
-                                </td>
-                                <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
-                                    {{account.amount | number:2}} €
-                                </td>
-                                <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
-                                    {{account.score}}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </md-card>
+                <!-- <md-card flex="56">
+                     <table class="table">
+                     <thead>
+                     <tr>
+                     <th><md-buton data-ng-click="bucket.order_by( 'account' )">account</md-buton></th>
+                     <th><md-buton data-ng-click="bucket.order_by( 'amount' )">amount</md-buton></th>
+                     <th><md-buton data-ng-click="bucket.order_by( 'score' )">score</md-buton></th>
+                     </tr>
+                     </thead>
+                     <tbody>
+                     <tr data-ng-repeat="account in bucket.data | orderBy:bucket.orderBy:bucket.orderDesc"
+                     data-ng-class="{'even': $even, 'odd': $odd}"
+                     style="border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}">
+                     <td style="border-bottom:1px solid {{coloring_score( account.score )}}">
+                     {{account.account}}
+                     </td>
+                     <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
+                     {{account.amount | number:2}} €
+                     </td>
+                     <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
+                     {{account.score}}
+                     </td>
+                     </tr>
+                     </tbody>
+                     </table>
+                     </md-card> -->
             </md-content>
         </md-card>
 </md-content>

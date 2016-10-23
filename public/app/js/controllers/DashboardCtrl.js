@@ -119,14 +119,19 @@ app.controller( 'DashboardCtrl',
                           };
 
                           this.pie_graph_options = { chart: { type: 'pieChart',
+                                                              donut: true,
+                                                              donutRatio: 0.25,
                                                               height: 300,
                                                               x: function( d ) { return d.account; },
                                                               y: function( d ) { return d.amount; },
                                                               showLabels: false,
-                                                              showLegend: false,
+                                                              showLegend: true,
+                                                              legendPosition: 'right',
+                                                              showTooltipPercent: true,
                                                               duration: 500,
                                                               labelThreshold: 0.01,
-                                                              labelSunbeamLayout: true
+                                                              labelSunbeamLayout: true,
+                                                              donutLabelsOutside: true
                                                             } };
                       };
 
@@ -202,48 +207,53 @@ app.controller( 'DashboardCtrl',
                                   } );
                               } );
 
-                              $scope.graphiques = { monthly_values: { options: { chart: { type: 'multiBarChart',
-                                                                                          height: 300,
-                                                                                          showControls: false,
-                                                                                          showLegend: true,
-                                                                                          showLabels: true,
-                                                                                          stacked: false,
-                                                                                          duration: 500,
-                                                                                          reduceXTicks: false,
-                                                                                          rotateLabels: 67,
-                                                                                          labelSunbeamLayout: true,
-                                                                                          useInteractiveGuideline: false,
-                                                                                          multibar: {
-                                                                                              dispatch: {
-                                                                                                  elementClick: function( event ) {
-                                                                                                      $scope.period = event.data.x;
-                                                                                                      retrieve_period_detailed_data();
-                                                                                                  }
-                                                                                              }
-                                                                                          }}
-                                                                               },
-                                                                      data: _.chain( response.data )
-                                                                      .keys()
-                                                                      .reverse()
-                                                                      .map( function( key ) {
-                                                                          var multiplicator = ( key == "Income" ) ? -1 : 1;
-                                                                          return { key: key,
-                                                                                   values: _.chain(response.data[ key ]).map( function( value ) {
-                                                                                       var date = new Date( value.date );
-                                                                                       var period = date.getFullYear() + '-' + ( date.getMonth() < 9 ? '0' : '' ) + ( date.getMonth() + 1 );
-                                                                                       $scope.periods.push( period );
+                              $scope.graphiques = {
+                                  monthly_values: {
+                                      options: {
+                                          chart: {
+                                              type: 'multiBarChart',
+                                              height: 300,
+                                              showControls: false,
+                                              showLegend: true,
+                                              showLabels: true,
+                                              stacked: false,
+                                              duration: 500,
+                                              reduceXTicks: false,
+                                              rotateLabels: 67,
+                                              labelSunbeamLayout: true,
+                                              useInteractiveGuideline: false,
+                                              multibar: {
+                                                  dispatch: {
+                                                      elementClick: function( event ) {
+                                                          $scope.period = event.data.x;
+                                                          retrieve_period_detailed_data();
+                                                      }
+                                                  }
+                                              }
+                                          }
+                                      },
+                                      data: _.chain( response.data )
+                                          .keys()
+                                          .reverse()
+                                          .map( function( key ) {
+                                              var multiplicator = ( key == "Income" ) ? -1 : 1;
+                                              return { key: key,
+                                                       values: _.chain(response.data[ key ]).map( function( value ) {
+                                                           var date = new Date( value.date );
+                                                           var period = date.getFullYear() + '-' + ( date.getMonth() < 9 ? '0' : '' ) + ( date.getMonth() + 1 );
+                                                           $scope.periods.push( period );
 
-                                                                                       return { key: key,
-                                                                                                x: period,
-                                                                                                y: parseInt( value.amount ) * multiplicator };
-                                                                                   } )
-                                                                                   .sortBy( function( item ) { return item.x; } )
-                                                                                   .value()
-                                                                                 };
-                                                                      } )
-                                                                      .value()
-                                                                    }
-                                                  };
+                                                           return { key: key,
+                                                                    x: period,
+                                                                    y: parseInt( value.amount ) * multiplicator };
+                                                       } )
+                                                       .sortBy( function( item ) { return item.x; } )
+                                                       .value()
+                                                     };
+                                          } )
+                                          .value()
+                                  }
+                              };
 
                               $scope.periods = _.chain($scope.periods).uniq().sort().reverse().value();
                               $scope.period = _($scope.periods).first();
