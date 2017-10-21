@@ -6,14 +6,14 @@ app.config( [ '$stateProvider', '$urlRouterProvider',
 			  url: '',
 			  views: {
 			      'main': {
-				  templateUrl: 'js/templates/dashboard.html',
+				  templateUrl: 'app/js/templates/dashboard.html',
 				  controller: 'DashboardCtrl'
 			      }
 			  }
 		      } )
 		      .state( '404', {
 			  url: '/404',
-			  templateUrl: 'js/templates/404.html'
+			  templateUrl: 'app/js/templates/404.html'
 		      } );
 
 	      }
