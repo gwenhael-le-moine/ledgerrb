@@ -34,3 +34,4 @@
 .rvmrc
 /thin.*
 /bundle/
+vendor/
