@@ -2,13 +2,7 @@
 
 ENV['RACK_ENV'] = 'development'
 task :load_config do
-  require 'rubygems'
-  require 'bundler'
-
-  Bundler.require( :default, ENV['RACK_ENV'].to_sym )     # require tout les gems définis dans Gemfile
-
-  require_relative '../lib/ledger'
-  require_relative '../config/options'
+  require_relative '../app'
 end
 
 desc 'Open pry with DB environment setup'

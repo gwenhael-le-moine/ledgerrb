@@ -10,7 +10,7 @@
                           options="graphiques.monthly_values.options"></nvd3>
                 </md-card>
         </md-card>
-        <h1>{{period | amDateFormat:'MMMM YYYY'}}</h1>
+        <h1 style="text-align: center;">{{period | amDateFormat:'MMMM YYYY'}}</h1>
         <md-card flex="100" layout="column"
                  ng:repeat="bucket in balance.buckets">
             <md-toolbar>
