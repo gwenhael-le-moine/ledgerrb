@@ -11,7 +11,6 @@ GEM
     rack (2.0.3)
     rack-protection (2.0.0)
       rack
-    rack-rewrite (1.5.1)
     rake (12.2.1)
     sinatra (2.0.0)
       mustermann (~> 1.0)
@@ -26,9 +25,8 @@ PLATFORMS
 DEPENDENCIES
   pry
   puma
-  rack-rewrite
   rake
   sinatra
 
 BUNDLED WITH
-   1.14.6
+   1.16.0
