@@ -2,7 +2,7 @@
 
 require "csv"
 
-# Ruby wrapper module for calling ledger
+# Crystal wrapper module for calling ledger
 module Ledger
   @binary = "ledger"
   @file = ENV[ "LEDGER_FILE" ]
