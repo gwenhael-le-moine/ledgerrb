@@ -18,8 +18,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
     }
 ]);
 app.component('dashboard', {
-    controller: ['$filter', 'API',
-        function ($filter, API) {
+    controller: ['$filter', '$q', 'API',
+        function ($filter, $q, API) {
             var ctrl = this;
             ctrl.xFunction = function () {
                 return function (d) {
@@ -160,13 +160,14 @@ app.component('dashboard', {
             };
             ctrl.depth = 99;
             var retrieve_period_detailed_data = function () {
+                console.log(ctrl.period);
                 ctrl.balance = {
                     buckets: [new Bucket('Expenses Liabilities Equity Income', ctrl.period),
                         new Bucket('Assets', null)],
                     details: {}
                 };
-                _(ctrl.balance.buckets).each(function (bucket) {
-                    API.balance({
+                return $q.all(_(ctrl.balance.buckets).map(function (bucket) {
+                    return API.balance({
                         period: bucket.period,
                         categories: bucket.categories,
                         depth: ctrl.depth
@@ -192,18 +193,19 @@ app.component('dashboard', {
                         bucket.accounts_selected = bucket.raw_data;
                         ctrl.filter_data();
                     });
-                });
+                }));
             };
             var retrieve_accounts = function () {
-                API.accounts()
+                return $q.when(API.accounts()
                     .then(function (response) {
                     ctrl.accounts = response.data.map(function (account_ary) {
                         return account_ary.join(':');
                     });
-                });
+                }));
             };
             var retrieve_graph_values = function (params) {
-                API.graph_values(params).then(function (response) {
+                return $q.when(API.graph_values(params)
+                    .then(function (response) {
                     ctrl.periods = [];
                     var largest_cat = _(response.data).reduce(function (memo, cat) {
                         return cat.length > memo.length ? cat : memo;
@@ -278,13 +280,17 @@ app.component('dashboard', {
                     };
                     ctrl.periods = _.chain(ctrl.periods).uniq().sort().reverse().value();
                     ctrl.period = _(ctrl.periods).first();
-                });
+                }));
             };
             ctrl.graphed_accounts = ['Expenses', 'Income'];
-            retrieve_accounts();
-            retrieve_period_detailed_data();
-            retrieve_graph_values({ period: '',
-                categories: ctrl.graphed_accounts.join(' ') });
+            retrieve_accounts().then(function (response) {
+                retrieve_graph_values({
+                    period: '',
+                    categories: ctrl.graphed_accounts.join(' ')
+                }).then(function (response) {
+                    retrieve_period_detailed_data();
+                });
+            });
         }
     ],
     template: "\n<md-content flex=\"100\" layout=\"column\">\n  <md-card flex=\"100\" layout=\"row\">\n    <md-card flex=\"20\">\n      <select style=\"height: 100%;\" multiple ng:model=\"$ctrl.graphed_accounts\">\n        <option ng:repeat=\"account in $ctrl.accounts\">{{account}}</option>\n      </select>\n    </md-card>\n    <md-card flex=\"81\">\n      <nvd3 data=\"$ctrl.graphiques.monthly_values.data\"\n            options=\"$ctrl.graphiques.monthly_values.options\"></nvd3>\n    </md-card>\n  </md-card>\n  <h1 style=\"text-align: center;\">{{$ctrl.period | amDateFormat:'MMMM YYYY'}}</h1>\n  <md-card flex=\"100\" layout=\"column\"\n           ng:repeat=\"bucket in $ctrl.balance.buckets\">\n    <md-toolbar>\n      <span ng:repeat=\"account in bucket.total_detailed\">{{account.account}} = {{account.amount | number:2}} \u20AC</span>\n    </md-toolbar>\n    <md-content layout=\"row\">\n      <md-card flex=\"20\">\n        <select style=\"height: 100%;\" multiple\n                ng:model=\"bucket.accounts_selected\"\n                ng:options=\"account.account for account in bucket.raw_data | orderBy:'account'\"\n                ng:change=\"filter_data()\">\n          <option value=''>...</option>\n        </select>\n      </md-card>\n      <md-card flex=\"78\">\n        <nvd3 data=\"bucket.data\"\n              options=\"bucket.pie_graph_options\" >\n        </nvd3>\n      </md-card>\n      <!-- <md-card flex=\"56\">\n           <table class=\"table\">\n             <thead>\n               <tr>\n                 <th><md-buton ng:click=\"bucket.order_by( 'account' )\">account</md-buton></th>\n                 <th><md-buton ng:click=\"bucket.order_by( 'amount' )\">amount</md-buton></th>\n                 <th><md-buton ng:click=\"bucket.order_by( 'score' )\">score</md-buton></th>\n               </tr>\n             </thead>\n             <tbody>\n               <tr ng:repeat=\"account in bucket.data | orderBy:bucket.orderBy:bucket.orderDesc\"\n                   ng:class=\"{'even': $even, 'odd': $odd}\"\n                   style=\"border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}\">\n                 <td style=\"border-bottom:1px solid {{coloring_score( account.score )}}\">\n                   {{account.account}}\n                 </td>\n                 <td style=\"text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}\">\n                   {{account.amount | number:2}} \u20AC\n                 </td>\n                 <td style=\"text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}\">\n                   {{account.score}}\n                 </td>\n               </tr>\n             </tbody>\n           </table>\n      </md-card> -->\n    </md-content>\n  </md-card>\n</md-content>\n"
