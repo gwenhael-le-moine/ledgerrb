@@ -1,6 +1,8 @@
 #!/bin/sh
 
-CWD=$(pwd)
+# CWD=$(dirname $0)
+
+# cd $cwd
 
 PIDFILE=./puma.pid
 SERVER='bundle exec puma'
