@@ -4,108 +4,36 @@ app.component('dashboard',
       function($filter, $q, API) {
         let ctrl = this;
 
-        ctrl.xFunction = function() {
-          return function(d) {
-            return d.account;
-          };
-        };
-        ctrl.yFunction = function() {
-          return function(d) {
-            return d.amount;
-          };
-        };
-        ctrl.toolTipContentFunction = function() {
-          return function(key, x, y, e, graph) {
-            let details = ctrl.balance.details[key];
-            return '<md-content><h3>' + key + '</h3>' + '<table>' + _(details).map(function(transaction) {
-              return '<tr><td>' + transaction.date + '</td><td>' + transaction.payee + '</td><td style="text-align: right">' + $filter('number')(transaction.amount, 2) + ' ' + transaction.currency + '</td></tr>';
-            }).join('') + '<tr><th></th><th>Total :</th><th>' + x + ' €</th></tr>' + '</table></md-content>';
-          };
-        };
+        ctrl.filter_data = function(bucket) {
+          bucket.data = [{ key: bucket.categories, values: [] }];
 
-        // compute an account's score: from 1 (good) to 10 (bad), 0 is neutral/undecided
-        let score_account = function(account) {
-          if (account.match(/^Income/)) {
-            return -10;
-          } else if (account.match(/^Expenses:(courses|Hang)$/)) {
-            return 1;
-          } else if (account.match(/^Expenses:Home/)) {
-            return 1;
-          } else if (account.match(/^Expenses:Health/)) {
-            return 1;
-          } else if (account.match(/^Expenses:Car/)) {
-            return 4;
-          } else if (account.match(/^Expenses:(Food|Transport)/)) {
-            return 5;
-          } else if (account.match(/^Expenses:(Shopping|Leisure)/)) {
-            return 9;
-          } else if (account.match(/^Expenses:Gadgets/)) {
-            return 10;
-          } else if (account.match(/^Liabilities/)) {
-            return 0;
-          } else if (account.match(/^Assets/)) {
-            return -100;
+          if (_(bucket.accounts_selected).isEmpty() && bucket.score_threshold === 0) {
+            bucket.data[0].values = bucket.raw_data;
           } else {
-            return 0;
-          }
-        };
-
-        ctrl.coloring_score = function(score) {
-          let adjusted_score = score;
-          let color_scale = ['#99f', '#0f0', '#3f0', '#6f0', '#9f0', '#cf0', '#fc0', '#f90', '#f60', '#f30', '#f00'];
-
-          if (score <= -100) {
-            // Assets
-            adjusted_score = (score * -1) - 100;
-            color_scale = ['#f0f'];
-          } else if (score <= -10) {
-            // Income
-            adjusted_score = (score * -1) - 10;
-            color_scale = ['#360'];
+            _(bucket.accounts_selected).each(function(account_selected) {
+              bucket.data[0].values = bucket.data[0].values.concat($filter('filter')(bucket.raw_data, account_selected, true));
+            });
           }
 
-          return color_scale[adjusted_score];
-        };
-
-        ctrl.color = function() {
-          return function(d, i) {
-            return ctrl.coloring_score(score_account(d.data.account));
-          };
-        };
-
-        ctrl.filter_data = function() {
-          _(ctrl.balance.buckets).each(function(bucket) {
-            bucket.data = [{ key: 'accounts', values: [] }];
-
-            if (_(bucket.accounts_selected).isEmpty() && bucket.score_threshold === 0) {
-              bucket.data[0].values = bucket.raw_data;
-            } else {
-              _(bucket.accounts_selected).each(function(account_selected) {
-                bucket.data[0].values = bucket.data[0].values.concat($filter('filter')(bucket.raw_data, account_selected, true));
-              });
-            }
-
-            bucket.total_detailed = _.chain(bucket.data[0].values)
-              .groupBy(function(account) {
-                return account.account.split(':')[0];
-              })
-              .each(function(category) {
-                category.total = _(category).reduce(function(memo, account) {
-                  return memo + account.amount;
-                }, 0);
-              })
-              .value();
-            bucket.total_detailed = _.chain(bucket.total_detailed)
-              .keys()
-              .map(function(key) {
-                return {
-                  account: key,
-                  amount: bucket.total_detailed[key].total
-                };
-              })
-              .value();
-
-          });
+          bucket.total_detailed = _.chain(bucket.data[0].values)
+            .groupBy(function(account) {
+              return account.account.split(':')[0];
+            })
+            .each(function(category) {
+              category.total = _(category).reduce(function(memo, account) {
+                return memo + account.amount;
+              }, 0);
+            })
+            .value();
+          bucket.total_detailed = _.chain(bucket.total_detailed)
+            .keys()
+            .map(function(key) {
+              return {
+                account: key,
+                amount: bucket.total_detailed[key].total
+              };
+            })
+            .value();
         };
 
         let Bucket = function(categories, period) {
@@ -125,7 +53,6 @@ app.component('dashboard',
 
           this.graph_options = {
             chart: {
-              //type: 'discreteBarChart',
               type: 'multiBarHorizontalChart',
               height: 600,
               margin: {
@@ -151,10 +78,26 @@ app.component('dashboard',
 
         ctrl.depth = 99;
 
+        let merge_buckets = function(buckets) {
+          let first_bucket = ctrl.balance.buckets.shift();
+          ctrl.balance.buckets = [_(ctrl.balance.buckets).reduce(function(memo, bucket) {
+            memo.categories += ` ${bucket.categories}`;
+            memo.graph_options.chart.height += bucket.graph_options.chart.height;
+            memo.raw_data = memo.raw_data.concat(bucket.raw_data);
+            memo.data.push(bucket.data[0]);
+            memo.total_detailed = memo.total_detailed.concat(bucket.total_detailed);
+
+            return memo;
+          }, first_bucket)];
+          console.log(ctrl.balance.buckets)
+        };
+
         let retrieve_period_detailed_data = function() {
           ctrl.balance = {
-            buckets: [new Bucket('Expenses Liabilities Equity Income', ctrl.period)],// ,
-            // new Bucket('Assets', null)],
+            buckets: [new Bucket('Expenses', ctrl.period),
+            new Bucket('Liabilities', ctrl.period),
+            new Bucket('Equity', ctrl.period),
+            new Bucket('Income', ctrl.period)],
             details: {}
           };
 
@@ -166,10 +109,6 @@ app.component('dashboard',
             })
               .then(function(response) {
                 bucket.raw_data = _.chain(response.data)
-                  .map(function(account) {
-                    account.score = score_account(account.account);
-                    return account;
-                  })
                   .sortBy(function(account) {
                     return 1 / account.amount;
                   })
@@ -183,9 +122,14 @@ app.component('dashboard',
                 }, 0);
                 bucket.accounts_selected = bucket.raw_data;
 
-                ctrl.filter_data();
+                ctrl.filter_data(bucket);
+
+                bucket.graph_options.chart.height = 60 + (15 * bucket.data[0].values.length);
               });
-          }));
+          }))
+            .then(function() {
+              ctrl.buckets = merge_buckets(ctrl.buckets);
+            });
         };
 
         let retrieve_accounts = function() {
@@ -294,16 +238,17 @@ app.component('dashboard',
         });
       }
     ],
-    template: `
-<md-content flex="100" layout="column">
-<md-card flex="100" layout="row">
-<md-card flex="20">
-<select style="height: 100%;" multiple ng:model="$ctrl.graphed_accounts">
-<option ng:repeat="account in $ctrl.accounts">{{account}}</option>
-</select>
-</md-card>
-<md-card flex="81">
-<nvd3 data="$ctrl.graphiques.monthly_values.data"
+
+                                                                                     template: `
+                                                                                     <md-content flex="100" layout="column">
+                                                                                       <md-card flex="100" layout="row">
+                                                                                         <md-card flex="20">
+                                                                                           <select style="height: 100%;" multiple ng:model="$ctrl.graphed_accounts">
+                                                                                             <option ng:repeat="account in $ctrl.accounts">{{account}}</option>
+                                                                                           </select>
+                                                                                         </md-card>
+                                                                                         <md-card flex="81">
+                                                                                           <nvd3 data="$ctrl.graphiques.monthly_values.data"
                                                                                                  options="$ctrl.graphiques.monthly_values.options"></nvd3>
                                                                                          </md-card>
                                                                                        </md-card>
