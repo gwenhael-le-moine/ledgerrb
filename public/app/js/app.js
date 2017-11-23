@@ -141,20 +141,20 @@ app.component('dashboard', {
                 };
                 this.graph_options = {
                     chart: {
-                        type: 'discreteBarChart',
+                        type: 'multiBarHorizontalChart',
                         height: 600,
                         margin: {
                             "top": 20,
                             "right": 20,
-                            "bottom": 200,
-                            "left": 55
+                            "bottom": 20,
+                            "left": 200
                         },
                         x: function (d) { return d.account; },
                         y: function (d) { return d.amount; },
                         valueFormat: function (d) { return d + " \u20AC"; },
                         showYAxis: false,
                         showValues: true,
-                        rotateLabels: -67,
+                        showLegend: false,
                         showTooltipPercent: true,
                         duration: 500,
                         labelThreshold: 0.01,
