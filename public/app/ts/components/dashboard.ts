@@ -3,6 +3,48 @@ app.component('dashboard',
     controller: ['$filter', '$q', 'API',
       function($filter, $q, API) {
         let ctrl = this;
+        ctrl.depth = 99;
+        ctrl.graphed_accounts = ['Expenses', 'Income'];
+
+        let Bucket = function(categories, period) {
+          let _this = this;
+          this.categories = categories;
+          this.period = period;
+          this.score_threshold = 0;
+          this.orderBy = 'amount';
+          this.orderDesc = false;
+          this.order_by = function(field) {
+            if (_this.orderBy == field) {
+              _this.orderDesc = !_this.orderDesc;
+            } else {
+              _this.orderBy = field;
+            }
+          };
+
+          this.graph_options = {
+            chart: {
+              type: 'multiBarHorizontalChart',
+              height: 600,
+              margin: {
+                top: 20,
+                right: 20,
+                bottom: 20,
+                left: 200
+              },
+              x: function(d) { return d.account; },
+              y: function(d) { return d.amount; },
+              valueFormat: function(d) { return `${d} €`; },
+              showYAxis: false,
+              showValues: true,
+              showLegend: false,
+              showTooltipPercent: true,
+              duration: 500,
+              labelThreshold: 0.01,
+              labelSunbeamLayout: true,
+              labelsOutside: true
+            }
+          };
+        };
 
         ctrl.filter_data = function(bucket) {
           bucket.data = [{ key: bucket.categories, values: [] }];
@@ -35,48 +77,6 @@ app.component('dashboard',
             })
             .value();
         };
-
-        let Bucket = function(categories, period) {
-          let _this = this;
-          this.categories = categories;
-          this.period = period;
-          this.score_threshold = 0;
-          this.orderBy = 'amount';
-          this.orderDesc = false;
-          this.order_by = function(field) {
-            if (_this.orderBy == field) {
-              _this.orderDesc = !_this.orderDesc;
-            } else {
-              _this.orderBy = field;
-            }
-          };
-
-          this.graph_options = {
-            chart: {
-              type: 'multiBarHorizontalChart',
-              height: 600,
-              margin: {
-                "top": 20,
-                "right": 20,
-                "bottom": 20,
-                "left": 200
-              },
-              x: function(d) { return d.account; },
-              y: function(d) { return d.amount; },
-              valueFormat: function(d) { return `${d} €`; },
-              showYAxis: false,
-              showValues: true,
-              showLegend: false,
-              showTooltipPercent: true,
-              duration: 500,
-              labelThreshold: 0.01,
-              labelSunbeamLayout: true,
-              labelsOutside: true
-            }
-          };
-        };
-
-        ctrl.depth = 99;
 
         let merge_buckets = function(buckets) {
           let first_bucket = ctrl.balance.buckets.shift();
@@ -135,7 +135,8 @@ app.component('dashboard',
         let retrieve_accounts = function() {
           return $q.when(API.accounts()
             .then(function(response) {
-              ctrl.accounts = response.data.map(function(account_ary) {
+              ctrl.raw_accounts = response.data;
+              ctrl.accounts = ctrl.raw_accounts.map(function(account_ary) {
                 return account_ary.join(':');
               });
             }));
@@ -225,21 +226,20 @@ app.component('dashboard',
             }));
         };
 
-        ctrl.graphed_accounts = ['Expenses', 'Income'];
-
-        retrieve_accounts().then(function(response) {
-          retrieve_graph_values({
-            period: '',
-            categories: ctrl.graphed_accounts.join(' ')
-          }).then(function(response) {
+        retrieve_accounts()
+          .then(function(response) {
+            return retrieve_graph_values({
+              period: '',
+              categories: ctrl.graphed_accounts.join(' ')
+            });
+          })
+          .then(function(response) {
             retrieve_period_detailed_data();
-
           });
-        });
       }
     ],
 
-                                                                                     template: `
+    template: `
                                                                                      <md-content flex="100" layout="column">
                                                                                        <md-card flex="100" layout="row">
                                                                                          <md-card flex="20">
@@ -252,56 +252,20 @@ app.component('dashboard',
                                                                                                  options="$ctrl.graphiques.monthly_values.options"></nvd3>
                                                                                          </md-card>
                                                                                        </md-card>
-                                                                                       <h1 style="text-align: center;">{{$ctrl.period | amDateFormat:'MMMM YYYY'}}</h1>
-                                                                                       <md-card flex="100" layout="column"
+
+<h1 style="text-align: center;">{{$ctrl.period | amDateFormat:'MMMM YYYY'}}</h1>
+
+<md-card flex="100" layout="column"
                                                                                                 ng:repeat="bucket in $ctrl.balance.buckets">
                                                                                          <md-toolbar>
                                                                                            <span ng:repeat="account in bucket.total_detailed">{{account.account}} = {{account.amount | number:2}} €</span>
                                                                                          </md-toolbar>
                                                                                          <md-content layout="row">
-                                                                                           <!--
-                                                                                               <md-card flex="20">
-                                                                                                 <select style="height: 100%;" multiple
-                                                                                                         ng:model="bucket.accounts_selected"
-                                                                                                         ng:options="account.account for account in bucket.raw_data | orderBy:'account'"
-                                                                                                         ng:change="filter_data()">
-                                                                                                   <option value=''>...</option>
-                                                                                                 </select>
-                                                                                               </md-card>
-                                                                                               -->
-                                                                                               <md-card flex="78">
-                                                                                                 <nvd3 data="bucket.data"
-                                                                                                       options="bucket.graph_options" >
-                                                                                                 </nvd3>
-                                                                                               </md-card>
-                                                                                               <!--
-                                                                                                   <md-card flex="56">
-                                                                                                     <table class="table">
-                                                                                                       <thead>
-                                                                                                         <tr>
-                                                                                                           <th><md-buton ng:click="bucket.order_by( 'account' )">account</md-buton></th>
-                                                                                                           <th><md-buton ng:click="bucket.order_by( 'amount' )">amount</md-buton></th>
-                                                                                                           <th><md-buton ng:click="bucket.order_by( 'score' )">score</md-buton></th>
-                                                                                                         </tr>
-                                                                                                       </thead>
-                                                                                                       <tbody>
-                                                                                                         <tr ng:repeat="account in bucket.data | orderBy:bucket.orderBy:bucket.orderDesc"
-                                                                                                             ng:class="{'even': $even, 'odd': $odd}"
-                                                                                                             style="border-left:10px solid {{coloring_score( account.score )}};border-right:10px solid {{coloring_score( account.score )}}">
-                                                                                                           <td style="border-bottom:1px solid {{coloring_score( account.score )}}">
-                                                                                                             {{account.account}}
-                                                                                                           </td>
-                                                                                                           <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
-                                                                                                             {{account.amount | number:2}} €
-                                                                                                           </td>
-                                                                                                           <td style="text-align:right;border-bottom:1px solid {{coloring_score( account.score )}}">
-                                                                                                             {{account.score}}
-                                                                                                           </td>
-                                                                                                         </tr>
-                                                                                                       </tbody>
-                                                                                                     </table>
-                                                                                                   </md-card>
-                                                                                                   -->
+                                                                                           <md-card flex="78">
+                                                                                             <nvd3 data="bucket.data"
+                                                                                                   options="bucket.graph_options" >
+                                                                                             </nvd3>
+                                                                                           </md-card>
                                                                                          </md-content>
                                                                                        </md-card>
                                                                                      </md-content>
