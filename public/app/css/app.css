@@ -1,8 +1,0 @@
-/* app css stylesheet */
-
-md-content table { max-width: 99%;
-		   width: 99%;
-		   margin: 0 0.5%; }
-md-card select { height: 100%; }
-.even{background-color:#ddd}
-.odd{background-color:#eee}
