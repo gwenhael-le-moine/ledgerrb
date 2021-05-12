@@ -1,25 +1,33 @@
-import * as dom from '../utils/dom/index'
-import sweetAlert from '../sweetalert2'
-import { swalClasses } from '../utils/classes'
+import * as dom from '../utils/dom/index.js'
+import Swal from '../sweetalert2.js'
+import { swalClasses } from '../utils/classes.js'
 
 /**
- * Show spinner instead of Confirm button and disable Cancel button
+ * Shows loader (spinner), this is useful with AJAX requests.
+ * By default the loader be shown instead of the "Confirm" button.
  */
-const showLoading = () => {
+const showLoading = (buttonToReplace) => {
   let popup = dom.getPopup()
   if (!popup) {
-    sweetAlert('')
+    Swal.fire()
   }
   popup = dom.getPopup()
   const actions = dom.getActions()
-  const confirmButton = dom.getConfirmButton()
-  const cancelButton = dom.getCancelButton()
+  const loader = dom.getLoader()
+
+  if (!buttonToReplace && dom.isVisible(dom.getConfirmButton())) {
+    buttonToReplace = dom.getConfirmButton()
+  }
 
   dom.show(actions)
-  dom.show(confirmButton)
+  if (buttonToReplace) {
+    dom.hide(buttonToReplace)
+    loader.setAttribute('data-button-to-replace', buttonToReplace.className)
+  }
+  loader.parentNode.insertBefore(loader, buttonToReplace)
   dom.addClass([popup, actions], swalClasses.loading)
-  confirmButton.disabled = true
-  cancelButton.disabled = true
+
+  dom.show(loader)
 
   popup.setAttribute('data-loading', true)
   popup.setAttribute('aria-busy', true)

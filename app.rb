@@ -16,7 +16,7 @@ class LedgerRbApp < Sinatra::Base
 
   get '/' do
     content_type :html
-    send_file './public/app/index.html'
+    send_file './public/angularjs.html'
   end
 
   get '/budget' do
