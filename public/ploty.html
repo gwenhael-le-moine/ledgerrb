@@ -23,14 +23,6 @@
              accounts: () => API.fetch( "/api/ledger/accounts" )
          }
 
-         const Utils = {
-             readable_date: date => {
-                 const months = { 0: 'Janvier', 1: 'Février', 2: 'Mars', 3: 'Avril', 4: 'Mai', 5: 'Juin', 6: 'Juillet', 7: 'Août', 8: 'Septembre', 9: 'Octobre', 10: 'Novembre', 11: 'Décembre' };
-
-                 return `${months[ date.getMonth() ]} ${date.getFullYear()}`;
-             }
-         };
-
          const Controls = {
              accounts_list: {
                  init: async ( ui_id ) => {
@@ -115,7 +107,6 @@
                      };
 
                      Controls.main_graph.set = async ( accounts ) => {
-                         console.log(accounts)
                          if (accounts.length < 1)
                              return;
 
@@ -128,7 +119,7 @@
                                                  return {
                                                      name: act,
                                                      type: "bar",
-                                                     x: v.map( reg => new Date( reg.date ) ), //Utils.readable_date( new Date( reg.date ) ) ),
+                                                     x: v.map( reg => new Date( reg.date ) ),
                                                      y: v.map( reg => reg.amount)
                                                  };
                                              } ),
