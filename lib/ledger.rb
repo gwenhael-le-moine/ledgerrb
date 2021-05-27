@@ -4,152 +4,163 @@ require 'csv'
 
 # Ruby wrapper module for calling ledger
 module Ledger
-  module_function
+    module_function
 
-  @binary = 'ledger'
-  @file = ENV[ 'LEDGER_FILE' ]
+    @binary = 'ledger'
+    @file = ENV[ 'LEDGER_FILE' ]
+    @last_mtime = Pathname.new(@file).mtime
 
-  def run( options, command = '', command_parameters = '' )
-    STDERR.puts "#{@binary} -f #{@file} #{options} #{command} #{command_parameters}"
-    `#{@binary} -f #{@file} #{options} #{command} #{command_parameters}`
-  end
+    @cache = Hash.new
 
-  def version
-    run '--version'
-  end
+    def run( options, command = '', command_parameters = '' )
+        command = "#{@binary} -f #{@file} #{options} #{command} #{command_parameters}"
 
-  def accounts( depth = 9999 )
-    accounts = run( '', 'accounts' )
-               .split( "\n" ) 
-               .map do |a|
-      a.split( ':' )
-      .each_slice( depth )
-      .to_a.first
-    end.uniq
+        mtime = Pathname.new(@file).mtime
+        if @last_mtime < mtime || !@cache.has_key?( command )
+            @last_mtime = mtime
 
-    accounts.map(&:length).max.times do |i|
-      accounts += accounts.map { |acc| acc.first( i ) }
+            @cache[ command ] = `#{command}`
+        end
+
+        @cache[ command ]
     end
 
-    accounts
-      .uniq
-      .sort
-      .reject { |a| a.empty? }
-      .sort_by { |a| a.length }
-  end
-
-  def dates_salaries( category = 'salaire' )
-    CSV.parse( run( '', 'csv', category ) )
-       .map do |row|
-      Date.parse row[ 0 ]
-    end
-       .uniq
-  end
-
-  def register( period = nil, categories = '' )
-    period = period.nil? ? '' : "-p '#{period}'"
-
-    CSV.parse( run( "--no-revalued --exchange '#{CURRENCY}' #{period}", 'csv', categories ) )
-       .map do |row|
-      { date: row[ 0 ],
-        payee: row[ 2 ],
-        account: row[ 3 ],
-        amount: row[ 5 ],
-        currency: row[ 4 ] }
-    end
-  end
-
-  def balance( cleared = false, depth = nil, period = nil, categories = '' )
-    period = period.nil? ? '' : "-p '#{period}'"
-    depth = depth.nil? ? '' : "--depth #{depth}"
-    operation = cleared ? 'cleared' : 'balance'
-    
-    run( "--flat --no-total --exchange '#{CURRENCY}' #{period} #{depth}", operation, categories )
-      .split( "\n" )
-      .map do |line|
-      line_array = line.split( "#{CURRENCY}" )
-
-      { account: line_array[ 1 ].strip,
-        amount: line_array[ 0 ].tr( SEPARATOR, '.' ).to_f }
-    end
-  end
-  
-  # def int_treefied_balance( node )
-  #   return { name: node[:account], size: node[:amount] } unless node[:account].include( ':' )
-    
-  #   { name: node[:account].split(':').first,
-  #     children: int_treefied_balance( ... ) }
-  # end
-  
-  # def treefeid_balance( cleared = false, depth = nil, period = nil, categories = '' )
-  #   bal = balance( cleared, depth, period, categories )
-    
-    
-  # end
-  
-  def cleared
-    run( "--flat --no-total --exchange '#{CURRENCY}'", 'cleared', 'Assets Equity' )
-      .split( "\n" )
-      .map do |row|
-      fields = row.match( /\s*(\S+ €)\s*(\S+ €)\s*(\S+)\s*(\S+)/ )
-      { account: fields[ 4 ],
-        amount: { cleared: fields[ 2 ],
-                  all: fields[ 1 ] } } unless fields.nil?
-    end
-  end
-
-  def budget( period = nil, categories = '' )
-    period = period.nil? ? '' : "-p '#{period}'"
-
-    budgeted = run( "--flat --no-total --budget --exchange '#{CURRENCY}' #{period}", 'budget', categories )
-               .lines
-               .map do |line|
-      ary = line.split
-
-      { currency: ary[1],
-        amount: ary[0].tr( SEPARATOR, '.' ).to_f,
-        budget: ary[2].tr( SEPARATOR, '.' ).to_f,
-        percentage: ary.last( 2 ).first.gsub( /%/, '' ).tr( SEPARATOR, '.' ).to_f,
-        account: ary.last }
+    def version
+        run '--version'
     end
 
-    unbudgeted_amount = run( "--flat --no-total --unbudgeted -Mn --exchange '#{CURRENCY}' #{period}", 'register', categories )
-                        .lines
-                        .map do |line|
-      line.split[4].tr( SEPARATOR, '.' ).to_f
-    end
-                        .reduce( :+ )
+    def accounts( depth = 9999 )
+        accounts = run( '', 'accounts' )
+                       .split( "\n" )
+                       .map do |a|
+            a.split( ':' )
+                .each_slice( depth )
+                .to_a.first
+        end.uniq
 
-    budget = budgeted.map { |account| account[:budget] }.reduce( :+ )
-    income = run( "--flat --no-total --unbudgeted -Mn --exchange '#{CURRENCY}' #{period}", 'register', 'Income' )
-             .lines
-             .last
-             .split[4]
-             .tr( SEPARATOR, '.' )
-             .to_f * -1
-    disposable_income = income - budget
+        accounts.map(&:length).max.times do |i|
+            accounts += accounts.map { |acc| acc.first( i ) }
+        end
 
-    budgeted << { currency: CURRENCY,
-                  amount: unbudgeted_amount,
-                  budget: disposable_income,
-                  percentage: (unbudgeted_amount / disposable_income) * 100,
-                  account: '(unbudgeted)' }
-  end
-
-  def graph_values( period = nil, categories = [ 'Expenses' ] )
-    period = period.nil? ? '' : "-p '#{period}'"
-
-    result = {}
-    categories.each do |category|
-      result[ category ] = CSV
-                           .parse( run( "-MAn --exchange '#{CURRENCY}' #{period}", 'csv --no-revalued', category ) )
-                           .map do |row|
-        { date: row[ 0 ],
-          amount: row[ 5 ],
-          currency: row[ 4 ] }
-      end
+        accounts
+            .uniq
+            .sort
+            .reject { |a| a.empty? }
+            .sort_by { |a| a.length }
     end
 
-    result
-  end
+    def dates_salaries( category = 'salaire' )
+        CSV.parse( run( '', 'csv', category ) )
+            .map do |row|
+            Date.parse row[ 0 ]
+        end
+            .uniq
+    end
+
+    def register( period = nil, categories = '' )
+        period = period.nil? ? '' : "-p '#{period}'"
+
+        CSV.parse( run( "--no-revalued --exchange '#{CURRENCY}' #{period}", 'csv', categories ) )
+            .map do |row|
+            { date: row[ 0 ],
+              payee: row[ 2 ],
+              account: row[ 3 ],
+              amount: row[ 5 ],
+              currency: row[ 4 ] }
+        end
+    end
+
+    def balance( cleared = false, depth = nil, period = nil, categories = '' )
+        period = period.nil? ? '' : "-p '#{period}'"
+        depth = depth.nil? ? '' : "--depth #{depth}"
+        operation = cleared ? 'cleared' : 'balance'
+
+        run( "--flat --no-total --exchange '#{CURRENCY}' #{period} #{depth}", operation, categories )
+            .split( "\n" )
+            .map do |line|
+            line_array = line.split( "#{CURRENCY}" )
+
+            { account: line_array[ 1 ].strip,
+              amount: line_array[ 0 ].tr( SEPARATOR, '.' ).to_f }
+        end
+    end
+
+    # def int_treefied_balance( node )
+    #   return { name: node[:account], size: node[:amount] } unless node[:account].include( ':' )
+
+    #   { name: node[:account].split(':').first,
+    #     children: int_treefied_balance( ... ) }
+    # end
+
+    # def treefeid_balance( cleared = false, depth = nil, period = nil, categories = '' )
+    #   bal = balance( cleared, depth, period, categories )
+
+
+    # end
+
+    def cleared
+        run( "--flat --no-total --exchange '#{CURRENCY}'", 'cleared', 'Assets Equity' )
+            .split( "\n" )
+            .map do |row|
+            fields = row.match( /\s*(\S+ €)\s*(\S+ €)\s*(\S+)\s*(\S+)/ )
+            { account: fields[ 4 ],
+              amount: { cleared: fields[ 2 ],
+                        all: fields[ 1 ] } } unless fields.nil?
+        end
+    end
+
+    def budget( period = nil, categories = '' )
+        period = period.nil? ? '' : "-p '#{period}'"
+
+        budgeted = run( "--flat --no-total --budget --exchange '#{CURRENCY}' #{period}", 'budget', categories )
+                       .lines
+                       .map do |line|
+            ary = line.split
+
+            { currency: ary[1],
+              amount: ary[0].tr( SEPARATOR, '.' ).to_f,
+              budget: ary[2].tr( SEPARATOR, '.' ).to_f,
+              percentage: ary.last( 2 ).first.gsub( /%/, '' ).tr( SEPARATOR, '.' ).to_f,
+              account: ary.last }
+        end
+
+        unbudgeted_amount = run( "--flat --no-total --unbudgeted -Mn --exchange '#{CURRENCY}' #{period}", 'register', categories )
+                                .lines
+                                .map do |line|
+            line.split[4].tr( SEPARATOR, '.' ).to_f
+        end
+                                .reduce( :+ )
+
+        budget = budgeted.map { |account| account[:budget] }.reduce( :+ )
+        income = run( "--flat --no-total --unbudgeted -Mn --exchange '#{CURRENCY}' #{period}", 'register', 'Income' )
+                     .lines
+                     .last
+                     .split[4]
+                     .tr( SEPARATOR, '.' )
+                     .to_f * -1
+        disposable_income = income - budget
+
+        budgeted << { currency: CURRENCY,
+                      amount: unbudgeted_amount,
+                      budget: disposable_income,
+                      percentage: (unbudgeted_amount / disposable_income) * 100,
+                      account: '(unbudgeted)' }
+    end
+
+    def graph_values( period = nil, categories = [ 'Expenses' ] )
+        period = period.nil? ? '' : "-p '#{period}'"
+
+        result = {}
+        categories.each do |category|
+            result[ category ] = CSV
+                                     .parse( run( "-MAn --exchange '#{CURRENCY}' #{period}", 'csv --no-revalued', category ) )
+                                     .map do |row|
+                { date: row[ 0 ],
+                  amount: row[ 5 ],
+                  currency: row[ 4 ] }
+            end
+        end
+
+        result
+    end
 end
